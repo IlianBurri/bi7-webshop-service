@@ -3,12 +3,13 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.model.User;
 import io.javalin.http.Handler;
 
+import java.util.List;
 import java.util.Optional;
 
 public class UserController {
     public static Handler fetchAllUsernames = ctx -> {
         UserDao dao = UserDao.instance();
-        Iterable<String> allUsers = dao.getAllUsernames();
+        List<String> allUsers = dao.getAllUsernames();
         ctx.json(allUsers);
     };
 

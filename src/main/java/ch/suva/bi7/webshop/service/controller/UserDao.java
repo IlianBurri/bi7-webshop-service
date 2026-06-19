@@ -36,7 +36,7 @@ class UserDao {
                 .findAny();
     }
 
-    Iterable<String> getAllUsernames() {
+    List<String> getAllUsernames() {
         return users.stream()
                 .map(user -> user.username)
                 .collect(Collectors.toList());
