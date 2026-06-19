@@ -5,12 +5,15 @@ import io.javalin.Javalin;
 
 public class Bi7WebshopService {
     public static void main(String[] args) {
-        UserController userController = new UserController();
-
         var app = Javalin.create(config -> {
-            config.router.get("/", ctx -> ctx.result("Hello World"));
-            config.router.get("/users", userController::getAllUsers);
-            config.router.get("/users/{id}", userController::getUserById);
+            config.bundledPlugins.enableCors(cors -> {
+                cors.addRule(it -> {
+                    it.anyHost();
+                });
+            });
+            config.routes.get("/", ctx -> ctx.result("Hello World"));
+            config.routes.get("/users", UserController.fetchAllUsernames);
+            config.routes.get("/users/{email}", UserController.fetchByEMail);
         }).start(7070);
     }
 }

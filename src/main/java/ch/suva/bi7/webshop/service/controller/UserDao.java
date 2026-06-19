@@ -1,4 +1,4 @@
-package ch.suva.bi7.webshop.service.Controller;
+package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.model.User;
 
@@ -10,14 +10,14 @@ import java.util.stream.Collectors;
 class UserDao {
 
     private List<User> users = Arrays.asList(
-            new User(0, "Steve Rogers"),
-            new User(1, "Tony Stark"),
-            new User(2, "Carol Danvers")
+            new User("Steve Rogers", "steve.rogers@microsoft.com", "steve"),
+            new User("Tony Stark", "t.stark@industries.com", "tony"),
+            new User("Carol Danvers", "cd@amazon.com", "carol")
     );
 
     private static UserDao userDao = null;
 
-    UserDao() {
+    private UserDao() {
     }
 
     static UserDao instance() {
@@ -27,15 +27,18 @@ class UserDao {
         return userDao;
     }
 
-    Optional<User> getUserById(int id) {
+    Optional<User> getUserByEMail(String email) {
+        if (email == null || email.isBlank()) {
+            return Optional.empty();
+        }
         return users.stream()
-                .filter(u -> u.id == id)
+                .filter(u -> u.email.toLowerCase().trim().equals(email.toLowerCase().trim()))
                 .findAny();
     }
 
     Iterable<String> getAllUsernames() {
         return users.stream()
-                .map(user -> user.name)
+                .map(user -> user.username)
                 .collect(Collectors.toList());
     }
 }
