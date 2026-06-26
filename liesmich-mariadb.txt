@@ -1,0 +1,19 @@
+
+# Installation von MariaDB in Docker:
+sudo docker run --name mariadb-container -e MYSQL_ROOT_PASSWORD=webshopdb-root-pw -d -v mariadb_data:/var/lib/mariadb -p 3306:3306 mariadb:latest
+
+# Verbindung zur Datenbank:
+mysql -h 127.0.0.1 -P 3306 -u root -pwebshopdb-root-pw
+
+# via mysql client Datenbank-Schema und User anlegen
+  CREATE DATABASE webshopdb;
+  CREATE USER 'webshopuser'@'%' IDENTIFIED BY 'webshoppassword';
+  GRANT ALL PRIVILEGES ON webshopdb.* TO 'webshopuser'@'%';
+  FLUSH PRIVILEGES;
+
+# Webshop 'user' Tabelle hier einfügen und via mysql client ausführen
+# TODO: SQL user Tabelle...
+
+# -------------------------------------------------------------
+# Installation von Docker in der Suva Linux-VM (RHEL 9):
+# https://www.ionos.com/digitalguide/hosting/technical-matters/install-mariadb-rhel-9/

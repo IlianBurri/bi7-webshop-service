@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.model.User;
 
 import java.util.Arrays;
@@ -9,6 +10,8 @@ import java.util.stream.Collectors;
 
 class UserDao {
 
+    //final DBConnection dbConnection;
+
     private List<User> users = Arrays.asList(
             new User("Steve Rogers", "steve.rogers@microsoft.com", "steve"),
             new User("Tony Stark", "t.stark@industries.com", "tony"),
@@ -17,10 +20,11 @@ class UserDao {
 
     private static UserDao userDao = null;
 
-    private UserDao() {
+    private UserDao() throws Exception {
+       //dbConnection = new DBConnection("localhost", "webshopdb", "webshopuser","webshoppassword");
     }
 
-    static UserDao instance() {
+    static UserDao instance() throws Exception {
         if (userDao == null) {
             userDao = new UserDao();
         }
