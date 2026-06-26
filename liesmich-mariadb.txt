@@ -3,15 +3,18 @@
 sudo docker run --name mariadb-container -e MYSQL_ROOT_PASSWORD=webshopdb-root-pw -d -v mariadb_data:/var/lib/mariadb -p 3306:3306 mariadb:latest
 
 # Verbindung zur Datenbank:
+# Eventuell muss der mysql/mariadb-Client installiert werden:
+# "sudo apt install mysql-client" oder so ähnlich.
 mysql -h 127.0.0.1 -P 3306 -u root -pwebshopdb-root-pw
 
-# via mysql client Datenbank-Schema und User anlegen
+# via mysql client als User "root" mit der Datenbank verbinden und Schema sowie User anlegen:
   CREATE DATABASE webshopdb;
   CREATE USER 'webshopuser'@'%' IDENTIFIED BY 'webshoppassword';
   GRANT ALL PRIVILEGES ON webshopdb.* TO 'webshopuser'@'%';
   FLUSH PRIVILEGES;
 
 # Webshop 'user' Tabelle hier einfügen und via mysql client ausführen
+# Hierzu mit dem neuen User mit der DB verbinden: mysql -h 127.0.0.1 -P 3306 -u webshopuser -pwebshoppassword webshopdb
 # TODO: SQL user Tabelle...
 
 # -------------------------------------------------------------
