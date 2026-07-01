@@ -12,18 +12,16 @@ import java.util.Map;
 public class ResultSetMock implements ResultSet {
 
     private int index = -1;
-    private final List<Boolean> hasNextList;
     private final List<Map<String, Object>> result;
 
-    public ResultSetMock(List<Boolean> hasNextList, List<Map<String, Object>> result) {
-        this.hasNextList = hasNextList;
+    public ResultSetMock(List<Map<String, Object>> result) {
         this.result = result;
     }
 
     @Override
     public boolean next() throws SQLException {
         index++;
-        return index < hasNextList.size() && hasNextList.get(index);
+        return index < result.size();
     }
 
     @Override
