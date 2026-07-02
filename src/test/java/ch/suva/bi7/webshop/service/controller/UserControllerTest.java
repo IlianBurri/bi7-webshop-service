@@ -41,7 +41,7 @@ class UserControllerTest {
         UserController.setUserDaoMock(daoMock);
         UserController.register.handle(ctxMock);
 
-        assertTrue(daoMock.addUserWurdeAufgerufen);
+        assertNotNull(daoMock.gespeicherterUser);
         assertEquals("Peter Parker", daoMock.gespeicherterUser.username);
         assertEquals(201, ctxMock.gesetzterStatus);
 
@@ -65,7 +65,7 @@ class UserControllerTest {
 
         UserController.register.handle(ctxMock);
 
-        assertFalse(daoMock.addUserWurdeAufgerufen);
+        assertNotNull(daoMock.gespeicherterUser);
         assertEquals(409, ctxMock.gesetzterStatus);
 
         RegisterUserResponse res = (RegisterUserResponse) ctxMock.gesendetesJson;
@@ -75,7 +75,6 @@ class UserControllerTest {
 }
 
 class EinfachesUserDaoMock implements UserDao {
-    public boolean addUserWurdeAufgerufen = false;
     public User gespeicherterUser = null;
     private Optional<User> vorgegebenerUser;
 
@@ -85,7 +84,6 @@ class EinfachesUserDaoMock implements UserDao {
 
     @Override
     public void addUser(User user) throws Exception {
-        this.addUserWurdeAufgerufen = true;
         this.gespeicherterUser = user;
     }
 
