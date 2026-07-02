@@ -10,4 +10,6 @@ public interface UserDao {
     Optional<User> getUserByEMail(String email) throws SQLException;
 
     List<String> getAllUsernames() throws SQLException;
+
+    void addUser(User newUser) throws Exception;
 }

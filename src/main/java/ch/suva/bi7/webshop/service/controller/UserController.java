@@ -23,7 +23,7 @@ public class UserController {
     }
 
     // For testing only
-    private static void setUserDaoMock(UserDao userDaoMock) {
+    static void setUserDaoMock(UserDao userDaoMock) {
         userDao = userDaoMock;
     }
 
@@ -47,9 +47,20 @@ public class UserController {
             RegisterUserRequest registerUserRequest = ctx.bodyAsClass(RegisterUserRequest.class);
             System.out.println("Register: " + registerUserRequest);
 
-            // TODO: UserDao verwenden und anhand EMail prüfen ob bereits registriert.
-            // Falls Ja: Fehler liefern.
-            // Falls Nein: User-Instanz aus dem RegisterRequest erstellen und dann UserDao.addUser(user) durchführen
+            UserDao dao = getUserDao();
+
+            if (dao.getUserByEMail(registerUserRequest.email).isPresent()) {
+                RegisterUserResponse response = new RegisterUserResponse("error", "Benutzer existiert bereits.");
+                ctx.status(409).json(response);
+                return;
+            }
+
+            User newUser = new User(
+                    registerUserRequest.username,
+                    registerUserRequest.email,
+                    registerUserRequest.password
+            );
+            dao.addUser(newUser);
 
             RegisterUserResponse response = new RegisterUserResponse("ok", null);
             ctx.status(201).json(response);

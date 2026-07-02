@@ -11,7 +11,7 @@ import java.util.Optional;
 
 class UserDaoImpl implements UserDao {
 
-    final DBConnection dbConnection;
+    private final DBConnection dbConnection;
 
     public UserDaoImpl(DBConnection dbConnection) {
         if (dbConnection == null) {
@@ -50,5 +50,14 @@ class UserDaoImpl implements UserDao {
             result.add(username);
         }
         return result;
+    }
+
+    @Override
+    public  void addUser(User newUser) throws Exception {
+        String query = String.format(
+                "INSERT INTO user (username, email, password) VALUES ('%s', '%s', '%s')",
+                newUser.username, newUser.email, newUser.password
+        );
+        dbConnection.execute(query);
     }
 }
