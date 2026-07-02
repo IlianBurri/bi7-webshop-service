@@ -22,7 +22,7 @@ class UserDaoImplTest {
                 "username", "testuser",
                 "password", "test",
                 "email", "test@somewhere.com");
-        ResultSet resultSet = createResultSetMock(List.of(Boolean.TRUE), List.of(map1));
+        ResultSet resultSet = createResultSetMock(List.of(map1));
         DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
         UserDaoImpl testee = createTestee(dbConnection);
 
@@ -38,7 +38,35 @@ class UserDaoImplTest {
     @Test
     public void testGetAllUsernames() throws SQLException {
         // TODO Schreibe ein Test mit 3 Namen als Ergebnis
+        Map<String, Object> map1 = Map.of(
+                "username", "testuser",
+                "password", "test",
+                "email", "test@somewhere.com");
+
+        Map<String, Object> map2 = Map.of(
+                "username", "testuser2",
+                "password", "test2",
+                "email", "test2@somewhere.com");
+
+        Map<String, Object> map3 = Map.of(
+                "username", "testuser3",
+                "password", "test3",
+                "email", "test3@somewhere.com");
+
+        ResultSet resultSet = createResultSetMock(List.of(map1, map2, map3));
+        DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
+
+        UserDaoImpl testee = createTestee(dbConnection);
+
+        List<String> resultUsernames = testee.getAllUsernames();
+
+        assertEquals(3, resultUsernames.size(), "Es sollten genau 3 Benutzernamen zurück gegeben worden sein");
+        assertTrue(resultUsernames.contains("testuser"));
+        assertTrue(resultUsernames.contains("testuser2"));
+        assertTrue(resultUsernames.contains("testuser3"));
+
     }
+
 
     private UserDaoImpl createTestee(DBConnection dbConnection) {
         return new UserDaoImpl(dbConnection);
@@ -63,7 +91,7 @@ class UserDaoImplTest {
         };
     }
 
-    private ResultSet createResultSetMock(List<Boolean> hasNextList, List<Map<String, Object>> result) {
-        return new ResultSetMock(hasNextList, result);
+    private ResultSet createResultSetMock(List<Map<String, Object>> result) {
+        return new ResultSetMock(result);
     }
 }
