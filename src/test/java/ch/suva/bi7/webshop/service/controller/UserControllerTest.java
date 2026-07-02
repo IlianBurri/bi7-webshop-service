@@ -3,11 +3,28 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.model.RegisterUserRequest;
 import ch.suva.bi7.webshop.service.model.RegisterUserResponse;
 import ch.suva.bi7.webshop.service.model.User;
+import io.javalin.config.Key;
+import io.javalin.config.MultipartConfig;
+import io.javalin.http.Context;
+import io.javalin.http.HttpStatus;
+import io.javalin.json.JsonMapper;
+import io.javalin.plugin.ContextPlugin;
+import io.javalin.router.Endpoint;
+import io.javalin.router.Endpoints;
+import io.javalin.security.RouteRole;
+import jakarta.servlet.ServletOutputStream;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,8 +51,11 @@ class UserControllerTest {
 
     @Test
     void testRegister_UserExistiertBereits() throws Exception {
-        RegisterUserRequest request = new RegisterUserRequest();
-        request.email = "bruce.wayne@gotham.com";
+        RegisterUserRequest request = new RegisterUserRequest(
+            "Bruce Wayne",
+            "bruce.wayne@gotham.com",
+            "batman"
+        );
 
         User batman = new User("Bruce Wayne", "bruce.wayne@gotham.com", "batman");
         EinfachesUserDaoMock daoMock = new EinfachesUserDaoMock(Optional.of(batman));
@@ -50,7 +70,7 @@ class UserControllerTest {
 
         RegisterUserResponse res = (RegisterUserResponse) ctxMock.gesendetesJson;
         assertEquals("error", res.status);
-        assertEquals("Benutzer existiert bereits.", res.message);
+        assertEquals("Benutzer existiert bereits.", res.error);
     }
 }
 
@@ -70,12 +90,12 @@ class EinfachesUserDaoMock implements UserDao {
     }
 
     @Override
-    public Optional<User> getUserByEMail(String email) throws Exception {
+    public Optional<User> getUserByEMail(String email) {
         return vorgegebenerUser;
     }
 
     @Override
-    public List<String> getAllUsernames() throws Exception {
+    public List<String> getAllUsernames() {
         return new ArrayList<>();
     }
 }
@@ -124,5 +144,95 @@ class EinfacherContextMock implements io.javalin.http.Context {
     @Override
     public String pathParam(String key) {
         return "";
+    }
+
+    @NotNull
+    @Override
+    public Endpoints endpoints() {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public Endpoint endpoint() {
+        return null;
+    }
+
+    @Override
+    public <T> T appData(@NotNull Key<T> key) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public JsonMapper jsonMapper() {
+        return null;
+    }
+
+    @Override
+    public <T> T with(@NotNull Class<? extends ContextPlugin<?, T>> aClass) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public MultipartConfig multipartConfig() {
+        return null;
+    }
+
+    @Override
+    public boolean strictContentTypes() {
+        return false;
+    }
+
+    @NotNull
+    @Override
+    public ServletOutputStream outputStream() {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public Context minSizeForCompression(int i) {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public Context result(@NotNull InputStream inputStream) {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public InputStream resultInputStream() {
+        return null;
+    }
+
+    @Override
+    public void future(@NotNull Supplier<? extends CompletableFuture<?>> supplier) {
+
+    }
+
+    @Override
+    public void redirect(@NotNull String s, @NotNull HttpStatus httpStatus) {
+
+    }
+
+    @Override
+    public void writeJsonStream(@NotNull Stream<?> stream) {
+
+    }
+
+    @NotNull
+    @Override
+    public Context skipRemainingHandlers() {
+        return null;
+    }
+
+    @NotNull
+    @Override
+    public Set<RouteRole> routeRoles() {
+        return Set.of();
     }
 }
