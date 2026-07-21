@@ -11,6 +11,7 @@ public class Bi7WebshopService {
             config.bundledPlugins.enableCors(cors -> {
                 cors.addRule(it -> {
                     it.anyHost();
+                    it.exposeHeader("sessionId");
                 });
             });
             config.routes.get("/", ctx -> ctx.result("Hello World"));

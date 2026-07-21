@@ -98,8 +98,9 @@ public class UserController {
 
             LoginUserResponse response = new LoginUserResponse("ok", null);
             ctx.status(201).json(response);
+            ctx.header("sessionId", sessionId);
             //ctx.sessionAttribute("sessionId", sessionId);
-            ctx.res().setHeader("sessionId", sessionId);
+            System.out.println("sessionId: " + sessionId);
         } catch (Exception e) {
             RegisterUserResponse response = new RegisterUserResponse("error", "Bad Request: " + e.getMessage() + "\n");
             ctx.status(400).json(response);
