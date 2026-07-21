@@ -65,7 +65,7 @@ class UserControllerTest {
 
         UserController.register.handle(ctxMock);
 
-        assertNotNull(daoMock.gespeicherterUser);
+        assertNull(daoMock.gespeicherterUser);
         assertEquals(409, ctxMock.gesetzterStatus);
 
         RegisterUserResponse res = (RegisterUserResponse) ctxMock.gesendetesJson;

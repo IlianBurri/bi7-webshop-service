@@ -15,7 +15,17 @@ mysql -h 127.0.0.1 -P 3306 -u root -pwebshopdb-root-pw
 
 # Webshop 'user' Tabelle hier einfügen und via mysql client ausführen
 # Hierzu mit dem neuen User mit der DB verbinden: mysql -h 127.0.0.1 -P 3306 -u webshopuser -pwebshoppassword webshopdb
-# TODO: SQL user Tabelle...
+CREATE TABLE user (
+  email nvarchar(100) not null,
+  username nvarchar(100) not null,
+  password nvarchar(100) not null,
+  primary key(email)
+);
+insert into user values('steve.rogers@microsoft.com','Steve Rogers','steve');
+insert into user values('t.stark@industries.com','Tony Stark','tony');
+insert into user values('cd@amazon.com','Carol Danvers','carol');
+
+insert into users values(email = 'cd@amazon.com',username = 'Carol Danvers', password='carol');
 CREATE TABLE user (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(100) NOT NULL,

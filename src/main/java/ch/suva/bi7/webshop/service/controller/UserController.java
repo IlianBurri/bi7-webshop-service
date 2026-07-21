@@ -2,13 +2,12 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
-import ch.suva.bi7.webshop.service.model.RegisterUserRequest;
-import ch.suva.bi7.webshop.service.model.RegisterUserResponse;
-import ch.suva.bi7.webshop.service.model.User;
+import ch.suva.bi7.webshop.service.model.*;
 import io.javalin.http.Handler;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public class UserController {
 
@@ -68,5 +67,62 @@ public class UserController {
             RegisterUserResponse response = new RegisterUserResponse("error", "Bad Request: " + e.getMessage() + "\n");
             ctx.status(400).json(response);
         }
+    };
+
+    public static Handler login = ctx -> {
+        try {
+            LoginUserRequest loginUserRequest = ctx.bodyAsClass(LoginUserRequest.class);
+            System.out.println("Login: " + loginUserRequest);
+
+            UserDao userDao = getUserDao();
+//            UserSessionDao userSessionDao = null;
+
+            Optional<User> userOptional = userDao.getUserByEMail(loginUserRequest.email);
+            if (userOptional.isEmpty()) {
+                LoginUserResponse response = new LoginUserResponse("error", "Benutzer existiert nicht.");
+                ctx.status(409).json(response);
+                return;
+            }
+
+            User user = userOptional.get();
+            if (!user.password.equals(loginUserRequest.password)) {
+                LoginUserResponse response = new LoginUserResponse("error", "Falsches Passwort.");
+                ctx.status(409).json(response);
+                return;
+            }
+            String sessionId = UUID.randomUUID().toString();
+            // TODO Schritt 1: 'UserSessionDao' ohne DB also nur im Memory speichern.
+            // TODO Schritt 2: Neue Datenbank-Tabelle um für einen User eine SessionId zu speichern
+//            UserSession userSession = new UserSession(user.email, sessionId);
+//            userSessionDao.saveUserSession(userSession);
+
+            LoginUserResponse response = new LoginUserResponse("ok", null);
+            ctx.status(201).json(response);
+            //ctx.sessionAttribute("sessionId", sessionId);
+            ctx.res().setHeader("sessionId", sessionId);
+        } catch (Exception e) {
+            RegisterUserResponse response = new RegisterUserResponse("error", "Bad Request: " + e.getMessage() + "\n");
+            ctx.status(400).json(response);
+        }
+    };
+
+    public static Handler logout = ctx -> {
+        // TODO Logout implemenieren....
+        LoginUserResponse response = new LoginUserResponse("error", "Logout: Not implemented yet");
+        ctx.status(409).json(response);
+    };
+
+    public static Handler shoppingBuy = ctx -> {
+        String sessionId = ctx.res().getHeader("sessionId");
+        System.out.println("sessionId: " + sessionId);
+        if (sessionId == null) {
+            // Fehlerbeandlung: Keine SessionId vorhanden, d.h. User ist angemeldet!!!
+        }
+
+        // Im UserSessionDao die Session 'sessionId' finden und den User ermitteln'
+
+        // Fehlerbehandlung: User nicht gefunden
+
+        // Falls User eingeloggt: Kaufvorgang für den gefunden User abschliessen
     };
 }
