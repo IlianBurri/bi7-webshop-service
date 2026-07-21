@@ -74,8 +74,18 @@ public class UserController {
             LoginUserRequest loginUserRequest = ctx.bodyAsClass(LoginUserRequest.class);
             System.out.println("Login: " + loginUserRequest);
 
+            String email = ctx.sessionAttribute("userEmail");
+            if (email != null) {
+                if (loginUserRequest.email.equals(email)) {
+                    System.out.println("Already logged in: " + loginUserRequest);
+                } else {
+                    System.out.println("Already logged in: " + email + " but trying to login as " + loginUserRequest.email);
+                }
+            } else {
+                System.out.println("Not logged in: " + email);
+            }
+
             UserDao userDao = getUserDao();
-//            UserSessionDao userSessionDao = null;
 
             Optional<User> userOptional = userDao.getUserByEMail(loginUserRequest.email);
             if (userOptional.isEmpty()) {
@@ -90,17 +100,11 @@ public class UserController {
                 ctx.status(409).json(response);
                 return;
             }
-            String sessionId = UUID.randomUUID().toString();
-            // TODO Schritt 1: 'UserSessionDao' ohne DB also nur im Memory speichern.
-            // TODO Schritt 2: Neue Datenbank-Tabelle um für einen User eine SessionId zu speichern
-//            UserSession userSession = new UserSession(user.email, sessionId);
-//            userSessionDao.saveUserSession(userSession);
 
+            ctx.sessionAttribute("userEmail", user.email);
             LoginUserResponse response = new LoginUserResponse("ok", null);
             ctx.status(201).json(response);
-            ctx.header("sessionId", sessionId);
-            //ctx.sessionAttribute("sessionId", sessionId);
-            System.out.println("sessionId: " + sessionId);
+
         } catch (Exception e) {
             RegisterUserResponse response = new RegisterUserResponse("error", "Bad Request: " + e.getMessage() + "\n");
             ctx.status(400).json(response);
@@ -108,17 +112,40 @@ public class UserController {
     };
 
     public static Handler logout = ctx -> {
-        // TODO Logout implemenieren....
-        LoginUserResponse response = new LoginUserResponse("error", "Logout: Not implemented yet");
-        ctx.status(409).json(response);
+        String email = ctx.sessionAttribute("userEmail");
+        if (email == null) {
+            LoginUserResponse response = new LoginUserResponse("error", "Logout: No user logged in.");
+            ctx.status(409).json(response);
+        } else {
+            ctx.req().getSession().invalidate();
+            LoginUserResponse response = new LoginUserResponse("ok", "Logout: User logout successful.");
+            ctx.status(200).json(response);
+        }
     };
 
     public static Handler shoppingBuy = ctx -> {
-        String sessionId = ctx.res().getHeader("sessionId");
-        System.out.println("sessionId: " + sessionId);
-        if (sessionId == null) {
-            // Fehlerbeandlung: Keine SessionId vorhanden, d.h. User ist angemeldet!!!
+
+        String email = ctx.sessionAttribute("userEmail");
+        if (email == null) {
+            System.out.println("Kein User eingeloggt, redirect auf Login");
+            ctx.redirect("login.html");
+        } else {
+            UserDao userDao = getUserDao();
+            Optional<User> userOptional = userDao.getUserByEMail(email);
+            if (userOptional.isEmpty()) {
+                System.out.println("User nicht gefunden, redirect auf Login");
+                ctx.redirect("error.html");
+            } else {
+                System.out.println("User gefunden, Kauf abschliessen: " + userOptional.get());
+                // ..... TODO: Kaufvorgang für den gefunden User abschliessen
+            }
         }
+
+//        String sessionId = ctx.res().getHeader("sessionId");
+//        System.out.println("sessionId: " + sessionId);
+//        if (sessionId == null) {
+//            // Fehlerbeandlung: Keine SessionId vorhanden, d.h. User ist angemeldet!!!
+//        }
 
         // Im UserSessionDao die Session 'sessionId' finden und den User ermitteln'
 
