@@ -15,7 +15,7 @@ public class Bi7WebshopService {
             });
             config.routes.get("/", ctx -> ctx.result("Hello World"));
             config.routes.get("/users", UserController.fetchAllUsernames);
-            config.routes.get("/users/login", UserController.login);
+            config.routes.post("/users/login", UserController.login);
             config.routes.get("/users/logout", UserController.logout);
             config.routes.get("/users/{email}", UserController.fetchByEMail);
             config.routes.post("/users/register", UserController.register);
