@@ -61,6 +61,7 @@ public class UserController {
             );
             dao.addUser(newUser);
 
+
             RegisterUserResponse response = new RegisterUserResponse("ok", null);
             ctx.status(201).json(response);
         } catch (Exception e) {
