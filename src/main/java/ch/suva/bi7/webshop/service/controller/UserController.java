@@ -7,7 +7,6 @@ import io.javalin.http.Handler;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 public class UserController {
 
@@ -49,7 +48,8 @@ public class UserController {
             UserDao dao = getUserDao();
 
             if (dao.getUserByEMail(registerUserRequest.email).isPresent()) {
-                RegisterUserResponse response = new RegisterUserResponse("error", "Benutzer existiert bereits.");
+                RegisterUserResponse response = new RegisterUserResponse("error", "User already exists");
+                System.out.println(response);
                 ctx.status(409).json(response);
                 return;
             }
@@ -61,11 +61,12 @@ public class UserController {
             );
             dao.addUser(newUser);
 
-
             RegisterUserResponse response = new RegisterUserResponse("ok", null);
+            System.out.println(response);
             ctx.status(201).json(response);
         } catch (Exception e) {
             RegisterUserResponse response = new RegisterUserResponse("error", "Bad Request: " + e.getMessage() + "\n");
+            System.out.println(response);
             ctx.status(400).json(response);
         }
     };
@@ -73,12 +74,12 @@ public class UserController {
     public static Handler login = ctx -> {
         try {
             LoginUserRequest loginUserRequest = ctx.bodyAsClass(LoginUserRequest.class);
-            System.out.println("Login: " + loginUserRequest);
+            System.out.println("Login: " + loginUserRequest.email);
 
             String email = ctx.sessionAttribute("userEmail");
             if (email != null) {
                 if (loginUserRequest.email.equals(email)) {
-                    System.out.println("Already logged in: " + loginUserRequest);
+                    System.out.println("Already logged in: " + email);
                 } else {
                     System.out.println("Already logged in: " + email + " but trying to login as " + loginUserRequest.email);
                 }
@@ -90,68 +91,62 @@ public class UserController {
 
             Optional<User> userOptional = userDao.getUserByEMail(loginUserRequest.email);
             if (userOptional.isEmpty()) {
-                LoginUserResponse response = new LoginUserResponse("error", "Benutzer existiert nicht.");
+                LoginUserResponse response = new LoginUserResponse("error", "User does not exist: " + loginUserRequest.email);
                 ctx.status(409).json(response);
+                System.out.println(response);
                 return;
             }
 
             User user = userOptional.get();
             if (!user.password.equals(loginUserRequest.password)) {
-                LoginUserResponse response = new LoginUserResponse("error", "Falsches Passwort.");
+                LoginUserResponse response = new LoginUserResponse("error", "Wrong password for user: " + loginUserRequest.email);
                 ctx.status(409).json(response);
+                System.out.println(response);
                 return;
             }
 
             ctx.sessionAttribute("userEmail", user.email);
             LoginUserResponse response = new LoginUserResponse("ok", null);
+            System.out.println(response);
             ctx.status(201).json(response);
 
         } catch (Exception e) {
             RegisterUserResponse response = new RegisterUserResponse("error", "Bad Request: " + e.getMessage() + "\n");
+            System.out.println(response);
             ctx.status(400).json(response);
         }
     };
 
     public static Handler logout = ctx -> {
         String email = ctx.sessionAttribute("userEmail");
+        LogoutUserResponse response;
         if (email == null) {
-            LoginUserResponse response = new LoginUserResponse("error", "Logout: No user logged in.");
-            ctx.status(409).json(response);
+            response = new LogoutUserResponse("ok", "Nothing to do, no user logged in");
+
         } else {
             ctx.req().getSession().invalidate();
-            LoginUserResponse response = new LoginUserResponse("ok", "Logout: User logout successful.");
-            ctx.status(200).json(response);
+            response = new LogoutUserResponse("ok", "User logout successful.");
         }
+        System.out.println(response.info);
+        ctx.status(200).json(response);
     };
 
     public static Handler shoppingBuy = ctx -> {
 
         String email = ctx.sessionAttribute("userEmail");
         if (email == null) {
-            System.out.println("Kein User eingeloggt, redirect auf Login");
+            System.out.println("No user logged in, redirect to login");
             ctx.redirect("login.html");
         } else {
             UserDao userDao = getUserDao();
             Optional<User> userOptional = userDao.getUserByEMail(email);
             if (userOptional.isEmpty()) {
-                System.out.println("User nicht gefunden, redirect auf Login");
+                System.out.println("User '" + email + "' not found, redirect to error page");
                 ctx.redirect("error.html");
             } else {
-                System.out.println("User gefunden, Kauf abschliessen: " + userOptional.get());
+                System.out.println("User found, finish shopping: " + userOptional.get());
                 // ..... TODO: Kaufvorgang für den gefunden User abschliessen
             }
         }
-
-//        String sessionId = ctx.res().getHeader("sessionId");
-//        System.out.println("sessionId: " + sessionId);
-//        if (sessionId == null) {
-//            // Fehlerbeandlung: Keine SessionId vorhanden, d.h. User ist angemeldet!!!
-//        }
-
-        // Im UserSessionDao die Session 'sessionId' finden und den User ermitteln'
-
-        // Fehlerbehandlung: User nicht gefunden
-
-        // Falls User eingeloggt: Kaufvorgang für den gefunden User abschliessen
     };
 }

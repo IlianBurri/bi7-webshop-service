@@ -30,7 +30,7 @@ class UserDaoImpl implements UserDao {
             String username = queryResult.getString("username");
             String password = queryResult.getString("password");
             User user = new User(username, email, password);
-            System.out.println("User aus DB gelesen: '" + email + "', '" + username + "', '" + password + "'");
+//            System.out.println("User aus DB gelesen: '" + email + "', '" + username + "', '" + password + "'");
             return Optional.of(user);
         }
         System.out.println("User nicht gefunden: '" + email + "'");
@@ -46,7 +46,7 @@ class UserDaoImpl implements UserDao {
             String email = queryResult.getString("email");
             String username = queryResult.getString("username");
             String password = queryResult.getString("password");
-            System.out.println("User aus DB gelesen: '" + email + "', '" + username + "', '" + password + "'");
+//            System.out.println("User aus DB gelesen: '" + email + "', '" + username + "', '" + password + "'");
             result.add(username);
         }
         return result;

@@ -15,4 +15,12 @@ public class LoginUserResponse {
         this.status = status;
         this.error = error;
     }
+
+    @Override
+    public String toString() {
+        return "LoginUserResponse{" +
+                "status='" + status + '\'' +
+                ", error='" + error + '\'' +
+                '}';
+    }
 }

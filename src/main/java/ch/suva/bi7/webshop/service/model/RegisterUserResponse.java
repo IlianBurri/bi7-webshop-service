@@ -15,4 +15,12 @@ public class RegisterUserResponse {
         this.status = status;
         this.error = error;
     }
+
+    @Override
+    public String toString() {
+        return "RegisterUserResponse{" +
+                "status='" + status + '\'' +
+                ", error='" + error + '\'' +
+                '}';
+    }
 }
