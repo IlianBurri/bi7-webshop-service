@@ -92,7 +92,7 @@ public class UserController {
 
             Optional<User> userOptional = userDao.getUserByEMail(loginUserRequest.email);
             if (userOptional.isEmpty()) {
-                LoginUserResponse response = new LoginUserResponse("error", "User does not exist: " + loginUserRequest.email);
+                LoginUserResponse response = new LoginUserResponse("error", "User does not exist: " + loginUserRequest.email, null);
                 ctx.status(409).json(response);
                 System.out.println(response);
                 return;
@@ -100,7 +100,7 @@ public class UserController {
 
             User user = userOptional.get();
             if (!user.password.equals(loginUserRequest.password)) {
-                LoginUserResponse response = new LoginUserResponse("error", "Wrong password for user: " + loginUserRequest.email);
+                LoginUserResponse response = new LoginUserResponse("error", "Wrong password for user: " + loginUserRequest.email, null);
                 ctx.status(409).json(response);
                 System.out.println(response);
                 return;
@@ -110,7 +110,7 @@ public class UserController {
 
             //ctx.header("sessionId", ctx.req().getSession().getId());
 
-            LoginUserResponse response = new LoginUserResponse("ok", null);
+            LoginUserResponse response = new LoginUserResponse("ok", null, user.username);
             System.out.println(response);
             ctx.status(201).json(response);
 
@@ -133,32 +133,6 @@ public class UserController {
         System.out.println(response.info);
         ctx.status(200).json(response);
     };
-
-    public static Handler getCurrentUser = ctx -> {
-        String email = ctx.sessionAttribute("userEmail");
-
-        if (email != null) {
-            ctx.status(200).json(new UserStatusResponse("ok", email));
-        } else {
-            ctx.status(401).json(new UserStatusResponse("error", null));
-        }
-    };
-
-    public static class UserStatusResponse {
-        public final String status;
-        public final String email;
-
-        public UserStatusResponse(
-                @JsonProperty("status") String status,
-                @JsonProperty("email") String email) {
-            if (status == null) {
-                throw new IllegalArgumentException("status must not be null");
-            }
-            this.status = status;
-            this.email = email;
-        }
-    }
-
 
     public static Handler shoppingBuy = ctx -> {
 

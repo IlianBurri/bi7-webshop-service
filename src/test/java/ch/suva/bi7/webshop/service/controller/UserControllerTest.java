@@ -33,31 +33,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserControllerTest {
 
     @Test
-    void testGetCurrentUser_Eingeloggt() throws Exception {
-        EinfacherContextMock ctxMock = new EinfacherContextMock(null);
-        ctxMock.sessionAttribute("userEmail", "peter@example.com");
-
-        UserController.getCurrentUser.handle(ctxMock);
-
-        assertEquals(200, ctxMock.gesetzterStatus);
-        UserController.UserStatusResponse res = (UserController.UserStatusResponse) ctxMock.gesendetesJson;
-        assertEquals("ok", res.status);
-        assertEquals("peter@example.com", res.email);
-    }
-
-    @Test
-    void testGetCurrentUser_NichtEingeloggt() throws Exception {
-        EinfacherContextMock ctxMock = new EinfacherContextMock(null);
-
-        UserController.getCurrentUser.handle(ctxMock);
-
-        assertEquals(401, ctxMock.gesetzterStatus);
-        UserController.UserStatusResponse res = (UserController.UserStatusResponse) ctxMock.gesendetesJson;
-        assertEquals("error", res.status);
-        assertNull(res.email);
-    }
-
-    @Test
     void testRegister_Erfolgreich() throws Exception {
 
         RegisterUserRequest request = new RegisterUserRequest("Peter Parker", "spidey@dailybugle.com", "webslinger");
@@ -97,7 +72,7 @@ class UserControllerTest {
 
         RegisterUserResponse res = (RegisterUserResponse) ctxMock.gesendetesJson;
         assertEquals("error", res.status);
-        assertEquals("Benutzer existiert bereits.", res.error);
+        assertEquals("User already exists", res.error);
     }
 }
 
