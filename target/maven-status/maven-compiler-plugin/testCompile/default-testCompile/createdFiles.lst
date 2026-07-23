@@ -1,0 +1,11 @@
+ch/suva/bi7/webshop/service/mock/ResultSetMock.class
+ch/suva/bi7/webshop/service/model/RegisterUserRequestTest.class
+ch/suva/bi7/webshop/service/model/UserTest.class
+ch/suva/bi7/webshop/service/controller/UserDaoImplTest.class
+ch/suva/bi7/webshop/service/controller/UserDaoIntegrationTest.class
+ch/suva/bi7/webshop/service/model/RegisterUserResponseTest.class
+ch/suva/bi7/webshop/service/controller/EinfachesUserDaoMock.class
+ch/suva/bi7/webshop/service/controller/EinfacherContextMock.class
+ch/suva/bi7/webshop/service/controller/UserDaoImplTest$1.class
+ch/suva/bi7/webshop/service/db/DBConnectionImplTest.class
+ch/suva/bi7/webshop/service/controller/UserControllerTest.class

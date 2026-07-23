@@ -3,6 +3,7 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.model.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.javalin.http.Handler;
 
 import java.util.List;
@@ -14,7 +15,7 @@ public class UserController {
 
     private static UserDao getUserDao() throws Exception {
         if (userDao == null) {
-            DBConnection dbConnection = new DBConnectionImpl("localhost", "webshopdb", "webshopuser","webshoppassword");
+            DBConnection dbConnection = new DBConnectionImpl("localhost", "webshopdb", "webshopuser", "webshoppassword");
             userDao = new UserDaoImpl(dbConnection);
         }
         return userDao;
@@ -106,6 +107,9 @@ public class UserController {
             }
 
             ctx.sessionAttribute("userEmail", user.email);
+
+            //ctx.header("sessionId", ctx.req().getSession().getId());
+
             LoginUserResponse response = new LoginUserResponse("ok", null);
             System.out.println(response);
             ctx.status(201).json(response);
@@ -116,7 +120,6 @@ public class UserController {
             ctx.status(400).json(response);
         }
     };
-
     public static Handler logout = ctx -> {
         String email = ctx.sessionAttribute("userEmail");
         LogoutUserResponse response;
@@ -130,6 +133,32 @@ public class UserController {
         System.out.println(response.info);
         ctx.status(200).json(response);
     };
+
+    public static Handler getCurrentUser = ctx -> {
+        String email = ctx.sessionAttribute("userEmail");
+
+        if (email != null) {
+            ctx.status(200).json(new UserStatusResponse("ok", email));
+        } else {
+            ctx.status(401).json(new UserStatusResponse("error", null));
+        }
+    };
+
+    public static class UserStatusResponse {
+        public final String status;
+        public final String email;
+
+        public UserStatusResponse(
+                @JsonProperty("status") String status,
+                @JsonProperty("email") String email) {
+            if (status == null) {
+                throw new IllegalArgumentException("status must not be null");
+            }
+            this.status = status;
+            this.email = email;
+        }
+    }
+
 
     public static Handler shoppingBuy = ctx -> {
 

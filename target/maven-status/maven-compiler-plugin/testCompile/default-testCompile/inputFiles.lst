@@ -1,0 +1,8 @@
+/home/ilian/bi7-webshop-service/src/test/java/ch/suva/bi7/webshop/service/controller/UserControllerTest.java
+/home/ilian/bi7-webshop-service/src/test/java/ch/suva/bi7/webshop/service/controller/UserDaoImplTest.java
+/home/ilian/bi7-webshop-service/src/test/java/ch/suva/bi7/webshop/service/controller/UserDaoIntegrationTest.java
+/home/ilian/bi7-webshop-service/src/test/java/ch/suva/bi7/webshop/service/db/DBConnectionImplTest.java
+/home/ilian/bi7-webshop-service/src/test/java/ch/suva/bi7/webshop/service/mock/ResultSetMock.java
+/home/ilian/bi7-webshop-service/src/test/java/ch/suva/bi7/webshop/service/model/RegisterUserRequestTest.java
+/home/ilian/bi7-webshop-service/src/test/java/ch/suva/bi7/webshop/service/model/RegisterUserResponseTest.java
+/home/ilian/bi7-webshop-service/src/test/java/ch/suva/bi7/webshop/service/model/UserTest.java

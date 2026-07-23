@@ -19,7 +19,9 @@ import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -29,6 +31,31 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserControllerTest {
+
+    @Test
+    void testGetCurrentUser_Eingeloggt() throws Exception {
+        EinfacherContextMock ctxMock = new EinfacherContextMock(null);
+        ctxMock.sessionAttribute("userEmail", "peter@example.com");
+
+        UserController.getCurrentUser.handle(ctxMock);
+
+        assertEquals(200, ctxMock.gesetzterStatus);
+        UserController.UserStatusResponse res = (UserController.UserStatusResponse) ctxMock.gesendetesJson;
+        assertEquals("ok", res.status);
+        assertEquals("peter@example.com", res.email);
+    }
+
+    @Test
+    void testGetCurrentUser_NichtEingeloggt() throws Exception {
+        EinfacherContextMock ctxMock = new EinfacherContextMock(null);
+
+        UserController.getCurrentUser.handle(ctxMock);
+
+        assertEquals(401, ctxMock.gesetzterStatus);
+        UserController.UserStatusResponse res = (UserController.UserStatusResponse) ctxMock.gesendetesJson;
+        assertEquals("error", res.status);
+        assertNull(res.email);
+    }
 
     @Test
     void testRegister_Erfolgreich() throws Exception {
@@ -102,6 +129,7 @@ class EinfacherContextMock implements io.javalin.http.Context {
     public int gesetzterStatus = 0;
     public Object gesendetesJson = null;
     private Object vorgegebenerBody;
+    private final Map<String, Object> sessionAttrs = new HashMap<>();
 
     public EinfacherContextMock(Object vorgegebenerBody) {
         this.vorgegebenerBody = vorgegebenerBody;
@@ -110,6 +138,22 @@ class EinfacherContextMock implements io.javalin.http.Context {
     @Override
     public <T> T bodyAsClass(Class<T> clazz) {
         return clazz.cast(vorgegebenerBody);
+    }
+
+    @Override
+    public <T> T sessionAttribute(@NotNull String key) {
+        @SuppressWarnings("unchecked")
+        T value = (T) sessionAttrs.get(key);
+        return value;
+    }
+
+    @Override
+    public void sessionAttribute(@NotNull String key, @Nullable Object value) {
+        if (value == null) {
+            sessionAttrs.remove(key);
+        } else {
+            sessionAttrs.put(key, value);
+        }
     }
 
     @Override
@@ -135,7 +179,7 @@ class EinfacherContextMock implements io.javalin.http.Context {
     }
 
     @Override
-    public java.util.Map<String, String> pathParamMap() {
+    public Map<String, String> pathParamMap() {
         return null;
     }
 
