@@ -1,6 +1,6 @@
 #  MariaDB-Setup für den Webshop (Docker)
 
-Diese Anleitung beschreibt Schritt für Schritt, wie du eine MariaDB-Datenbank in Docker aufsetzt, einen Datenbank-User anlegst und die Tabellen für den Webshop (`user` und `artikel`) erstellst und befüllst.
+Diese Anleitung beschreibt Schritt für Schritt, wie du eine MariaDB-Datenbank in Docker aufsetzt, einen Datenbank-User und Artikel anlegst und die Tabellen für den Webshop (`user` und `artikel`) erstellst und befüllst.
 
 ---
 
