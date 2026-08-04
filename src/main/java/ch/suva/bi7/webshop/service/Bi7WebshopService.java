@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service;
 
+import ch.suva.bi7.webshop.service.controller.ArtikelController;
 import ch.suva.bi7.webshop.service.controller.UserController;
 import io.javalin.Javalin;
 
@@ -20,6 +21,7 @@ public class Bi7WebshopService {
             config.routes.get("/users/{email}", UserController.fetchByEMail);
             config.routes.post("/users/register", UserController.register);
             config.routes.post("/shopping/buy", UserController.shoppingBuy);
+            config.routes.get("/artikel", ArtikelController.fetchAllArtikel);
         }).start(7070);
     }
 }
