@@ -12,7 +12,7 @@ Diese Anleitung beschreibt Schritt für Schritt, wie du eine MariaDB-Datenbank i
 
 ---
 
-## 1⃣ MariaDB-Container starten
+## 1 MariaDB-Container starten
 
 ```bash
 sudo docker run --name mariadb-container \
@@ -43,7 +43,7 @@ sudo docker ps
 
 ---
 
-## 2⃣ MySQL/MariaDB-Client installieren (falls nötig)
+## 2 MySQL/MariaDB-Client installieren (falls nötig)
 
 ```bash
 sudo apt install mysql-client
@@ -63,7 +63,7 @@ mysql -h 127.0.0.1 -P 3306 -u root -pwebshopdb-root-pw
 
 ---
 
-## 4⃣ Datenbank und Webshop-User anlegen
+## 4 Datenbank und Webshop-User anlegen
 
 Im MySQL-Client (als `root`) folgende Befehle ausführen:
 
@@ -83,7 +83,7 @@ Das legt an:
 
 ---
 
-## 5⃣ Mit dem neuen User verbinden
+## 5 Mit dem neuen User verbinden
 
 Ab jetzt mit `webshopuser` statt `root` arbeiten:
 
@@ -93,7 +93,7 @@ mysql -h 127.0.0.1 -P 3306 -u webshopuser -pwebshoppassword webshopdb
 
 ---
 
-## 6⃣ Tabelle `user` anlegen
+## 6 Tabelle `user` anlegen
 
 ```sql
 CREATE TABLE user (
@@ -125,7 +125,7 @@ INSERT INTO user VALUES
 
 ---
 
-## 7⃣ Tabelle `artikel` anlegen
+## 7 Tabelle `artikel` anlegen
 
 ```sql
 CREATE TABLE IF NOT EXISTS artikel (
@@ -161,7 +161,7 @@ INSERT INTO artikel (artikelId, name, preis, bild) VALUES
 
 
 
-## 8⃣ Ergebnis prüfen
+## 8 Ergebnis prüfen
 
 ```sql
 SELECT * FROM user;
