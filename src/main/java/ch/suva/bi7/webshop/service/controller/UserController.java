@@ -78,17 +78,28 @@ public class UserController {
             System.out.println("Login: " + loginUserRequest.email);
 
             String email = ctx.sessionAttribute("userEmail");
+            UserDao userDao = getUserDao();
+
             if (email != null) {
                 if (loginUserRequest.email.equals(email)) {
-                    System.out.println("Already logged in: " + email);
-                } else {
-                    System.out.println("Already logged in: " + email + " but trying to login as " + loginUserRequest.email);
-                }
-            } else {
-                System.out.println("Not logged in: " + email);
-            }
+                    Optional<User> userOptional = userDao.getUserByEMail(email);
+                    String realUsername = userOptional.map(u -> u.username).orElse(email);
 
-            UserDao userDao = getUserDao();
+                    LoginUserResponse response = new LoginUserResponse(
+                            "info", "Du bist bereits als " + realUsername + " eingeloggt.", realUsername
+                    );
+                    System.out.println(response);
+                    ctx.status(200).json(response);
+                    return;
+                } else {
+                    LoginUserResponse response = new LoginUserResponse(
+                            "error", "Es ist bereits ein anderer User (" + email + ") in dieser Session eingeloggt. Bitte zuerst ausloggen.", null
+                    );
+                    System.out.println(response);
+                    ctx.status(409).json(response);
+                    return;
+                }
+            }
 
             Optional<User> userOptional = userDao.getUserByEMail(loginUserRequest.email);
             if (userOptional.isEmpty()) {
@@ -108,8 +119,6 @@ public class UserController {
 
             ctx.sessionAttribute("userEmail", user.email);
 
-            //ctx.header("sessionId", ctx.req().getSession().getId());
-
             LoginUserResponse response = new LoginUserResponse("ok", null, user.username);
             System.out.println(response);
             ctx.status(201).json(response);
@@ -120,6 +129,7 @@ public class UserController {
             ctx.status(400).json(response);
         }
     };
+
     public static Handler logout = ctx -> {
         String email = ctx.sessionAttribute("userEmail");
         LogoutUserResponse response;
