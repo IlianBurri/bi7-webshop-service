@@ -13,7 +13,7 @@ public class Artikel {
             @JsonProperty("artikelId") Integer artikelId,
             @JsonProperty("name") String name,
             @JsonProperty("preis") BigDecimal preis,
-            @JsonProperty("bild") String bild) { // <-- Neu im Konstruktor
+            @JsonProperty("bild") String bild) {
         this.artikelId = artikelId;
         this.name = name;
         this.preis = preis;
