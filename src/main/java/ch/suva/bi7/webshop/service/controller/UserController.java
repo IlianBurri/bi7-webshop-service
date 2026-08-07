@@ -3,7 +3,6 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.model.*;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.javalin.http.Handler;
 
 import java.util.List;
