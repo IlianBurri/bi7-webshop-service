@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class LoginUserRequestTest {
-
     @Test
     void erzeugtObjektBeiGültigenDaten() {
         LoginUserRequest request = new LoginUserRequest("test@example.com", "secret123");

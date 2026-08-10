@@ -2,6 +2,7 @@ package ch.suva.bi7.webshop.service;
 
 import ch.suva.bi7.webshop.service.controller.ArtikelController;
 import ch.suva.bi7.webshop.service.controller.UserController;
+import ch.suva.bi7.webshop.service.controller.WarenkorbController;
 import io.javalin.Javalin;
 
 public class Bi7WebshopService {
@@ -9,8 +10,7 @@ public class Bi7WebshopService {
         var app = Javalin.create(config -> {
             config.bundledPlugins.enableCors(cors -> {
                 cors.addRule(it -> {
-                    it.allowHost("http://localhost:8080");
-                    it.allowCredentials = true;
+                    it.anyHost();
                     it.exposeHeader("sessionId");
                 });
             });
@@ -22,6 +22,11 @@ public class Bi7WebshopService {
             config.routes.post("/users/register", UserController.register);
             config.routes.post("/shopping/buy", UserController.shoppingBuy);
             config.routes.get("/artikel", ArtikelController.fetchAllArtikel);
+
+            config.routes.get("/api/warenkorb/{email}", WarenkorbController.getWarenkorb);
+            config.routes.post("/api/warenkorb/add", WarenkorbController.addToWarenkorb);
+            config.routes.delete("/api/warenkorb/item/{id}", WarenkorbController.deleteWarenkorbItem);
+            config.routes.put("/api/warenkorb/item/{id}", WarenkorbController.updateMenge);
         }).start(7070);
     }
 }

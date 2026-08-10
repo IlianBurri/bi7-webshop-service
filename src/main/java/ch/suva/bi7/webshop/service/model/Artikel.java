@@ -19,11 +19,9 @@ public class Artikel {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Name darf nicht null/leer sein");
         }
-        // Validierung, wenn Preis 0 nicht erlaubt ist
         if (preis == null || preis.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Preis darf nicht null/negativ sein");
         }
-    //     Validierung, wenn Preis 0 erlaubt ist
         if (preis == null || preis.compareTo(BigDecimal.ZERO) < 0) {
           throw new IllegalArgumentException("Preis darf nicht negativ sein");
        }

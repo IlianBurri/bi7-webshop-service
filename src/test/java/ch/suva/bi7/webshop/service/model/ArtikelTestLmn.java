@@ -18,7 +18,6 @@ class ArtikelTestLmn {
 
     @Test
     void erstellenWirftIllegalArgumentExceptionWennNameNullOderLeerIst() {
-        // Beispiel mit assertAll
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class,
                         () -> new Artikel(1, null, new BigDecimal("10.00"), "bild.jpg")),

@@ -143,6 +143,11 @@ public class ResultSetMock implements ResultSet {
 
     @Override
     public int getInt(String s) throws SQLException {
+        Map<String, Object> map = result.get(index);
+        if (map != null && map.get(s) != null) {
+            // Stringify wie getString, damit auch "5" (String) statt nur Integer funktioniert
+            return new BigDecimal(map.get(s).toString()).intValue();
+        }
         return 0;
     }
 
@@ -163,7 +168,7 @@ public class ResultSetMock implements ResultSet {
 
     @Override
     public BigDecimal getBigDecimal(String s, int i) throws SQLException {
-        return null;
+        return getBigDecimal(s);
     }
 
     @Override
@@ -253,6 +258,10 @@ public class ResultSetMock implements ResultSet {
 
     @Override
     public BigDecimal getBigDecimal(String s) throws SQLException {
+        Map<String, Object> map = result.get(index);
+        if (map != null && map.get(s) != null) {
+            return new BigDecimal(map.get(s).toString());
+        }
         return null;
     }
 
