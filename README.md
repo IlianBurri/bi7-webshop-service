@@ -206,3 +206,102 @@ sudo systemctl status docker
 - [ ] Tabelle `user` erstellt und mit Testdaten befüllt
 - [ ] Tabelle `artikel` erstellt und mit 10 Produkten befüllt
 - [ ] Verbindung als `webshopuser` funktioniert
+
+---
+
+# Webshop starten und aufrufen (Backend + UI)
+
+Der Webshop besteht aus **zwei getrennten Projekten/Servern**. Beide müssen laufen, damit die Seite funktioniert:
+
+| Server | Projekt | Port | Aufgabe |
+|---|---|---|---|
+| **Backend-Service** | `bi7-webshop-service` | `7070` | REST-API (Login, Artikel, Warenkorb, Adressen) – Daten aus **MariaDB** |
+| **UI-Webserver** | `bi7-webshop-ui` | `8080` | Liefert die HTML-Seiten aus und bedient eigene API-Routen – eigene **H2-Datenbank** |
+
+---
+
+## 1 Backend starten (bi7-webshop-service)
+
+**Voraussetzung:** Die MariaDB läuft (siehe Setup oben, Port `3306`, Datenbank `webshopdb`).
+
+```bash
+cd /home/ilian/bi7-webshop-service
+mvn package                 # baut das ausführbare JAR
+java -jar target/bi7-webshop-service-1.0-SNAPSHOT.jar
+```
+
+**Funktionstest:**
+
+```bash
+curl http://localhost:7070/            # erwartet: "Hello World"
+curl http://localhost:7070/artikel     # erwartet: JSON-Liste der Artikel
+curl http://localhost:7070/users       # erwartet: JSON-Liste der Benutzernamen
+```
+
+---
+
+## 2 UI-Webserver starten (bi7-webshop-ui)
+
+Am einfachsten startest du ihn wie bisher **in IntelliJ** (Run-Konfiguration mit Main-Klasse `ch.suva.bi7.webshop.BI7WebshopWebserver`).
+
+>  **Wichtig:** Starte den Server immer aus dem Verzeichnis `bi7-webshop-ui` heraus. Die H2-Datenbank wird relativ zum Arbeitsverzeichnis gesucht: `./data/webshop-db`. Startest du woanders, findet er die Datenbank nicht.
+
+**Funktionstest:**
+
+```bash
+curl http://localhost:8080/HTML/landingpage.html   # erwartet: HTTP 200, HTML-Code
+curl http://localhost:8080/api/artikel             # erwartet: HTTP 200, JSON-Liste
+```
+
+---
+
+## 3 Seite im Browser aufrufen
+
+**Die Startseite ist NICHT `http://localhost:8080/`, sondern:**
+
+>  **http://localhost:8080/HTML/landingpage.html**
+
+| URL | Ergebnis |
+|---|---|
+| `http://localhost:8080/HTML/landingpage.html` | ✅ Startseite mit Artikeln |
+| `http://localhost:8080/HTML/loginForm.html` | ✅ Login |
+| `http://localhost:8080/HTML/registerForm.html` | ✅ Registrierung |
+| `http://localhost:8080/HTML/warenkorb.html` | ✅ Warenkorb |
+| `http://localhost:8080/HTML/checkOut.html` | ✅ Checkout |
+| `http://localhost:8080/` | ❌ **404** – es gibt kein `index.html` im Webapp-Root |
+
+---
+
+## 4 Problem: `http://localhost:8080/` liefert 404
+
+**Ursache:** Im UI-Projekt (`src/main/webapp/`) wurde die Datei `index.html` gelöscht (Commit `8a7dee8`). Der Server liefert daher an der Wurzel nichts aus.
+
+**Lösung:** Eine Datei `src/main/webapp/index.html` anlegen, die auf die Landingpage weiterleitet:
+
+```html
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0; url=HTML/landingpage.html">
+    <title>Webshop</title>
+</head>
+<body>
+    <p>Weiterleitung zu <a href="HTML/landingpage.html">landingpage.html</a>…</p>
+</body>
+</html>
+```
+
+Danach greift `http://localhost:8080/` automatisch. Ein Neustart des UI-Servers ist für die HTML-Datei **nicht** nötig (statische Dateien werden live aus dem Verzeichnis gelesen).
+
+---
+
+## 5 Troubleshooting / Kurz-Checkliste
+
+- [ ] Beide Server laufen: `ss -tlnp | grep -E ':7070|:8080'`
+- [ ] `curl http://localhost:7070/` liefert `Hello World`
+- [ ] `curl http://localhost:8080/HTML/landingpage.html` liefert HTTP 200
+- [ ] MariaDB (3306) erreichbar – sonst antwortet das Backend mit 500
+- [ ] H2-Datei vorhanden: `ls /home/ilian/bi7-webshop-ui/data/webshop-db.mv.db`
+- [ ] Internet nötig: Bootstrap-CSS und Platzhalterbilder kommen von externen CDNs (`cdn.jsdelivr.net`, `via.placeholder.com`) – ohne Internet sieht die Seite ungestylt aus
+- [ ] Nach **Java-Code-Änderungen** den jeweiligen Server **neu bauen und neu starten** (HTML/CSS/JS werden live übernommen, Java-Klassen nicht)

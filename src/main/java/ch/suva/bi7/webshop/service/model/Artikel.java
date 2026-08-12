@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 
 public class Artikel {
+
+    private static final BigDecimal MINDESTPREIS = new BigDecimal("0.01");
+
     public final Integer artikelId;
     public final String name;
     public final BigDecimal preis;
@@ -14,20 +17,23 @@ public class Artikel {
             @JsonProperty("name") String name,
             @JsonProperty("preis") BigDecimal preis,
             @JsonProperty("bild") String bild) {
-        // TODO: artikelId == null testen (oder bewusst dokumentieren, dass erlaubt)
-
+        if (artikelId == null) {
+            throw new IllegalArgumentException("artikelId darf nicht null sein");
+        }
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Name darf nicht null/leer sein");
         }
-        if (preis == null || preis.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Preis darf nicht null/negativ sein");
+        if (preis == null || preis.compareTo(MINDESTPREIS) < 0) {
+            throw new IllegalArgumentException("Preis darf nicht null sein und muss mindestens 0.01 betragen");
         }
-        if (preis == null || preis.compareTo(BigDecimal.ZERO) < 0) {
-          throw new IllegalArgumentException("Preis darf nicht negativ sein");
-       }
+        // Bild ist optional (null = kein Bild), aber falls gesetzt darf es nicht leer sein
+        if (bild != null && bild.trim().isEmpty()) {
+            throw new IllegalArgumentException("Bild darf nicht leer sein (weglassen, wenn kein Bild vorhanden)");
+        }
+
         this.artikelId = artikelId;
-        this.name = name;
+        this.name = name.trim();
         this.preis = preis;
-        this.bild = bild;
+        this.bild = bild == null ? null : bild.trim();
     }
 }

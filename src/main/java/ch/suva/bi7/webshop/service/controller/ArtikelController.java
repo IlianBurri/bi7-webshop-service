@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.model.Artikel;
@@ -17,7 +18,7 @@ public class ArtikelController {
 
     private static ArtikelDao getArtikelDao() throws Exception {
         if (artikelDao == null) {
-            DBConnection dbConnection = new DBConnectionImpl("localhost", "webshopdb", "webshopuser", "webshoppassword");
+            DBConnection dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
             artikelDao = new ArtikelDaoImpl(dbConnection);
         }
         return artikelDao;

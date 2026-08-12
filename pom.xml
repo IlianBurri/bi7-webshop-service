@@ -100,7 +100,7 @@
             <configuration>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>ch.suva.bi7.webshop.App</mainClass>
+                  <mainClass>ch.suva.bi7.webshop.service.Bi7WebshopService</mainClass>
                 </transformer>
               </transformers>
             </configuration>

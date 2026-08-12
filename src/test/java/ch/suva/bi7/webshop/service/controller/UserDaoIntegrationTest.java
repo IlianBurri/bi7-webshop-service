@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.model.User;
@@ -21,7 +22,7 @@ class UserDaoIntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         try {
-            dbConnection = new DBConnectionImpl("localhost", "webshopdb", "webshopuser","webshoppassword");
+            dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
             userDao = new UserDaoImpl(dbConnection);
         } catch (Exception e) {
             assumeTrue(false, "MariaDB not available: " + e.getMessage());

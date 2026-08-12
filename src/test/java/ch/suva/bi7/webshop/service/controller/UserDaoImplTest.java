@@ -5,7 +5,8 @@ import ch.suva.bi7.webshop.service.mock.ResultSetMock;
 import ch.suva.bi7.webshop.service.model.User;
 import org.junit.jupiter.api.Test;
 
-import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,13 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class UserDaoImplTest {
 
     @Test
-    public void testGetUserByEMail() throws SQLException {
+    void getUserByEMailLiefertBenutzer() throws SQLException {
         // Arrange
-        Map<String, Object> map1 = Map.of(
-                "username", "testuser",
-                "password", "test",
-                "email", "test@somewhere.com");
-        ResultSet resultSet = createResultSetMock(List.of(map1));
+        ResultSet resultSet = createResultSetMock(List.of(user("testuser", "test", "test@somewhere.com")));
         DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
         UserDaoImpl testee = createTestee(dbConnection);
 
@@ -36,37 +33,30 @@ class UserDaoImplTest {
     }
 
     @Test
-    public void testGetAllUsernames() throws SQLException {
-        // TODO Schreibe ein Test mit 3 Namen als Ergebnis
-        Map<String, Object> map1 = Map.of(
-                "username", "testuser",
-                "password", "test",
-                "email", "test@somewhere.com");
-
-        Map<String, Object> map2 = Map.of(
-                "username", "testuser2",
-                "password", "test2",
-                "email", "test2@somewhere.com");
-
-        Map<String, Object> map3 = Map.of(
-                "username", "testuser3",
-                "password", "test3",
-                "email", "test3@somewhere.com");
-
-        ResultSet resultSet = createResultSetMock(List.of(map1, map2, map3));
+    void getAllUsernamesLiefertAlleBenutzernamen() throws SQLException {
+        ResultSet resultSet = createResultSetMock(List.of(
+                user("testuser", "test", "test@somewhere.com"),
+                user("testuser2", "test2", "test2@somewhere.com"),
+                user("testuser3", "test3", "test3@somewhere.com")));
         DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
 
         UserDaoImpl testee = createTestee(dbConnection);
 
         List<String> resultUsernames = testee.getAllUsernames();
 
-        assertEquals(3, resultUsernames.size(), "Es sollten genau 3 Benutzernamen zurück gegeben worden sein");
-        assertTrue(resultUsernames.contains("testuser"));
-        assertTrue(resultUsernames.contains("testuser2"));
-        assertTrue(resultUsernames.contains("testuser3"));
-
+        // Prüft Anzahl, Inhalt UND Reihenfolge in einem Schritt
+        assertEquals(
+                List.of("testuser", "testuser2", "testuser3"),
+                resultUsernames,
+                "Es sollten genau 3 Benutzernamen in korrekter Reihenfolge zurück gegeben werden");
     }
 
+    private Map<String, Object> user(String username, String password, String email) {
+        return Map.of(
+                "username", username,
+                "password", password,
+                "email", email);
+    }
 
     private UserDaoImpl createTestee(DBConnection dbConnection) {
         return new UserDaoImpl(dbConnection);

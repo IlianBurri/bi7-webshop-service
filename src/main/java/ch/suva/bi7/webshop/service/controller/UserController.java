@@ -1,20 +1,25 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.model.*;
 import io.javalin.http.Handler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
 
 public class UserController {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+
     private static UserDao userDao = null;
 
     private static UserDao getUserDao() throws Exception {
         if (userDao == null) {
-            DBConnection dbConnection = new DBConnectionImpl("localhost", "webshopdb", "webshopuser", "webshoppassword");
+            DBConnection dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
             userDao = new UserDaoImpl(dbConnection);
         }
         return userDao;
@@ -43,13 +48,13 @@ public class UserController {
     public static Handler register = ctx -> {
         try {
             RegisterUserRequest registerUserRequest = ctx.bodyAsClass(RegisterUserRequest.class);
-            System.out.println("Register: " + registerUserRequest);
+            logger.info("Register: username={}, email={}", registerUserRequest.username, registerUserRequest.email);
 
             UserDao dao = getUserDao();
 
             if (dao.getUserByEMail(registerUserRequest.email).isPresent()) {
                 RegisterUserResponse response = new RegisterUserResponse("error", "User already exists");
-                System.out.println(response);
+                logger.info("Register abgelehnt: {}", response);
                 ctx.status(409).json(response);
                 return;
             }
@@ -62,11 +67,11 @@ public class UserController {
             dao.addUser(newUser);
 
             RegisterUserResponse response = new RegisterUserResponse("ok", null);
-            System.out.println(response);
+            logger.info("Register erfolgreich: {}", response);
             ctx.status(201).json(response);
         } catch (Exception e) {
             RegisterUserResponse response = new RegisterUserResponse("error", "Bad Request: " + e.getMessage() + "\n");
-            System.out.println(response);
+            logger.error("Register fehlgeschlagen: {}", e.getMessage(), e);
             ctx.status(400).json(response);
         }
     };
@@ -74,7 +79,7 @@ public class UserController {
     public static Handler login = ctx -> {
         try {
             LoginUserRequest loginUserRequest = ctx.bodyAsClass(LoginUserRequest.class);
-            System.out.println("Login: " + loginUserRequest.email);
+            logger.info("Login: {}", loginUserRequest.email);
 
             String email = ctx.sessionAttribute("userEmail");
             UserDao userDao = getUserDao();
@@ -87,14 +92,14 @@ public class UserController {
                     LoginUserResponse response = new LoginUserResponse(
                             "info", "Du bist bereits als " + realUsername + " eingeloggt.", realUsername
                     );
-                    System.out.println(response);
+                    logger.info("Bereits eingeloggt: {}", response);
                     ctx.status(200).json(response);
                     return;
                 } else {
                     LoginUserResponse response = new LoginUserResponse(
                             "error", "Es ist bereits ein anderer User (" + email + ") in dieser Session eingeloggt. Bitte zuerst ausloggen.", null
                     );
-                    System.out.println(response);
+                    logger.info("Login-Konflikt: {}", response);
                     ctx.status(409).json(response);
                     return;
                 }
@@ -103,28 +108,28 @@ public class UserController {
             Optional<User> userOptional = userDao.getUserByEMail(loginUserRequest.email);
             if (userOptional.isEmpty()) {
                 LoginUserResponse response = new LoginUserResponse("error", "User does not exist: " + loginUserRequest.email, null);
+                logger.info("Login abgelehnt: {}", response);
                 ctx.status(409).json(response);
-                System.out.println(response);
                 return;
             }
 
             User user = userOptional.get();
             if (!user.password.equals(loginUserRequest.password)) {
                 LoginUserResponse response = new LoginUserResponse("error", "Wrong password for user: " + loginUserRequest.email, null);
+                logger.info("Login abgelehnt (falsches Passwort): {}", response);
                 ctx.status(409).json(response);
-                System.out.println(response);
                 return;
             }
 
             ctx.sessionAttribute("userEmail", user.email);
 
             LoginUserResponse response = new LoginUserResponse("ok", null, user.username);
-            System.out.println(response);
+            logger.info("Login erfolgreich: {}", response);
             ctx.status(201).json(response);
 
         } catch (Exception e) {
             RegisterUserResponse response = new RegisterUserResponse("error", "Bad Request: " + e.getMessage() + "\n");
-            System.out.println(response);
+            logger.error("Login fehlgeschlagen: {}", e.getMessage(), e);
             ctx.status(400).json(response);
         }
     };
@@ -139,7 +144,7 @@ public class UserController {
             ctx.req().getSession().invalidate();
             response = new LogoutUserResponse("ok", "User logout successful.");
         }
-        System.out.println(response.info);
+        logger.info("Logout: {}", response.info);
         ctx.status(200).json(response);
     };
 
@@ -147,16 +152,16 @@ public class UserController {
 
         String email = ctx.sessionAttribute("userEmail");
         if (email == null) {
-            System.out.println("No user logged in, redirect to login");
+            logger.info("No user logged in, redirect to login");
             ctx.redirect("login.html");
         } else {
             UserDao userDao = getUserDao();
             Optional<User> userOptional = userDao.getUserByEMail(email);
             if (userOptional.isEmpty()) {
-                System.out.println("User '" + email + "' not found, redirect to error page");
+                logger.info("User '{}' not found, redirect to error page", email);
                 ctx.redirect("error.html");
             } else {
-                System.out.println("User found, finish shopping: " + userOptional.get());
+                logger.info("User found, finish shopping: {}", userOptional.get());
                 // ..... TODO: Kaufvorgang für den gefunden User abschliessen
             }
         }

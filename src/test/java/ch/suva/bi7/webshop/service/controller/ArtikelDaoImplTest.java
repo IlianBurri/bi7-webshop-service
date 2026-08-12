@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.model.Artikel;
@@ -17,10 +18,10 @@ class ArtikelDaoImplTest {
     private ArtikelDao getDao() throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
 
         DBConnection dbConnection = new DBConnectionImpl(
-                "localhost",
-                "webshopdb",
-                "webshopuser",
-                "webshoppassword"
+                DBConfig.getHost(),
+                DBConfig.getSchema(),
+                DBConfig.getUser(),
+                DBConfig.getPassword()
         );
 
         return new ArtikelDaoImpl(dbConnection);
@@ -28,7 +29,7 @@ class ArtikelDaoImplTest {
 
 
     @Test
-    void tf02_einArtikelKannGeladenWerden() throws Exception {
+    void einArtikelKannGeladenWerden() throws Exception {
 
         ArtikelDao dao = getDao();
 
@@ -45,7 +46,7 @@ class ArtikelDaoImplTest {
 
 
     @Test
-    void tf03_mehrereArtikelWerdenGeladen() throws Exception {
+    void mehrereArtikelWerdenGeladen() throws Exception {
 
         ArtikelDao dao = getDao();
 
@@ -56,7 +57,7 @@ class ArtikelDaoImplTest {
 
 
     @Test
-    void tf04_alleArtikelHabenGueltigeDaten() throws Exception {
+    void alleArtikelHabenGueltigeDaten() throws Exception {
 
         ArtikelDao dao = getDao();
 

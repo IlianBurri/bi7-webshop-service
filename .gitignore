@@ -1,1 +1,9 @@
 /target/
+/dependency-reduced-pom.xml
+
+# Lokale Doku-Dateien (nicht für das Repo)
+FRONTEND-ANLEITUNG.txt
+REVIEW-ANTWORTEN.txt
+
+# Lokaler Tool-State (Freebuff-Datenbank)
+.freebuff/

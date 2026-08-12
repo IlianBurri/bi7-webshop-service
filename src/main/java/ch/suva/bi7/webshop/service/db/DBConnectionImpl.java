@@ -1,8 +1,13 @@
 package ch.suva.bi7.webshop.service.db;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.*;
 
 public class DBConnectionImpl implements DBConnection {
+
+    private static final Logger logger = LoggerFactory.getLogger(DBConnectionImpl.class);
 
     private final Connection con;
 
@@ -12,7 +17,7 @@ public class DBConnectionImpl implements DBConnection {
 
         con = DriverManager.getConnection("jdbc:mariadb://" + host + "/" + schema + "?" +
                 "user=" + user + "&password=" + password + "&useSSL=false");
-        System.out.println("DB-Connection: " + con);
+        logger.info("DB-Connection hergestellt: {}", con);
     }
 
     @Override
@@ -35,7 +40,9 @@ public class DBConnectionImpl implements DBConnection {
         if (con != null) {
             try {
                 con.close();
-            } catch (SQLException e) {}
+            } catch (SQLException e) {
+                logger.warn("Fehler beim Schliessen der DB-Connection", e);
+            }
         }
     }
 }

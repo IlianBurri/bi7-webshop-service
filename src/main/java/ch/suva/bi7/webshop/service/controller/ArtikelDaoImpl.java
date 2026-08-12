@@ -13,6 +13,9 @@ public class ArtikelDaoImpl implements ArtikelDao {
     private final DBConnection dbConnection;
 
     public ArtikelDaoImpl(DBConnection dbConnection) {
+        if (dbConnection == null) {
+            throw new IllegalArgumentException("dbConnection must not be null");
+        }
         this.dbConnection = dbConnection;
     }
 

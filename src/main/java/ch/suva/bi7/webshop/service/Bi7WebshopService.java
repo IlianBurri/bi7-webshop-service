@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service;
 
+import ch.suva.bi7.webshop.service.controller.AdresseController;
 import ch.suva.bi7.webshop.service.controller.ArtikelController;
 import ch.suva.bi7.webshop.service.controller.UserController;
 import ch.suva.bi7.webshop.service.controller.WarenkorbController;
@@ -27,6 +28,11 @@ public class Bi7WebshopService {
             config.routes.post("/api/warenkorb/add", WarenkorbController.addToWarenkorb);
             config.routes.delete("/api/warenkorb/item/{id}", WarenkorbController.deleteWarenkorbItem);
             config.routes.put("/api/warenkorb/item/{id}", WarenkorbController.updateMenge);
+
+            config.routes.get("/api/adressen/{email}", AdresseController.getAdressen);
+            config.routes.post("/api/adressen", AdresseController.createAdresse);
+            config.routes.put("/api/adressen/{adressId}", AdresseController.updateAdresse);
+            config.routes.delete("/api/adressen/{adressId}", AdresseController.deleteAdresse);
         }).start(7070);
     }
 }

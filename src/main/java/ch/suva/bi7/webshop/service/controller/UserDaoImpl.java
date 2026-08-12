@@ -17,7 +17,7 @@ class UserDaoImpl implements UserDao {
         if (dbConnection == null) {
             throw new IllegalArgumentException("dbConnection must not be null");
         }
-       this.dbConnection = dbConnection;
+        this.dbConnection = dbConnection;
     }
 
     @Override
@@ -30,10 +30,8 @@ class UserDaoImpl implements UserDao {
             String username = queryResult.getString("username");
             String password = queryResult.getString("password");
             User user = new User(username, email, password);
-//            System.out.println("User aus DB gelesen: '" + email + "', '" + username + "', '" + password + "'");
             return Optional.of(user);
         }
-        System.out.println("User nicht gefunden: '" + email + "'");
         return Optional.empty();
     }
 
@@ -43,17 +41,13 @@ class UserDaoImpl implements UserDao {
 
         List<String> result = new ArrayList<>();
         while (queryResult.next()) {
-            String email = queryResult.getString("email");
-            String username = queryResult.getString("username");
-            String password = queryResult.getString("password");
-//            System.out.println("User aus DB gelesen: '" + email + "', '" + username + "', '" + password + "'");
-            result.add(username);
+            result.add(queryResult.getString("username"));
         }
         return result;
     }
 
     @Override
-    public  void addUser(User newUser) throws Exception {
+    public void addUser(User newUser) throws Exception {
         String query = String.format(
                 "INSERT INTO user (username, email, password) VALUES ('%s', '%s', '%s')",
                 newUser.username, newUser.email, newUser.password

@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserControllerTest {
 
     @Test
-    void testRegister_Erfolgreich() throws Exception {
+    void registerErfolgreich() throws Exception {
 
         RegisterUserRequest request = new RegisterUserRequest("Peter Parker", "spidey@dailybugle.com", "webslinger");
 
@@ -52,7 +52,7 @@ class UserControllerTest {
     }
 
     @Test
-    void testRegister_UserExistiertBereits() throws Exception {
+    void registerBeiExistierendemUserLiefert409() throws Exception {
         RegisterUserRequest request = new RegisterUserRequest(
             "Bruce Wayne",
             "bruce.wayne@gotham.com",
