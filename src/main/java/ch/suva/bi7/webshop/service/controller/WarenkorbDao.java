@@ -6,11 +6,23 @@ import java.util.List;
 
 public interface WarenkorbDao {
 
-    List<WarenkorbItem> getWarenkorbByUser(String email) throws Exception;
+    List<WarenkorbItem> getWarenkorbByUser(String email) throws DaoException;
 
-    void addArtikelToWarenkorb(String email, int artikelId, int menge) throws Exception;
+    void addArtikelToWarenkorb(String email, int artikelId, int menge) throws DaoException;
 
-    void updateMenge(int warenkorbItemId, int menge) throws Exception;
+    /**
+     * Setzt die Menge eines Warenkorb-Items neu.
+     *
+     * @return {@code true}, wenn genau ein Datensatz aktualisiert wurde,
+     *         {@code false} wenn die id nicht existiert (→ Controller kann 404 liefern)
+     */
+    boolean updateMenge(int warenkorbItemId, int menge) throws DaoException;
 
-    void deleteWarenkorbItem(int warenkorbItemId) throws Exception;
+    /**
+     * Löscht ein Warenkorb-Item.
+     *
+     * @return {@code true}, wenn genau ein Datensatz gelöscht wurde,
+     *         {@code false} wenn die id nicht existiert (→ Controller kann 404 liefern)
+     */
+    boolean deleteWarenkorbItem(int warenkorbItemId) throws DaoException;
 }

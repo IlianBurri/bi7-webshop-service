@@ -5,6 +5,7 @@ import ch.suva.bi7.webshop.service.model.WarenkorbItem;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,16 +21,16 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
     }
 
     @Override
-    public List<WarenkorbItem> getWarenkorbByUser(String email) throws Exception {
+    public List<WarenkorbItem> getWarenkorbByUser(String email) throws DaoException {
         List<WarenkorbItem> items = new ArrayList<>();
 
         String sql = "SELECT w.warenkorbItemId, w.userEmail, w.artikelId, w.menge, " +
                      "a.name AS artikelName, a.preis AS artikelPreis, a.bild AS artikelBild " +
                      "FROM warenkorb_item w " +
                      "JOIN artikel a ON w.artikelId = a.artikelId " +
-                     "WHERE w.userEmail = '" + email + "'";
+                     "WHERE w.userEmail = ?";
 
-        try (ResultSet rs = dbConnection.execute(sql)) {
+        try (ResultSet rs = dbConnection.execute(sql, email)) {
             if (rs != null) {
                 while (rs.next()) {
                     Integer warenkorbItemId = rs.getInt("warenkorbItemId");
@@ -46,45 +47,43 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
                     ));
                 }
             }
+        } catch (SQLException e) {
+            throw new DaoException("Fehler beim Abrufen des Warenkorbs", e);
         }
         return items;
     }
 
     @Override
-    public void addArtikelToWarenkorb(String email, int artikelId, int menge) throws Exception {
-        // Prüfe zuerst ob Item bereits im Warenkorb
-        String checkSql = "SELECT warenkorbItemId, menge FROM warenkorb_item " +
-                          "WHERE userEmail = '" + email + "' AND artikelId = " + artikelId;
-
-        try (ResultSet rs = dbConnection.execute(checkSql)) {
-            if (rs != null && rs.next()) {
-                // Item existiert bereits -> erhöhe Menge um die gewählte Menge
-                int warenkorbItemId = rs.getInt("warenkorbItemId");
-                int currentMenge = rs.getInt("menge");
-                int newMenge = currentMenge + menge;
-
-                String updateSql = "UPDATE warenkorb_item SET menge = " + newMenge +
-                                   " WHERE warenkorbItemId = " + warenkorbItemId;
-                dbConnection.executeUpdate(updateSql);
-            } else {
-                // Item existiert nicht -> füge mit gewählter Menge hinzu
-                String insertSql = "INSERT INTO warenkorb_item (userEmail, artikelId, menge) " +
-                                   "VALUES ('" + email + "', " + artikelId + ", " + menge + ")";
-                dbConnection.executeUpdate(insertSql);
-            }
+    public void addArtikelToWarenkorb(String email, int artikelId, int menge) throws DaoException {
+        // Atomares Upsert: ein einziges Statement statt "SELECT prüfen + UPDATE/INSERT".
+        // So können parallele Requests keine Duplikate/Falschmengen erzeugen.
+        // Voraussetzung: UNIQUE-Index auf (userEmail, artikelId) – siehe README.
+        String sql = "INSERT INTO warenkorb_item (userEmail, artikelId, menge) VALUES (?, ?, ?) " +
+                "ON DUPLICATE KEY UPDATE menge = menge + VALUES(menge)";
+        try {
+            dbConnection.executeUpdate(sql, email, artikelId, menge);
+        } catch (SQLException e) {
+            throw new DaoException("Fehler beim Hinzufügen zum Warenkorb", e);
         }
     }
 
     @Override
-    public void updateMenge(int warenkorbItemId, int menge) throws Exception {
-        String sql = "UPDATE warenkorb_item SET menge = " + menge +
-                     " WHERE warenkorbItemId = " + warenkorbItemId;
-        dbConnection.executeUpdate(sql);
+    public boolean updateMenge(int warenkorbItemId, int menge) throws DaoException {
+        String sql = "UPDATE warenkorb_item SET menge = ? WHERE warenkorbItemId = ?";
+        try {
+            return dbConnection.executeUpdate(sql, menge, warenkorbItemId) > 0;
+        } catch (SQLException e) {
+            throw new DaoException("Fehler beim Aktualisieren der Menge", e);
+        }
     }
 
     @Override
-    public void deleteWarenkorbItem(int warenkorbItemId) throws Exception {
-        String sql = "DELETE FROM warenkorb_item WHERE warenkorbItemId = " + warenkorbItemId;
-        dbConnection.executeUpdate(sql);
+    public boolean deleteWarenkorbItem(int warenkorbItemId) throws DaoException {
+        String sql = "DELETE FROM warenkorb_item WHERE warenkorbItemId = ?";
+        try {
+            return dbConnection.executeUpdate(sql, warenkorbItemId) > 0;
+        } catch (SQLException e) {
+            throw new DaoException("Fehler beim Löschen des Warenkorb-Items", e);
+        }
     }
 }

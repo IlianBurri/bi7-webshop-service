@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class WarenkorbDaoIntegrationTest {
 
     private static final String TEST_EMAIL = "cart.test@example.com";
+    private static final String TEST_EMAIL_ZWEITER_USER = "cart.zweiter@example.com";
 
     private WarenkorbDao warenkorbDao;
     private DBConnection dbConnection;
@@ -41,7 +42,7 @@ class WarenkorbDaoIntegrationTest {
         }
         try {
             // Löschen des Users entfernt via ON DELETE CASCADE auch alle Warenkorb-Items
-            dbConnection.executeUpdate("DELETE FROM user WHERE email = '" + TEST_EMAIL + "'");
+            dbConnection.executeUpdate("DELETE FROM user WHERE email IN ('" + TEST_EMAIL + "', '" + TEST_EMAIL_ZWEITER_USER + "')");
         } catch (Exception e) {
             System.out.println("Fehler beim Aufräumen: " + e.getMessage());
         }
@@ -124,5 +125,91 @@ class WarenkorbDaoIntegrationTest {
 
         assertTrue(warenkorbDao.getWarenkorbByUser(TEST_EMAIL).isEmpty(),
                 "ON DELETE CASCADE muss die Warenkorb-Items mit löschen");
+    }
+
+    @Test
+    void warenkorbUeberlebtLogoutUndNeuenLogin() throws Exception {
+        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 2);
+        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 3, 1);
+
+        // Abmelden + erneutes Einloggen = neue Session mit neuer DB-Connection.
+        // Da der Warenkorb pro User in der DB liegt (nicht in der Session),
+        // muss er mit einer frischen DAO-Instanz weiterhin vollständig da sein.
+        DBConnection neueConnection = new DBConnectionImpl(
+                DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
+        WarenkorbDao daoNachNeuemLogin = new WarenkorbDaoImpl(neueConnection);
+
+        List<WarenkorbItem> items = daoNachNeuemLogin.getWarenkorbByUser(TEST_EMAIL);
+
+        assertEquals(2, items.size(), "Nach Abmelden darf nichts verloren gehen");
+        WarenkorbItem erster = items.get(0);
+        assertEquals(1, erster.getArtikelId());
+        assertEquals(2, erster.getMenge());
+        assertEquals("iPhone 15 Pro", erster.getArtikelName());
+        assertEquals(new BigDecimal("1199.00"), erster.getArtikelPreis());
+    }
+
+    @Test
+    void warenkorbIstProUserGetrennt() throws Exception {
+        dbConnection.executeUpdate("INSERT IGNORE INTO user (username, email, password) " +
+                "VALUES ('Zweiter User', '" + TEST_EMAIL_ZWEITER_USER + "', 'test123')");
+
+        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 2);
+
+        assertTrue(warenkorbDao.getWarenkorbByUser(TEST_EMAIL_ZWEITER_USER).isEmpty(),
+                "Der andere User darf keine fremden Artikel sehen");
+
+        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL_ZWEITER_USER, 2, 1);
+
+        List<WarenkorbItem> userA = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
+        List<WarenkorbItem> userB = warenkorbDao.getWarenkorbByUser(TEST_EMAIL_ZWEITER_USER);
+
+        assertEquals(1, userA.size());
+        assertEquals(1, userB.size());
+        assertEquals(1, userA.get(0).getArtikelId(), "User A behält nur seine eigenen Artikel");
+        assertEquals(2, userB.get(0).getArtikelId());
+    }
+
+    @Test
+    void sqlInjectionVersuchLiefertKeineFremdenDaten() throws Exception {
+        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 1);
+
+        // Bösartige Eingabe: bei String-Konkatenation (WHERE userEmail = '' OR '1'='1')
+        // hätte diese Abfrage ALLE Warenkörbe zurückgeliefert. Mit PreparedStatement
+        // wird der Wert als reiner String behandelt und matcht keinen User.
+        List<WarenkorbItem> items = warenkorbDao.getWarenkorbByUser("' OR '1'='1");
+
+        assertTrue(items.isEmpty(), "SQL-Injection darf keine fremden Warenkorb-Items liefern");
+    }
+
+    @Test
+    void artikelHinzufuegenMitUnbekanntemArtikelSchlaegtFehl() throws Exception {
+        assertThrows(Exception.class,
+                () -> warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 999999, 1),
+                "Fremdschlüssel auf artikel.artikelId muss verletzt werden");
+
+        assertTrue(warenkorbDao.getWarenkorbByUser(TEST_EMAIL).isEmpty(),
+                "Bei fehlgeschlagenem INSERT darf nichts im Warenkorb landen");
+    }
+
+    @Test
+    void artikelHinzufuegenMitUnbekanntemUserSchlaegtFehl() {
+        assertThrows(Exception.class,
+                () -> warenkorbDao.addArtikelToWarenkorb("gibts.nicht@example.com", 1, 1),
+                "Fremdschlüssel auf user.email muss verletzt werden");
+    }
+
+    @Test
+    void mengeErhoehenBehaeltPreisUndArtikelDaten() throws Exception {
+        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 1);
+        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 4);
+
+        List<WarenkorbItem> items = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
+
+        assertEquals(1, items.size());
+        assertEquals(5, items.get(0).getMenge(), "1 + 4 muss 5 ergeben");
+        assertEquals("iPhone 15 Pro", items.get(0).getArtikelName());
+        assertEquals(new BigDecimal("1199.00"), items.get(0).getArtikelPreis(),
+                "Der Preis kommt aus der artikel-Tabelle und darf sich bei Mengenänderung nicht verändern");
     }
 }

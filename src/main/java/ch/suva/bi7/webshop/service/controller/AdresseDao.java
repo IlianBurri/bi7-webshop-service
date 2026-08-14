@@ -6,13 +6,13 @@ import java.util.List;
 
 public interface AdresseDao {
 
-    List<Adresse> findByUserEmail(String email) throws Exception;
+    List<Adresse> findByUserEmail(String email) throws DaoException;
 
-    Adresse insert(Adresse adresse) throws Exception;
+    Adresse insert(Adresse adresse) throws DaoException;
 
-    boolean update(int adressId, Adresse adresse) throws Exception;
+    boolean update(int adressId, Adresse adresse) throws DaoException;
 
-    boolean delete(int adressId) throws Exception;
+    boolean delete(int adressId) throws DaoException;
 
-    boolean existsIdentical(Adresse adresse) throws Exception;
+    boolean existsIdentical(Adresse adresse) throws DaoException;
 }

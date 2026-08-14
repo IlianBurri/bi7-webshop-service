@@ -2,6 +2,7 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.model.Artikel;
 import io.javalin.http.Context;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ class ArtikelControllerTest {
     static class FakeArtikelDao implements ArtikelDao {
 
         private final List<Artikel> artikel;
+        int callCount = 0;
 
         FakeArtikelDao(List<Artikel> artikel) {
             this.artikel = artikel;
@@ -22,6 +24,7 @@ class ArtikelControllerTest {
 
         @Override
         public List<Artikel> getAllArtikel() {
+            callCount++;
             return artikel;
         }
     }
@@ -29,68 +32,30 @@ class ArtikelControllerTest {
 
     static class FehlerArtikelDao implements ArtikelDao {
 
+        int callCount = 0;
+
         @Override
         public List<Artikel> getAllArtikel() throws Exception {
+            callCount++;
             throw new Exception("Datenbank Fehler");
         }
     }
 
 
-    @Test
-    void mehrereArtikelWerdenZurueckgegeben() throws Exception {
-
-        ArtikelDao dao = new FakeArtikelDao(List.of(
-                new Artikel(
-                        1,
-                        "iPhone 15 Pro",
-                        new BigDecimal("1199.00"),
-                        "https://imgs.search.brave.com/XKzj-Ry1DHNPSKMfAu3qWuKp_PdZCmUA9_yPjrLtfP8/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9zczcu/dnp3LmNvbS9pcy9p/bWFnZS9WZXJpem9u/V2lyZWxlc3MvYXBw/bGUtaXBob25lLTE1/LXByby0xdGItbmF0/dXJhbC10aXRhbml1/bS1tdHU1M2xsLWEt/YT93aWQ9NDAwJmhl/aT00MDAmZm10PXdl/YnAtYWxwaGE"
-                ),
-                new Artikel(
-                        2,
-                        "Samsung Galaxy S24",
-                        new BigDecimal("899.90"),
-                        "https://imgs.search.brave.com/BkadkX__5a26LuCKGPBUVS5kY4cRhKoh2dXmvCeXYgk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tLWNk/bi5waG9uZWFyZW5h/LmNvbS9pbWFnZXMv/cGhvbmVzLzg0Mzg5/LTM1MC9TYW1zdW5n/LUdhbGF4eS1TMjQu/d2VicD93PTE"
-                )
-        ));
-
-        List<Artikel> artikel = dao.getAllArtikel();
-
-        assertNotNull(artikel);
-        assertEquals(2, artikel.size());
-
-        assertEquals("iPhone 15 Pro", artikel.get(0).name);
-        assertEquals("Samsung Galaxy S24", artikel.get(1).name);
-    }
-
-
-    @Test
-    void keineArtikelVorhandenLiefertLeereListe() throws Exception {
-
-        ArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
-
-        List<Artikel> artikel = dao.getAllArtikel();
-
-        assertNotNull(artikel);
-        assertTrue(artikel.isEmpty());
-    }
-
-
-    @Test
-    void datenbankFehlerWirdBehandelt() {
-
-        ArtikelDao dao = new FehlerArtikelDao();
-
-        assertThrows(Exception.class, dao::getAllArtikel);
+    // Statischen DAO-Zustand pro Test zurücksetzen, damit keine Test-Interferenzen entstehen
+    @BeforeEach
+    void resetArtikelDaoMock() {
+        ArtikelController.setArtikelDaoMock(new FakeArtikelDao(Collections.emptyList()));
     }
 
 
     @Test
     void fetchAllArtikelLiefertArtikellisteAlsJson() throws Exception {
-        ArtikelController.setArtikelDaoMock(new FakeArtikelDao(List.of(
+        FakeArtikelDao dao = new FakeArtikelDao(List.of(
                 new Artikel(1, "iPhone 15 Pro", new BigDecimal("1199.00"), "https://example.com/iphone.jpg"),
                 new Artikel(2, "Samsung Galaxy S24", new BigDecimal("899.90"), "https://example.com/galaxy.jpg")
-        )));
+        ));
+        ArtikelController.setArtikelDaoMock(dao);
 
         ArtikelContextMock ctx = new ArtikelContextMock();
         ArtikelController.fetchAllArtikel.handle(ctx);
@@ -98,14 +63,24 @@ class ArtikelControllerTest {
         assertEquals(200, ctx.gesetzterStatus);
         List<?> json = (List<?>) ctx.gesendetesJson;
         assertEquals(2, json.size(), "Es müssen 2 Artikel im JSON stehen");
-        assertEquals("iPhone 15 Pro", ((Artikel) json.get(0)).name);
-        assertEquals("Samsung Galaxy S24", ((Artikel) json.get(1)).name);
+        assertEquals(1, dao.callCount, "Das DAO muss genau einmal aufgerufen werden");
+
+        Artikel erster = (Artikel) json.get(0);
+        assertEquals("iPhone 15 Pro", erster.name);
+        assertEquals(new BigDecimal("1199.00"), erster.preis);
+        assertEquals("https://example.com/iphone.jpg", erster.bild);
+
+        Artikel zweiter = (Artikel) json.get(1);
+        assertEquals("Samsung Galaxy S24", zweiter.name);
+        assertEquals(new BigDecimal("899.90"), zweiter.preis);
+        assertEquals("https://example.com/galaxy.jpg", zweiter.bild);
     }
 
 
     @Test
     void fetchAllArtikelBeiLeererListeLiefertLeeresJson() throws Exception {
-        ArtikelController.setArtikelDaoMock(new FakeArtikelDao(Collections.emptyList()));
+        FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
+        ArtikelController.setArtikelDaoMock(dao);
 
         ArtikelContextMock ctx = new ArtikelContextMock();
         ArtikelController.fetchAllArtikel.handle(ctx);
@@ -113,18 +88,37 @@ class ArtikelControllerTest {
         assertEquals(200, ctx.gesetzterStatus);
         assertNotNull(ctx.gesendetesJson);
         assertTrue(((List<?>) ctx.gesendetesJson).isEmpty(), "Ohne Artikel muss ein leeres JSON kommen");
+        assertEquals(1, dao.callCount, "Das DAO muss genau einmal aufgerufen werden");
     }
 
 
     @Test
-    void fetchAllArtikelBeiDatenbankFehlerLiefert500() throws Exception {
-        ArtikelController.setArtikelDaoMock(new FehlerArtikelDao());
+    void fetchAllArtikelBeiExceptionLiefertKonkreteFehlermeldung() throws Exception {
+        FehlerArtikelDao dao = new FehlerArtikelDao();
+        ArtikelController.setArtikelDaoMock(dao);
 
         ArtikelContextMock ctx = new ArtikelContextMock();
         ArtikelController.fetchAllArtikel.handle(ctx);
 
         assertEquals(500, ctx.gesetzterStatus);
-        assertNotNull(ctx.gesendetesResult, "Bei einem DB-Fehler muss eine Fehlermeldung gesendet werden");
+        assertEquals("Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
+                ctx.gesendetesResult, "Der API-Vertrag muss eine konkrete Fehlermeldung liefern");
+        assertEquals(1, dao.callCount, "Das DAO muss genau einmal aufgerufen werden");
+    }
+
+
+    @Test
+    void fetchAllArtikelRuftDaoGenauEinmalAuf() throws Exception {
+        FakeArtikelDao dao = new FakeArtikelDao(List.of(
+                new Artikel(1, "iPhone 15 Pro", new BigDecimal("1199.00"), "https://example.com/iphone.jpg")
+        ));
+        ArtikelController.setArtikelDaoMock(dao);
+
+        ArtikelContextMock ctx = new ArtikelContextMock();
+        ArtikelController.fetchAllArtikel.handle(ctx);
+
+        assertEquals(200, ctx.gesetzterStatus);
+        assertEquals(1, dao.callCount, "fetchAllArtikel muss das DAO genau einmal verwenden");
     }
 }
 

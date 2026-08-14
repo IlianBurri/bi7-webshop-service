@@ -65,12 +65,12 @@ class UserDaoImplTest {
     private DBConnection createDBConnectionMock(ResultSet resultSet, int updateCount) {
         return new DBConnection() {
             @Override
-            public ResultSet execute(String sql) {
+            public ResultSet execute(String sql, Object... params) {
                 return resultSet;
             }
 
             @Override
-            public int executeUpdate(String sql) throws SQLException {
+            public int executeUpdate(String sql, Object... params) throws SQLException {
                 return updateCount;
             }
 

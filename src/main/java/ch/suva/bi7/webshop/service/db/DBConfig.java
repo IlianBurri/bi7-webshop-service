@@ -36,31 +36,38 @@ public final class DBConfig {
     }
 
     public static String getHost() {
-        return requireProperty("db.host");
+        return requireValue("db.host", "DB_HOST");
     }
 
     public static String getSchema() {
-        return requireProperty("db.name");
+        return requireValue("db.name", "DB_NAME");
     }
 
     public static String getUser() {
-        return requireProperty("db.user");
+        return requireValue("db.user", "DB_USER");
     }
 
     public static String getPassword() {
-        return requireProperty("db.password");
+        return requireValue("db.password", "DB_PASSWORD");
     }
 
     /**
-     * Liefert den Wert zum Key oder wirft sofort eine Exception, wenn der Key
-     * fehlt/vertippt ist. So schlägt die Konfiguration früh fehl, statt später
-     * mit einem unlesbaren "null" in der Connection-URL zu scheitern.
+     * Liefert den Wert zum Key. Eine gesetzte Umgebungsvariable hat Vorrang
+     * (so können echte Zugangsdaten lokal gesetzt werden, ohne sie ins
+     * Repository zu committen). Ist beides nicht gesetzt, wirft die Methode
+     * sofort eine Exception – so schlägt die Konfiguration früh fehl, statt
+     * später mit einem unlesbaren "null" in der Connection-URL zu scheitern.
      */
-    private static String requireProperty(String key) {
+    private static String requireValue(String key, String envKey) {
+        String envValue = System.getenv(envKey);
+        if (envValue != null && !envValue.isBlank()) {
+            return envValue;
+        }
         String value = PROPERTIES.getProperty(key);
         if (value == null || value.isBlank()) {
             throw new IllegalStateException(
-                    "Konfigurationskey '" + key + "' fehlt in '" + PROPERTIES_FILE + "'");
+                    "Konfigurationskey '" + key + "' fehlt in '" + PROPERTIES_FILE +
+                    "' (oder Umgebungsvariable '" + envKey + "' ist nicht gesetzt)");
         }
         return value;
     }

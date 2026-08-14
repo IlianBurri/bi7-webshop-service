@@ -1,8 +1,5 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.db.DBConfig;
-import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.model.Adresse;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
@@ -12,109 +9,107 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Instanzbasierter Controller: Das DAO wird per Konstruktor injiziert (manuelle
+ * Dependency Injection). Dadurch ist der Controller ohne statischen Zustand
+ * testbar und thread-sicher.
+ */
 public class AdresseController {
 
     private static final Logger logger = LoggerFactory.getLogger(AdresseController.class);
 
     private static final String STANDARD_LAND = "Schweiz";
 
-    private static AdresseDao adresseDao = null;
+    private final AdresseDao adresseDao;
 
-    private static AdresseDao getAdresseDao() throws Exception {
+    public final Handler getAdressen;
+    public final Handler createAdresse;
+    public final Handler updateAdresse;
+    public final Handler deleteAdresse;
+
+    public AdresseController(AdresseDao adresseDao) {
         if (adresseDao == null) {
-            DBConnection dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
-            adresseDao = new AdresseDaoImpl(dbConnection);
+            throw new IllegalArgumentException("adresseDao must not be null");
         }
-        return adresseDao;
+        this.adresseDao = adresseDao;
+
+        this.getAdressen = ctx -> {
+            try {
+                String email = ctx.pathParam("email");
+                List<Adresse> adressen = adresseDao.findByUserEmail(email);
+                ctx.status(200).json(adressen);
+            } catch (Exception e) {
+                logger.error("Fehler beim Abrufen der Adressen: {}", e.getMessage(), e);
+                ctx.status(500).json(Map.of("error", "Fehler beim Abrufen der Adressen."));
+            }
+        };
+
+        this.createAdresse = ctx -> {
+            try {
+                Adresse eingabe = ctx.bodyAsClass(Adresse.class);
+                Adresse adresse = validiereUndNormalisiere(eingabe);
+
+                if (adresseDao.existsIdentical(adresse)) {
+                    Adresse bestehende = findeBestehendeIdentische(adresseDao, adresse);
+                    ctx.status(200).json(bestehende);
+                    return;
+                }
+
+                Adresse gespeichert = adresseDao.insert(adresse);
+                ctx.status(201).json(gespeichert);
+            } catch (BadRequestResponse e) {
+                ctx.status(400).json(Map.of("error", "Ungültiger JSON-Request-Body."));
+            } catch (IllegalArgumentException e) {
+                ctx.status(400).json(Map.of("error", e.getMessage()));
+            } catch (Exception e) {
+                logger.error("Fehler beim Speichern der Adresse: {}", e.getMessage(), e);
+                ctx.status(500).json(Map.of("error", "Fehler beim Speichern der Adresse."));
+            }
+        };
+
+        this.updateAdresse = ctx -> {
+            try {
+                int adressId = Integer.parseInt(ctx.pathParam("adressId"));
+
+                Adresse eingabe = ctx.bodyAsClass(Adresse.class);
+                Adresse adresse = validiereUndNormalisiere(eingabe);
+
+                if (!adresseDao.update(adressId, adresse)) {
+                    ctx.status(404).json(Map.of("error", "Adresse nicht gefunden"));
+                    return;
+                }
+
+                ctx.status(200).json(mitAdressId(adresse, adressId));
+            } catch (NumberFormatException e) {
+                ctx.status(400).json(Map.of("error", "adressId muss eine Zahl sein."));
+            } catch (BadRequestResponse e) {
+                ctx.status(400).json(Map.of("error", "Ungültiger JSON-Request-Body."));
+            } catch (IllegalArgumentException e) {
+                ctx.status(400).json(Map.of("error", e.getMessage()));
+            } catch (Exception e) {
+                logger.error("Fehler beim Aktualisieren der Adresse: {}", e.getMessage(), e);
+                ctx.status(500).json(Map.of("error", "Fehler beim Aktualisieren der Adresse."));
+            }
+        };
+
+        this.deleteAdresse = ctx -> {
+            try {
+                int adressId = Integer.parseInt(ctx.pathParam("adressId"));
+
+                if (!adresseDao.delete(adressId)) {
+                    ctx.status(404).json(Map.of("error", "Adresse nicht gefunden"));
+                    return;
+                }
+
+                ctx.status(200).result("Adresse gelöscht.");
+            } catch (NumberFormatException e) {
+                ctx.status(400).json(Map.of("error", "adressId muss eine Zahl sein."));
+            } catch (Exception e) {
+                logger.error("Fehler beim Löschen der Adresse: {}", e.getMessage(), e);
+                ctx.status(500).json(Map.of("error", "Fehler beim Löschen der Adresse."));
+            }
+        };
     }
-
-    static void setAdresseDaoMock(AdresseDao adresseDaoMock) {
-        adresseDao = adresseDaoMock;
-    }
-
-    public static Handler getAdressen = ctx -> {
-        try {
-            String email = ctx.pathParam("email");
-            List<Adresse> adressen = getAdresseDao().findByUserEmail(email);
-            ctx.status(200).json(adressen);
-        } catch (Exception e) {
-            logger.error("Fehler beim Abrufen der Adressen: {}", e.getMessage(), e);
-            ctx.status(500).json(Map.of("error", "Fehler beim Abrufen der Adressen."));
-        }
-    };
-
-
-    public static Handler createAdresse = ctx -> {
-        try {
-            Adresse eingabe = ctx.bodyAsClass(Adresse.class);
-            Adresse adresse = validiereUndNormalisiere(eingabe);
-
-            AdresseDao dao = getAdresseDao();
-            if (dao.existsIdentical(adresse)) {
-                Adresse bestehende = findeBestehendeIdentische(dao, adresse);
-                ctx.status(200).json(bestehende);
-                return;
-            }
-
-            Adresse gespeichert = dao.insert(adresse);
-            ctx.status(201).json(gespeichert);
-        } catch (BadRequestResponse e) {
-            ctx.status(400).json(Map.of("error", "Ungültiger JSON-Request-Body."));
-        } catch (IllegalArgumentException e) {
-            ctx.status(400).json(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Fehler beim Speichern der Adresse: {}", e.getMessage(), e);
-            ctx.status(500).json(Map.of("error", "Fehler beim Speichern der Adresse."));
-        }
-    };
-
-
-    public static Handler updateAdresse = ctx -> {
-        try {
-            int adressId = Integer.parseInt(ctx.pathParam("adressId"));
-
-            Adresse eingabe = ctx.bodyAsClass(Adresse.class);
-            Adresse adresse = validiereUndNormalisiere(eingabe);
-
-            AdresseDao dao = getAdresseDao();
-            if (!dao.update(adressId, adresse)) {
-                ctx.status(404).json(Map.of("error", "Adresse nicht gefunden"));
-                return;
-            }
-
-            ctx.status(200).json(mitAdressId(adresse, adressId));
-        } catch (NumberFormatException e) {
-            ctx.status(400).json(Map.of("error", "adressId muss eine Zahl sein."));
-        } catch (BadRequestResponse e) {
-            ctx.status(400).json(Map.of("error", "Ungültiger JSON-Request-Body."));
-        } catch (IllegalArgumentException e) {
-            ctx.status(400).json(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            logger.error("Fehler beim Aktualisieren der Adresse: {}", e.getMessage(), e);
-            ctx.status(500).json(Map.of("error", "Fehler beim Aktualisieren der Adresse."));
-        }
-    };
-
-
-    public static Handler deleteAdresse = ctx -> {
-        try {
-            int adressId = Integer.parseInt(ctx.pathParam("adressId"));
-
-            AdresseDao dao = getAdresseDao();
-            if (!dao.delete(adressId)) {
-                ctx.status(404).json(Map.of("error", "Adresse nicht gefunden"));
-                return;
-            }
-
-            ctx.status(200).result("Adresse gelöscht.");
-        } catch (NumberFormatException e) {
-            ctx.status(400).json(Map.of("error", "adressId muss eine Zahl sein."));
-        } catch (Exception e) {
-            logger.error("Fehler beim Löschen der Adresse: {}", e.getMessage(), e);
-            ctx.status(500).json(Map.of("error", "Fehler beim Löschen der Adresse."));
-        }
-    };
-
 
     private static Adresse validiereUndNormalisiere(Adresse eingabe) {
         String userEmail = pflichtfeld(eingabe.userEmail(), "userEmail");
@@ -146,7 +141,7 @@ public class AdresseController {
         return wert.trim();
     }
 
-    private static Adresse findeBestehendeIdentische(AdresseDao dao, Adresse adresse) throws Exception {
+    private static Adresse findeBestehendeIdentische(AdresseDao dao, Adresse adresse) throws DaoException {
         List<Adresse> vorhandene = dao.findByUserEmail(adresse.userEmail());
         for (Adresse a : vorhandene) {
             if (istIdentisch(a, adresse)) {

@@ -25,7 +25,7 @@ class UserDaoImpl implements UserDao {
         if (email == null || email.isBlank()) {
             return Optional.empty();
         }
-        ResultSet queryResult = dbConnection.execute("SELECT * FROM user where upper(email)='" + email.toUpperCase() + "'");
+        ResultSet queryResult = dbConnection.execute("SELECT * FROM user WHERE UPPER(email) = UPPER(?)", email);
         if (queryResult.next()) {
             String username = queryResult.getString("username");
             String password = queryResult.getString("password");
@@ -48,10 +48,7 @@ class UserDaoImpl implements UserDao {
 
     @Override
     public void addUser(User newUser) throws Exception {
-        String query = String.format(
-                "INSERT INTO user (username, email, password) VALUES ('%s', '%s', '%s')",
-                newUser.username, newUser.email, newUser.password
-        );
-        dbConnection.execute(query);
+        String query = "INSERT INTO user (username, email, password) VALUES (?, ?, ?)";
+        dbConnection.execute(query, newUser.username, newUser.email, newUser.password);
     }
 }

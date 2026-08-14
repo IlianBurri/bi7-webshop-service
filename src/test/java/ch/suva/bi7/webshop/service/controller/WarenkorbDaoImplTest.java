@@ -54,39 +54,65 @@ class WarenkorbDaoImplTest {
     }
 
     @Test
-    void artikelHinzufuegenLegtNeuesItemAnOderErhoehtMenge() throws Exception {
-        List<String> updates = new ArrayList<>();
-        WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), updates));
+    void artikelHinzufuegenNutztAtomaresUpsert() throws Exception {
+        // Race-Condition-Fix: Es darf KEIN separates "SELECT ob vorhanden" mehr geben,
+        // sondern ein einziges atomares INSERT ... ON DUPLICATE KEY UPDATE.
+        List<SqlStatement> updates = new ArrayList<>();
+        List<SqlStatement> selects = new ArrayList<>();
+        WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), updates, selects));
 
         testee.addArtikelToWarenkorb("test@somewhere.com", 5, 3);
 
-        assertEquals(1, updates.size(), "Es muss genau ein UPDATE/INSERT ausgeführt werden");
-        assertTrue(updates.get(0).startsWith("INSERT INTO warenkorb_item"), "Neues Item muss eingefügt werden, war: " + updates.get(0));
+        assertTrue(selects.isEmpty(), "Kein Check-SELECT mehr nötig – das Upsert ist atomar");
+        assertEquals(1, updates.size(), "Es muss genau ein Statement ausgeführt werden");
+        SqlStatement upsert = updates.get(0);
+        assertTrue(upsert.sql().startsWith("INSERT INTO warenkorb_item"),
+                "Erwartet INSERT, war: " + upsert.sql());
+        assertTrue(upsert.sql().contains("ON DUPLICATE KEY UPDATE menge = menge + VALUES(menge)"),
+                "Bei vorhandenem Item muss die Menge erhöht werden, war: " + upsert.sql());
+        assertEquals(List.of("test@somewhere.com", 5, 3), upsert.params(),
+                "User, Artikel und Menge müssen als PreparedStatement-Parameter gebunden werden");
+    }
 
-        List<String> updatesBeiVorhandenemItem = new ArrayList<>();
-        List<Map<String, Object>> zeilen = List.of(Map.of("warenkorbItemId", 7, "menge", 2));
-        WarenkorbDaoImpl testee2 = createTestee(createDBConnectionMock(createResultSetMock(zeilen), updatesBeiVorhandenemItem));
+    @Test
+    void warenkorbLesenJoinsArtikelUndFiltertNachEmail() throws Exception {
+        List<SqlStatement> selects = new ArrayList<>();
+        WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), selects));
 
-        testee2.addArtikelToWarenkorb("test@somewhere.com", 5, 3);
+        testee.getWarenkorbByUser("kunde@example.com");
 
-        String update = updatesBeiVorhandenemItem.get(0);
-        assertTrue(update.startsWith("UPDATE warenkorb_item"), "Vorhandenes Item muss aktualisiert werden, war: " + update);
-        assertTrue(update.contains("menge = 5"), "2 + 3 muss 5 ergeben, war: " + update);
+        SqlStatement sql = selects.get(0);
+        assertTrue(sql.sql().contains("JOIN artikel"), "Preis/Name/Bild müssen per JOIN aus der artikel-Tabelle kommen, war: " + sql.sql());
+        assertTrue(sql.sql().contains("WHERE w.userEmail = ?"), "Email muss als Parameter gebunden werden (kein String-Einbau), war: " + sql.sql());
+        assertEquals("kunde@example.com", sql.params().get(0), "Nur der Warenkorb dieses Users darf abgefragt werden");
+        assertTrue(sql.sql().contains("a.preis AS artikelPreis"), "Der Preis muss aus der DB gelesen werden (nicht vom Client), war: " + sql.sql());
     }
 
     @Test
     void mengeAktualisierenUndItemLoeschenErzeugenSql() throws Exception {
-        List<String> updates = new ArrayList<>();
+        List<SqlStatement> updates = new ArrayList<>();
         WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), updates));
 
-        testee.updateMenge(42, 9);
-        testee.deleteWarenkorbItem(42);
+        assertTrue(testee.updateMenge(42, 9), "Bei Erfolg muss true zurückkommen");
+        assertTrue(testee.deleteWarenkorbItem(42), "Bei Erfolg muss true zurückkommen");
 
         assertEquals(2, updates.size());
-        assertTrue(updates.get(0).startsWith("UPDATE warenkorb_item"), "Erwartet UPDATE, war: " + updates.get(0));
-        assertTrue(updates.get(0).contains("menge = 9"));
-        assertTrue(updates.get(1).startsWith("DELETE FROM warenkorb_item"), "Erwartet DELETE, war: " + updates.get(1));
-        assertTrue(updates.get(1).contains("warenkorbItemId = 42"));
+        SqlStatement update = updates.get(0);
+        assertTrue(update.sql().startsWith("UPDATE warenkorb_item"), "Erwartet UPDATE, war: " + update.sql());
+        assertTrue(update.sql().contains("menge = ?"), "Menge muss als Parameter kommen, war: " + update.sql());
+        assertEquals(List.of(9, 42), update.params(), "Neue Menge und warenkorbItemId als Parameter");
+
+        SqlStatement delete = updates.get(1);
+        assertTrue(delete.sql().startsWith("DELETE FROM warenkorb_item"), "Erwartet DELETE, war: " + delete.sql());
+        assertEquals(List.of(42), delete.params(), "warenkorbItemId als Parameter");
+    }
+
+    @Test
+    void mengeAktualisierenUndLoeschenMeldenFehlendeZeilen() throws Exception {
+        WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), 0));
+
+        assertFalse(testee.updateMenge(999, 3), "Wenn keine Zeile aktualisiert wird, muss false zurückkommen");
+        assertFalse(testee.deleteWarenkorbItem(999), "Wenn keine Zeile gelöscht wird, muss false zurückkommen");
     }
 
 
@@ -94,17 +120,31 @@ class WarenkorbDaoImplTest {
         return new WarenkorbDaoImpl(dbConnection);
     }
 
-    private DBConnection createDBConnectionMock(ResultSet resultSet, List<String> updateLog) {
+    private DBConnection createDBConnectionMock(ResultSet resultSet, List<SqlStatement> updateLog) {
+        return createDBConnectionMock(resultSet, updateLog, new ArrayList<>(), 1);
+    }
+
+    private DBConnection createDBConnectionMock(ResultSet resultSet, List<SqlStatement> updateLog, List<SqlStatement> selectLog) {
+        return createDBConnectionMock(resultSet, updateLog, selectLog, 1);
+    }
+
+    private DBConnection createDBConnectionMock(ResultSet resultSet, List<SqlStatement> updateLog, int updateErgebnis) {
+        return createDBConnectionMock(resultSet, updateLog, new ArrayList<>(), updateErgebnis);
+    }
+
+    private DBConnection createDBConnectionMock(ResultSet resultSet, List<SqlStatement> updateLog,
+                                                List<SqlStatement> selectLog, int updateErgebnis) {
         return new DBConnection() {
             @Override
-            public ResultSet execute(String sql) {
+            public ResultSet execute(String sql, Object... params) {
+                selectLog.add(new SqlStatement(sql, List.of(params)));
                 return resultSet;
             }
 
             @Override
-            public int executeUpdate(String sql) {
-                updateLog.add(sql);
-                return 1;
+            public int executeUpdate(String sql, Object... params) {
+                updateLog.add(new SqlStatement(sql, List.of(params)));
+                return updateErgebnis;
             }
 
             @Override

@@ -3,7 +3,12 @@ package ch.suva.bi7.webshop.service.db;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class DBConnectionImpl implements DBConnection {
 
@@ -21,18 +26,33 @@ public class DBConnectionImpl implements DBConnection {
     }
 
     @Override
-    public ResultSet execute(String sql) throws SQLException {
-        Statement s = con.createStatement();
-        if (s.execute(sql)) {
-            return s.getResultSet();
+    public ResultSet execute(String sql, Object... params) throws SQLException {
+        PreparedStatement ps = con.prepareStatement(sql);
+        bindParams(ps, params);
+        if (ps.execute()) {
+            return ps.getResultSet();
         }
         return null;
     }
 
     @Override
-    public int executeUpdate(String sql) throws SQLException {
-        Statement s = con.createStatement();
-        return s.executeUpdate(sql);
+    public int executeUpdate(String sql, Object... params) throws SQLException {
+        PreparedStatement ps = con.prepareStatement(sql);
+        bindParams(ps, params);
+        return ps.executeUpdate();
+    }
+
+    @Override
+    public int executeUpdateReturningGeneratedKeys(String sql, Object... params) throws SQLException {
+        PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        bindParams(ps, params);
+        ps.executeUpdate();
+        try (ResultSet keys = ps.getGeneratedKeys()) {
+            if (keys.next()) {
+                return keys.getInt(1);
+            }
+            throw new SQLException("Kein generierter Schlüssel wurde zurückgegeben");
+        }
     }
 
     @Override
@@ -43,6 +63,12 @@ public class DBConnectionImpl implements DBConnection {
             } catch (SQLException e) {
                 logger.warn("Fehler beim Schliessen der DB-Connection", e);
             }
+        }
+    }
+
+    private void bindParams(PreparedStatement ps, Object... params) throws SQLException {
+        for (int i = 0; i < params.length; i++) {
+            ps.setObject(i + 1, params[i]);
         }
     }
 }
