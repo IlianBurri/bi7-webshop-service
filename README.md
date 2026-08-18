@@ -175,15 +175,17 @@ SELECT * FROM artikel;
 | Spalte | Typ | Beschreibung |
 |---|---|---|
 ```sql
-| `adressId` | `INT AUTO_INCREMENT PRIMARY KEY` | Eindeutige, automatisch generierte ID |
-| `userEmail` | `VARCHAR(255) NOT NULL` | Email Adresse des Users |
-| `vorname` | `VARCHAR(255) NOT NULL` | Vorname des Kundens |
-| `nachname` | `VARCHAR(255) NOT NULL` | Nachname des Kundens |
-| `strasse` | `VARCHAR(255) NOt NULL` | Strassenname des Kunden|
-| `plz` | `VARCHAR(10) NOT NULL` | Postleitzahl des Kunde|
-| `ort` | `VARCHAR(255) NOT NULL` |Ort des Kunden|
-| `land` | `VARCHAR(100) NOT NULL DEFAULT 'Schweiz'` | Land vom Kunde|
-| `createdAt` | `TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`; | Wann die Adresse eingetragen wurde|
+CREATE TABLE adresse (
+    adressId INT AUTO_INCREMENT PRIMARY KEY,
+    userEmail VARCHAR(255) NOT NULL,
+    vorname VARCHAR(255) NOT NULL,
+    nachname VARCHAR(255) NOT NULL,  
+    strasse VARCHAR(255) NOT NULL,
+    plz VARCHAR(10) NOT NULL,
+    ort VARCHAR(255) NOT NULL,
+    land VARCHAR(100) NOT NULL DEFAULT 'Schweiz',
+    createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 ```
 ##  Kurz-Checkliste
 
