@@ -25,7 +25,7 @@ class WarenkorbDaoIntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         try {
-            dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
+            dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
             warenkorbDao = new WarenkorbDaoImpl(dbConnection);
             dbConnection.executeUpdate("INSERT IGNORE INTO user (username, email, password) " +
                     "VALUES ('Cart Test', '" + TEST_EMAIL + "', 'test123')");
@@ -130,7 +130,7 @@ class WarenkorbDaoIntegrationTest {
         warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 3, 1);
 
         DBConnection neueConnection = new DBConnectionImpl(
-                DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
+                DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
         WarenkorbDao daoNachNeuemLogin = new WarenkorbDaoImpl(neueConnection);
 
         List<WarenkorbItem> items = daoNachNeuemLogin.getWarenkorbByUser(TEST_EMAIL);

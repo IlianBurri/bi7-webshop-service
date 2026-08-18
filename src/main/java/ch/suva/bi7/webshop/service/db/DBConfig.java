@@ -45,13 +45,7 @@ public final class DBConfig {
     }
 
     public static int getPort() {
-        String raw = requireValue("server.port", "SERVER_PORT");
-        try {
-            return Integer.parseInt(raw);
-        } catch (NumberFormatException e) {
-            throw new IllegalStateException(
-                    "Konfigurationskey 'server.port' muss eine ganze Zahl sein, war: '" + raw + "'", e);
-        }
+        return Integer.valueOf(requireValue("db.port", "DB_PORT")).intValue();
     }
 
     public static boolean isDev() {

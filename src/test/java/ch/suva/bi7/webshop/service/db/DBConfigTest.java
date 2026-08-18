@@ -15,7 +15,7 @@ class DBConfigTest {
     private static final String PROPERTIES_FILE = "application-dev.properties";
 
     private static final List<String> PFLICHT_KEYS =
-            List.of("db.host", "db.name", "db.user", "db.password", "server.port", "app.isDev");
+            List.of("db.host", "db.port", "db.name", "db.user", "db.password", "app.isDev");
 
     @Test
     void propertiesDateiEnthaeltAllePflichtKeys() throws IOException {

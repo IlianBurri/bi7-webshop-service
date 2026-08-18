@@ -16,11 +16,14 @@ public class ArtikelController {
 
     private static ArtikelDao artikelDao = null;
 
-    private static ArtikelDao getArtikelDao() throws Exception {
+    public ArtikelController(ArtikelDao artikelDao) {
         if (artikelDao == null) {
-            DBConnection dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
-            artikelDao = new ArtikelDaoImpl(dbConnection);
+            throw new IllegalArgumentException("artikelDao must not be null");
         }
+        this.artikelDao = artikelDao;
+    }
+
+    private static ArtikelDao getArtikelDao() throws Exception {
         return artikelDao;
     }
 

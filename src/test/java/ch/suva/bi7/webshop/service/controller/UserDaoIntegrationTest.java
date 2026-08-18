@@ -22,7 +22,7 @@ class UserDaoIntegrationTest {
     @BeforeEach
     void setUp() throws Exception {
         try {
-            dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
+            dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
             userDao = new UserDaoImpl(dbConnection);
         } catch (Exception e) {
             assumeTrue(false, "MariaDB not available: " + e.getMessage());

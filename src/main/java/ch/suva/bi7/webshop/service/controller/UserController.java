@@ -1,8 +1,5 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.db.DBConfig;
-import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.model.*;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
@@ -17,11 +14,14 @@ public class UserController {
 
     private static UserDao userDao = null;
 
-    private static UserDao getUserDao() throws Exception {
+    public UserController(UserDao userDao) {
         if (userDao == null) {
-            DBConnection dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
-            userDao = new UserDaoImpl(dbConnection);
+            throw new IllegalArgumentException("userDao must not be null");
         }
+        this.userDao = userDao;
+    }
+
+    private static UserDao getUserDao() throws Exception {
         return userDao;
     }
 

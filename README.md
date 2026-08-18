@@ -97,18 +97,18 @@ mysql -h 127.0.0.1 -P 3306 -u webshopuser -pwebshoppassword webshopdb
 
 ```sql
 CREATE TABLE user (
-  email nvarchar(100) NOT NULL,
-  username nvarchar(100) NOT NULL,
-  password nvarchar(100) NOT NULL,
+  email VARCHAR(100) NOT NULL,
+  username VARCHAR(100) NOT NULL,
+  password VARCHAR(100) NOT NULL,
   PRIMARY KEY (email)
 );
 ```
 
 | Spalte | Typ | Beschreibung |
 |---|---|---|
-| `email` | `nvarchar(100)` | Primärschlüssel, eindeutige Kennung des Users |
-| `username` | `nvarchar(100)` | Anzeigename |
-| `password` | `nvarchar(100)` | Passwort |
+| `email` | `VARCHAR(100)` | Primärschlüssel, eindeutige Kennung des Users |
+| `username` | `VARCHAR(100)` | Anzeigename |
+| `password` | `VARCHAR(100)` | Passwort |
 
 >  **Wichtiger Hinweis für später:** Passwörter sollten in einem echten Webshop **niemals im Klartext** gespeichert werden, sondern gehasht (z. B. mit bcrypt/argon2). Für dieses Testsetup ist Klartext okay, für Produktivbetrieb nicht.
 >
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS adresse (
     ort VARCHAR(100) NOT NULL,
     land VARCHAR(100) NOT NULL DEFAULT 'Schweiz',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userEmail) REFERENCES user(email) ON DELETE CASCADE
+    FOREIGN KEY (`userEmail`) REFERENCES `user`(`email`) ON DELETE CASCADE
 );
 ```
 
@@ -197,8 +197,8 @@ CREATE TABLE IF NOT EXISTS warenkorb_item (
     userEmail VARCHAR(100) NOT NULL,
     artikelId INT NOT NULL,
     menge INT NOT NULL DEFAULT 1,
-    FOREIGN KEY (userEmail) REFERENCES user(email) ON DELETE CASCADE,
-    FOREIGN KEY (artikelId) REFERENCES artikel(artikelId),
+    FOREIGN KEY (`userEmail`) REFERENCES `user`(`email`) ON DELETE CASCADE,
+    FOREIGN KEY (`artikelId`) REFERENCES `artikel`(`artikelId`),
     UNIQUE KEY uq_warenkorb_user_artikel (userEmail, artikelId)
 );
 ```
@@ -222,7 +222,15 @@ CREATE TABLE IF NOT EXISTS warenkorb_item (
 
 ---
 
-## 10 Ergebnis prüfen
+## 10 Tabelle Adresse einfügen **
+
+| Spalte | Typ | Beschreibung |
+|---|---|---|
+```sql
+TODO
+```
+
+## 11 Ergebnis prüfen
 
 ```sql
 SELECT * FROM user;
@@ -233,23 +241,7 @@ SELECT * FROM warenkorb_item;
 
 ---
 
-## 9 Tabelle Adresse einfügen **
 
-| Spalte | Typ | Beschreibung |
-|---|---|---|
-```sql
-CREATE TABLE adresse (
-    adressId INT AUTO_INCREMENT PRIMARY KEY,
-    userEmail VARCHAR(255) NOT NULL,
-    vorname VARCHAR(255) NOT NULL,
-    nachname VARCHAR(255) NOT NULL,  
-    strasse VARCHAR(255) NOT NULL,
-    plz VARCHAR(10) NOT NULL,
-    ort VARCHAR(255) NOT NULL,
-    land VARCHAR(100) NOT NULL DEFAULT 'Schweiz',
-    createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-```
 ##  Kurz-Checkliste
 
 - [ ] Container `mariadb-container` läuft (`docker ps`)

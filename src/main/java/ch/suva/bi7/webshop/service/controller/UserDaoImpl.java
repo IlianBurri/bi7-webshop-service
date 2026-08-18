@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-class UserDaoImpl implements UserDao {
+public class UserDaoImpl implements UserDao {
 
     private final DBConnection dbConnection;
 

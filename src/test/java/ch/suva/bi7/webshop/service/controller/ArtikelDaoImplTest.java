@@ -19,6 +19,7 @@ class ArtikelDaoImplTest {
 
         DBConnection dbConnection = new DBConnectionImpl(
                 DBConfig.getHost(),
+                DBConfig.getPort(),
                 DBConfig.getSchema(),
                 DBConfig.getUser(),
                 DBConfig.getPassword()

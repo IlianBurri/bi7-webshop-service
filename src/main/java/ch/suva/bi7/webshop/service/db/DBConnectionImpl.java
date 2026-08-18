@@ -16,10 +16,10 @@ public class DBConnectionImpl implements DBConnection {
 
     private final Connection con;
 
-    public DBConnectionImpl(String host, String schema, String user, String password) throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException {
+    public DBConnectionImpl(String host, int port, String schema, String user, String password) throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException {
         Class.forName("org.mariadb.jdbc.Driver").newInstance();
 
-        con = DriverManager.getConnection("jdbc:mariadb://" + host + "/" + schema + "?" +
+        con = DriverManager.getConnection("jdbc:mariadb://" + host + ":" + port + "/" + schema + "?" +
                 "user=" + user + "&password=" + password + "&useSSL=false");
         logger.info("DB-Connection hergestellt: {}", con);
     }

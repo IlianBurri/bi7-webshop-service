@@ -11,8 +11,6 @@ public class WarenkorbController {
 
     private static final Logger logger = LoggerFactory.getLogger(WarenkorbController.class);
 
-    private final WarenkorbDao warenkorbDao;
-
     public final Handler getWarenkorb;
     public final Handler addToWarenkorb;
     public final Handler updateMenge;
@@ -22,7 +20,6 @@ public class WarenkorbController {
         if (warenkorbDao == null) {
             throw new IllegalArgumentException("warenkorbDao must not be null");
         }
-        this.warenkorbDao = warenkorbDao;
 
         this.getWarenkorb = ctx -> {
             try {
