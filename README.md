@@ -170,33 +170,19 @@ SELECT * FROM artikel;
 
 ---
 
-##  Anhang: Docker-Installation auf der Suva Linux-VM (RHEL 9)
+## 9 Tabelle Adresse einfügen **
 
-Referenz-Anleitung: [MariaDB unter RHEL 9 installieren (IONOS Digital Guide)](https://www.ionos.com/digitalguide/hosting/technical-matters/install-mariadb-rhel-9/)
-
-Kurzer Ablauf für Docker auf RHEL 9:
-
-```bash
-# Alte Docker-Versionen entfernen
-sudo dnf remove docker docker-client docker-client-latest docker-common \
-  docker-latest docker-latest-logrotate docker-logrotate docker-engine
-
-# Docker-Repository hinzufügen
-sudo dnf -y install dnf-plugins-core
-sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
-
-# Docker installieren
-sudo dnf install docker-ce docker-ce-cli containerd.io
-
-# Docker-Dienst starten und aktivieren
-sudo systemctl start docker
-sudo systemctl enable docker
-
-# Status prüfen
-sudo systemctl status docker
-```
-
----
+| Spalte | Typ | Beschreibung |
+|---|---|---|
+| `adressId` | `INT AUTO_INCREMENT PRIMARY KEY` | Eindeutige, automatisch generierte ID |
+| `userEmail` | `VARCHAR(255) NOT NULL` | Email Adresse des Users |
+| `vorname` | `VARCHAR(255) NOT NULL` | Vorname des Kundens |
+| `nachname` | `VARCHAR(255) NOT NULL` | Nachname des Kundens |
+| `strasse` | `VARCHAR(255) NOt NULL` | Strassenname des Kunden|
+| `plz` | `VARCHAR(10) NOT NULL` | Postleitzahl des Kunde|
+| `ort` | `VARCHAR(255) NOT NULL` |Ort des Kunden|
+| `land` | `VARCHAR(100) NOT NULL DEFAULT 'Schweiz'` | Land vom Kunde|
+| `createdAt` | `TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`; | Wann die Adresse eingetragen wurde|
 
 ##  Kurz-Checkliste
 
