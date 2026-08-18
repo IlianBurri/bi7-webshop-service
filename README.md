@@ -174,6 +174,7 @@ SELECT * FROM artikel;
 
 | Spalte | Typ | Beschreibung |
 |---|---|---|
+```sql
 | `adressId` | `INT AUTO_INCREMENT PRIMARY KEY` | Eindeutige, automatisch generierte ID |
 | `userEmail` | `VARCHAR(255) NOT NULL` | Email Adresse des Users |
 | `vorname` | `VARCHAR(255) NOT NULL` | Vorname des Kundens |
@@ -183,7 +184,7 @@ SELECT * FROM artikel;
 | `ort` | `VARCHAR(255) NOT NULL` |Ort des Kunden|
 | `land` | `VARCHAR(100) NOT NULL DEFAULT 'Schweiz'` | Land vom Kunde|
 | `createdAt` | `TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`; | Wann die Adresse eingetragen wurde|
-
+```
 ##  Kurz-Checkliste
 
 - [ ] Container `mariadb-container` läuft (`docker ps`)
