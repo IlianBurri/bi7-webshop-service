@@ -161,11 +161,74 @@ INSERT INTO artikel (artikelId, name, preis, bild) VALUES
 
 
 
-## 8 Ergebnis prüfen
+## 8 Tabelle `adresse` anlegen
+
+```sql
+CREATE TABLE IF NOT EXISTS adresse (
+    adressId INT AUTO_INCREMENT PRIMARY KEY,
+    userEmail VARCHAR(100) NOT NULL,
+    vorname VARCHAR(100) NOT NULL,
+    nachname VARCHAR(100) NOT NULL,
+    strasse VARCHAR(255) NOT NULL,
+    plz VARCHAR(20) NOT NULL,
+    ort VARCHAR(100) NOT NULL,
+    land VARCHAR(100) NOT NULL DEFAULT 'Schweiz',
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (userEmail) REFERENCES user(email) ON DELETE CASCADE
+);
+```
+
+| Spalte | Typ | Beschreibung |
+|---|---|---|
+| `adressId` | `INT AUTO_INCREMENT` | Eindeutige, automatisch generierte ID |
+| `userEmail` | `VARCHAR(100)` | Besitzer der Adresse, Fremdschlüssel auf `user(email)` |
+| `vorname`, `nachname`, `strasse`, `plz`, `ort`, `land` | `VARCHAR` | Adressdaten; `land` hat den Default `Schweiz` |
+| `createdAt` | `TIMESTAMP` | Anlagezeitpunkt (für die Sortierung bei der Abfrage) |
+
+> **Hinweis:** `ON DELETE CASCADE` sorgt dafür, dass die Adressen eines Users automatisch gelöscht werden, wenn der User gelöscht wird.
+
+---
+
+## 9 Tabelle `warenkorb_item` anlegen
+
+```sql
+CREATE TABLE IF NOT EXISTS warenkorb_item (
+    warenkorbItemId INT AUTO_INCREMENT PRIMARY KEY,
+    userEmail VARCHAR(100) NOT NULL,
+    artikelId INT NOT NULL,
+    menge INT NOT NULL DEFAULT 1,
+    FOREIGN KEY (userEmail) REFERENCES user(email) ON DELETE CASCADE,
+    FOREIGN KEY (artikelId) REFERENCES artikel(artikelId),
+    UNIQUE KEY uq_warenkorb_user_artikel (userEmail, artikelId)
+);
+```
+
+| Spalte | Typ | Beschreibung |
+|---|---|---|
+| `warenkorbItemId` | `INT AUTO_INCREMENT` | Eindeutige, automatisch generierte ID |
+| `userEmail` | `VARCHAR(100)` | Besitzer, Fremdschlüssel auf `user(email)` |
+| `artikelId` | `INT` | Artikel, Fremdschlüssel auf `artikel(artikelId)` |
+| `menge` | `INT` | Anzahl im Warenkorb |
+
+> **Wichtig (Unique-Key):** Der UNIQUE-Key auf `(userEmail, artikelId)` ist **Pflicht**.
+> Der Backend-Code fügt Artikel per atomarem `INSERT ... ON DUPLICATE KEY UPDATE` in den
+> Warenkorb ein (statt „erst SELECT, dann UPDATE/INSERT“). Nur mit diesem Unique-Key
+> erkennt MariaDB den „Duplikat“-Fall und erhöht die Menge statt eine zweite Zeile anzulegen.
+> Existiert die Tabelle bereits ohne den Key, einmalig nachrüsten:
+>
+> ```sql
+> ALTER TABLE warenkorb_item ADD UNIQUE KEY uq_warenkorb_user_artikel (userEmail, artikelId);
+> ```
+
+---
+
+## 10 Ergebnis prüfen
 
 ```sql
 SELECT * FROM user;
 SELECT * FROM artikel;
+SELECT * FROM adresse;
+SELECT * FROM warenkorb_item;
 ```
 
 ---
@@ -194,6 +257,8 @@ CREATE TABLE adresse (
 - [ ] Datenbank `webshopdb` und User `webshopuser` angelegt
 - [ ] Tabelle `user` erstellt und mit Testdaten befüllt
 - [ ] Tabelle `artikel` erstellt und mit 10 Produkten befüllt
+- [ ] Tabelle `adresse` erstellt
+- [ ] Tabelle `warenkorb_item` mit Unique-Key auf `(userEmail, artikelId)` erstellt
 - [ ] Verbindung als `webshopuser` funktioniert
 
 ---
@@ -205,6 +270,15 @@ Der Webshop besteht aus **zwei getrennten Projekten/Servern**. Beide müssen lau
 | Server | Projekt | Port | Aufgabe |
 |---|---|---|---|
 | **Backend-Service** | `bi7-webshop-service` | `7070` | REST-API (Login, Artikel, Warenkorb, Adressen) – Daten aus **MariaDB** |
+
+> **Konfiguration:** Die Zugangsdaten liegen nicht im Code, sondern in
+> `src/main/resources/application-dev.properties` (Keys `db.host`, `db.name`, `db.user`, `db.password`).
+> Im Repository stehen nur Beispielwerte. Für lokale, echte Zugangsdaten die
+> Umgebungsvariablen `DB_HOST`, `DB_NAME`, `DB_USER` und `DB_PASSWORD` setzen –
+> diese haben Vorrang vor der Datei und landen so nie im Repo.
+> Weitere Werte: `server.port` (HTTP-Port des Backends, Env `SERVER_PORT`) und
+> `app.isDev` (Env `APP_IS_DEV`): `true` erlaubt CORS für jede Origin (`anyHost()`,
+> nur für Entwicklung), `false` beschränkt CORS auf die lokale UI (Produktion).
 | **UI-Webserver** | `bi7-webshop-ui` | `8080` | Liefert die HTML-Seiten aus und bedient eigene API-Routen – eigene **H2-Datenbank** |
 
 ---

@@ -4,12 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-/**
- * Lädt die Datenbank-Konfiguration aus dem File {@code application-dev.properties}
- * (Classpath-Ressource unter {@code src/main/resources}).
- * So sind die Zugangsdaten nicht mehr im Code hartkodiert, sondern zentral
- * in einer Konfigurationsdatei.
- */
 public final class DBConfig {
 
     private static final String PROPERTIES_FILE = "application-dev.properties";
@@ -17,7 +11,6 @@ public final class DBConfig {
     private static final Properties PROPERTIES = loadProperties();
 
     private DBConfig() {
-        // Utility-Klasse: keine Instanzen erlaubt
     }
 
     private static Properties loadProperties() {
@@ -51,13 +44,36 @@ public final class DBConfig {
         return requireValue("db.password", "DB_PASSWORD");
     }
 
-    /**
-     * Liefert den Wert zum Key. Eine gesetzte Umgebungsvariable hat Vorrang
-     * (so können echte Zugangsdaten lokal gesetzt werden, ohne sie ins
-     * Repository zu committen). Ist beides nicht gesetzt, wirft die Methode
-     * sofort eine Exception – so schlägt die Konfiguration früh fehl, statt
-     * später mit einem unlesbaren "null" in der Connection-URL zu scheitern.
-     */
+    public static int getPort() {
+        String raw = requireValue("server.port", "SERVER_PORT");
+        try {
+            return Integer.parseInt(raw);
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException(
+                    "Konfigurationskey 'server.port' muss eine ganze Zahl sein, war: '" + raw + "'", e);
+        }
+    }
+
+    public static boolean isDev() {
+        String envValue = System.getenv("APP_IS_DEV");
+        if (envValue != null && !envValue.isBlank()) {
+            return parseBoolean(envValue, "APP_IS_DEV");
+        }
+        String value = PROPERTIES.getProperty("app.isDev");
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+        return parseBoolean(value, "app.isDev");
+    }
+
+    private static boolean parseBoolean(String value, String source) {
+        if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
+            return Boolean.parseBoolean(value);
+        }
+        throw new IllegalStateException(
+                "Konfigurationskey '" + source + "' muss 'true' oder 'false' sein, war: '" + value + "'");
+    }
+
     private static String requireValue(String key, String envKey) {
         String envValue = System.getenv(envKey);
         if (envValue != null && !envValue.isBlank()) {

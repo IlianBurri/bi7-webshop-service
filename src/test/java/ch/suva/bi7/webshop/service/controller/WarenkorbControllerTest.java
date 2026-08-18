@@ -70,13 +70,11 @@ class WarenkorbControllerTest {
     void addToWarenkorbMitUngueltigenParameternLiefert400() throws Exception {
         WarenkorbController controller = new WarenkorbController(new FakeWarenkorbDao(Collections.emptyList()));
 
-        // fehlende artikelId
         WarenkorbContextMock fehlendeArtikelId = new WarenkorbContextMock();
         fehlendeArtikelId.setQueryParam("email", "test@example.com");
         controller.addToWarenkorb.handle(fehlendeArtikelId);
         assertEquals(400, fehlendeArtikelId.gesetzterStatus);
 
-        // menge = 0
         WarenkorbContextMock mengeNull = new WarenkorbContextMock();
         mengeNull.setQueryParam("email", "test@example.com");
         mengeNull.setQueryParam("artikelId", "5");
@@ -84,7 +82,6 @@ class WarenkorbControllerTest {
         controller.addToWarenkorb.handle(mengeNull);
         assertEquals(400, mengeNull.gesetzterStatus);
 
-        // negative menge
         WarenkorbContextMock negativeMenge = new WarenkorbContextMock();
         negativeMenge.setQueryParam("email", "test@example.com");
         negativeMenge.setQueryParam("artikelId", "5");
@@ -92,14 +89,12 @@ class WarenkorbControllerTest {
         controller.addToWarenkorb.handle(negativeMenge);
         assertEquals(400, negativeMenge.gesetzterStatus);
 
-        // artikelId keine Zahl
         WarenkorbContextMock artikelIdKeineZahl = new WarenkorbContextMock();
         artikelIdKeineZahl.setQueryParam("email", "test@example.com");
         artikelIdKeineZahl.setQueryParam("artikelId", "abc");
         controller.addToWarenkorb.handle(artikelIdKeineZahl);
         assertEquals(400, artikelIdKeineZahl.gesetzterStatus);
 
-        // menge keine Zahl
         WarenkorbContextMock mengeKeineZahl = new WarenkorbContextMock();
         mengeKeineZahl.setQueryParam("email", "test@example.com");
         mengeKeineZahl.setQueryParam("artikelId", "5");
@@ -112,27 +107,23 @@ class WarenkorbControllerTest {
     void updateMengeMitUngueltigenParameternLiefert400() throws Exception {
         WarenkorbController controller = new WarenkorbController(new FakeWarenkorbDao(Collections.emptyList()));
 
-        // menge fehlt
         WarenkorbContextMock mengeFehlt = new WarenkorbContextMock();
         mengeFehlt.setPathParam("id", "7");
         controller.updateMenge.handle(mengeFehlt);
         assertEquals(400, mengeFehlt.gesetzterStatus);
 
-        // menge = 0
         WarenkorbContextMock mengeNull = new WarenkorbContextMock();
         mengeNull.setPathParam("id", "7");
         mengeNull.setQueryParam("menge", "0");
         controller.updateMenge.handle(mengeNull);
         assertEquals(400, mengeNull.gesetzterStatus);
 
-        // id keine Zahl
         WarenkorbContextMock idKeineZahl = new WarenkorbContextMock();
         idKeineZahl.setPathParam("id", "abc");
         idKeineZahl.setQueryParam("menge", "3");
         controller.updateMenge.handle(idKeineZahl);
         assertEquals(400, idKeineZahl.gesetzterStatus);
 
-        // menge keine Zahl
         WarenkorbContextMock mengeKeineZahl = new WarenkorbContextMock();
         mengeKeineZahl.setPathParam("id", "7");
         mengeKeineZahl.setQueryParam("menge", "abc");

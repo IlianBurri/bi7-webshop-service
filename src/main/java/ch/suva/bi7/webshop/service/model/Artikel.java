@@ -26,7 +26,6 @@ public class Artikel {
         if (preis == null || preis.compareTo(MINDESTPREIS) < 0) {
             throw new IllegalArgumentException("Preis darf nicht null sein und muss mindestens 0.01 betragen");
         }
-        // Bild ist optional (null = kein Bild), aber falls gesetzt darf es nicht leer sein
         if (bild != null && bild.trim().isEmpty()) {
             throw new IllegalArgumentException("Bild darf nicht leer sein (weglassen, wenn kein Bild vorhanden)");
         }

@@ -55,8 +55,6 @@ class WarenkorbDaoImplTest {
 
     @Test
     void artikelHinzufuegenNutztAtomaresUpsert() throws Exception {
-        // Race-Condition-Fix: Es darf KEIN separates "SELECT ob vorhanden" mehr geben,
-        // sondern ein einziges atomares INSERT ... ON DUPLICATE KEY UPDATE.
         List<SqlStatement> updates = new ArrayList<>();
         List<SqlStatement> selects = new ArrayList<>();
         WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), updates, selects));

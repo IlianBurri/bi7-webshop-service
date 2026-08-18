@@ -17,7 +17,6 @@ public class DBConnectionImpl implements DBConnection {
     private final Connection con;
 
     public DBConnectionImpl(String host, String schema, String user, String password) throws ClassNotFoundException, InstantiationException, IllegalAccessException, SQLException {
-        // JDBC-Treiber registrieren. Das ist ggf. nicht notwendig, kann also auch ohne diese Zeile funktionieren:
         Class.forName("org.mariadb.jdbc.Driver").newInstance();
 
         con = DriverManager.getConnection("jdbc:mariadb://" + host + "/" + schema + "?" +

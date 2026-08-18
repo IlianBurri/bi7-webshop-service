@@ -7,11 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-/**
- * Instanzbasierter Controller: Das DAO wird per Konstruktor injiziert (manuelle
- * Dependency Injection). Dadurch ist der Controller ohne statischen Zustand
- * testbar und thread-sicher.
- */
 public class WarenkorbController {
 
     private static final Logger logger = LoggerFactory.getLogger(WarenkorbController.class);
@@ -77,11 +72,6 @@ public class WarenkorbController {
             }
         };
 
-        /**
-         * PUT /api/warenkorb/item/{id}
-         * Setzt die Menge eines Warenkorb-Items neu.
-         * Query-Parameter: menge
-         */
         this.updateMenge = ctx -> {
             try {
                 String idStr = ctx.pathParam("id");
@@ -114,10 +104,6 @@ public class WarenkorbController {
             }
         };
 
-        /**
-         * DELETE /api/warenkorb/item/{id}
-         * Löscht ein Warenkorb-Item.
-         */
         this.deleteWarenkorbItem = ctx -> {
             try {
                 String idStr = ctx.pathParam("id");

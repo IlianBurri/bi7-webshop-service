@@ -10,19 +10,7 @@ public interface WarenkorbDao {
 
     void addArtikelToWarenkorb(String email, int artikelId, int menge) throws DaoException;
 
-    /**
-     * Setzt die Menge eines Warenkorb-Items neu.
-     *
-     * @return {@code true}, wenn genau ein Datensatz aktualisiert wurde,
-     *         {@code false} wenn die id nicht existiert (→ Controller kann 404 liefern)
-     */
     boolean updateMenge(int warenkorbItemId, int menge) throws DaoException;
 
-    /**
-     * Löscht ein Warenkorb-Item.
-     *
-     * @return {@code true}, wenn genau ein Datensatz gelöscht wurde,
-     *         {@code false} wenn die id nicht existiert (→ Controller kann 404 liefern)
-     */
     boolean deleteWarenkorbItem(int warenkorbItemId) throws DaoException;
 }

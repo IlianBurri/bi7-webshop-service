@@ -10,16 +10,12 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Prüft, dass die Konfigurationsdatei alle Pflicht-Keys enthält.
- * Fehlt ein Key, schlägt DBConfig erst beim Start fehl – dieser Test
- * macht das früh und ohne laufende Datenbank sichtbar.
- */
 class DBConfigTest {
 
     private static final String PROPERTIES_FILE = "application-dev.properties";
 
-    private static final List<String> PFLICHT_KEYS = List.of("db.host", "db.name", "db.user", "db.password");
+    private static final List<String> PFLICHT_KEYS =
+            List.of("db.host", "db.name", "db.user", "db.password", "server.port", "app.isDev");
 
     @Test
     void propertiesDateiEnthaeltAllePflichtKeys() throws IOException {

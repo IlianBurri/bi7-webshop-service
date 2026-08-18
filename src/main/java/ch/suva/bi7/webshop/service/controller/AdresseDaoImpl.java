@@ -47,9 +47,6 @@ public class AdresseDaoImpl implements AdresseDao {
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
         int adressId;
         try {
-            // Die neue adressId kommt direkt aus JDBC (AUTO_INCREMENT) – kein
-            // nachgelagerter SELECT nötig, der bei Parallelität den falschen
-            // Datensatz liefern könnte.
             adressId = dbConnection.executeUpdateReturningGeneratedKeys(insertSql,
                     adresse.userEmail(), adresse.vorname(), adresse.nachname(),
                     adresse.strasse(), adresse.plz(), adresse.ort(), adresse.land());

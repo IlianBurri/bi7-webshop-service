@@ -228,7 +228,6 @@ class FakeAdresseDao implements AdresseDao {
     @Override
     public Adresse insert(Adresse adresse) {
         this.gespeicherteAdresse = adresse;
-        // simuliert die von der DB vergebene adressId
         return new Adresse(42, adresse.userEmail(), adresse.vorname(), adresse.nachname(),
                 adresse.strasse(), adresse.plz(), adresse.ort(), adresse.land());
     }

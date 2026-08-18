@@ -14,8 +14,7 @@ import io.javalin.Javalin;
 public class Bi7WebshopService {
     public static void main(String[] args) {
         try {
-            // Manuelle Dependency Injection: eine DB-Connection wird an alle DAOs
-            // und Controller weitergegeben (statt statischer DAO-Zustand pro Controller).
+
             DBConnection dbConnection = new DBConnectionImpl(
                     DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
 
@@ -25,8 +24,11 @@ public class Bi7WebshopService {
             var app = Javalin.create(config -> {
                 config.bundledPlugins.enableCors(cors -> {
                     cors.addRule(it -> {
-                        // Whitelist statt anyHost(): nur die lokale UI (Port 8080) darf die API aufrufen
-                        it.allowHost("http://localhost:8080", "http://127.0.0.1:8080");
+                        if (DBConfig.isDev()) {
+                            it.anyHost();
+                        } else {
+                            it.allowHost("http://localhost:8080", "http://127.0.0.1:8080");
+                        }
                         it.exposeHeader("sessionId");
                     });
                 });
@@ -48,7 +50,7 @@ public class Bi7WebshopService {
                 config.routes.post("/api/adressen", adresseController.createAdresse);
                 config.routes.put("/api/adressen/{adressId}", adresseController.updateAdresse);
                 config.routes.delete("/api/adressen/{adressId}", adresseController.deleteAdresse);
-            }).start(7070);
+            }).start(DBConfig.getPort());
         } catch (Exception e) {
             System.err.println("Webshop konnte nicht gestartet werden: " + e.getMessage());
             e.printStackTrace();

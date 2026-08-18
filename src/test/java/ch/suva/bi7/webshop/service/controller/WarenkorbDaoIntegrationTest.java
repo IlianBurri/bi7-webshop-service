@@ -27,7 +27,6 @@ class WarenkorbDaoIntegrationTest {
         try {
             dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
             warenkorbDao = new WarenkorbDaoImpl(dbConnection);
-            // Test-User anlegen (FK auf user.email). Idempotent dank UNIQUE-Key auf email.
             dbConnection.executeUpdate("INSERT IGNORE INTO user (username, email, password) " +
                     "VALUES ('Cart Test', '" + TEST_EMAIL + "', 'test123')");
         } catch (Exception e) {
@@ -41,7 +40,6 @@ class WarenkorbDaoIntegrationTest {
             return;
         }
         try {
-            // Löschen des Users entfernt via ON DELETE CASCADE auch alle Warenkorb-Items
             dbConnection.executeUpdate("DELETE FROM user WHERE email IN ('" + TEST_EMAIL + "', '" + TEST_EMAIL_ZWEITER_USER + "')");
         } catch (Exception e) {
             System.out.println("Fehler beim Aufräumen: " + e.getMessage());
@@ -120,7 +118,6 @@ class WarenkorbDaoIntegrationTest {
         warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 1);
         assertEquals(1, warenkorbDao.getWarenkorbByUser(TEST_EMAIL).size());
 
-        // Wird in tearDown() nochmals ausgeführt – hier vorab simulieren
         dbConnection.executeUpdate("DELETE FROM user WHERE email = '" + TEST_EMAIL + "'");
 
         assertTrue(warenkorbDao.getWarenkorbByUser(TEST_EMAIL).isEmpty(),
@@ -132,9 +129,6 @@ class WarenkorbDaoIntegrationTest {
         warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 2);
         warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 3, 1);
 
-        // Abmelden + erneutes Einloggen = neue Session mit neuer DB-Connection.
-        // Da der Warenkorb pro User in der DB liegt (nicht in der Session),
-        // muss er mit einer frischen DAO-Instanz weiterhin vollständig da sein.
         DBConnection neueConnection = new DBConnectionImpl(
                 DBConfig.getHost(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
         WarenkorbDao daoNachNeuemLogin = new WarenkorbDaoImpl(neueConnection);
@@ -174,9 +168,6 @@ class WarenkorbDaoIntegrationTest {
     void sqlInjectionVersuchLiefertKeineFremdenDaten() throws Exception {
         warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 1);
 
-        // Bösartige Eingabe: bei String-Konkatenation (WHERE userEmail = '' OR '1'='1')
-        // hätte diese Abfrage ALLE Warenkörbe zurückgeliefert. Mit PreparedStatement
-        // wird der Wert als reiner String behandelt und matcht keinen User.
         List<WarenkorbItem> items = warenkorbDao.getWarenkorbByUser("' OR '1'='1");
 
         assertTrue(items.isEmpty(), "SQL-Injection darf keine fremden Warenkorb-Items liefern");

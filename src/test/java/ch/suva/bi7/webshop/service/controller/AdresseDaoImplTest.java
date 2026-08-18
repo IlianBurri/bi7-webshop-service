@@ -150,9 +150,6 @@ class AdresseDaoImplTest {
 
     @Test
     void boesartigeEingabeMitApostrophWirdAlsParameterGebundenUndVerlaesstSqlNicht() throws Exception {
-        // Didaktischer Security-Lern-Test: Bei String-Konkatenation hätte "max' OR '1'='1"
-        // die WHERE-Klausel manipuliert. Mit PreparedStatement bleibt der SQL-String
-        // unverändert und der Wert wird als Parameter gebunden (damit neutralisiert).
         String boeseEingabe = "max' OR '1'='1";
         List<SqlStatement> selects = new ArrayList<>();
         AdresseDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), 1, selects));

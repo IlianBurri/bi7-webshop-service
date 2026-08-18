@@ -9,15 +9,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Minimaler ResultSet-Mock für Unit-Tests.
- *
- * Implementiert sind nur die Methoden, die von den DAOs tatsächlich verwendet werden
- * ({@link #next()}, {@link #getString(String)}, {@link #getInt(String)}, {@link #getBigDecimal(String)}).
- * Alle übrigen JDBC-Methoden werfen bewusst eine {@link UnsupportedOperationException},
- * damit sofort auffällt, wenn versehentlich eine nicht implementierte Methode benutzt wird
- * (statt stillschweigend falsche Werte zu liefern).
- */
 public class ResultSetMock implements ResultSet {
 
     private int index = -1;
@@ -49,7 +40,6 @@ public class ResultSetMock implements ResultSet {
     public int getInt(String s) throws SQLException {
         Map<String, Object> map = result.get(index);
         if (map != null && map.get(s) != null) {
-            // Stringify wie getString, damit auch "5" (String) statt nur Integer funktioniert
             return new BigDecimal(map.get(s).toString()).intValue();
         }
         return 0;
@@ -66,7 +56,6 @@ public class ResultSetMock implements ResultSet {
 
     @Override
     public void close() throws SQLException {
-        // Nichts zu tun – das Mock hält keine Ressourcen
     }
 
     private UnsupportedOperationException notImplemented(String method) {

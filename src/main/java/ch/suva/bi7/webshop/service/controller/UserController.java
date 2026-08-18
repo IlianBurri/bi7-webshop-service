@@ -25,7 +25,6 @@ public class UserController {
         return userDao;
     }
 
-    // For testing only
     static void setUserDaoMock(UserDao userDaoMock) {
         userDao = userDaoMock;
     }
@@ -162,7 +161,6 @@ public class UserController {
                 ctx.redirect("error.html");
             } else {
                 logger.info("User found, finish shopping: {}", userOptional.get());
-                // ..... TODO: Kaufvorgang für den gefunden User abschliessen
             }
         }
     };

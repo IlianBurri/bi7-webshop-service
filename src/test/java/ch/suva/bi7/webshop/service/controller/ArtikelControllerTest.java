@@ -42,7 +42,6 @@ class ArtikelControllerTest {
     }
 
 
-    // Statischen DAO-Zustand pro Test zurücksetzen, damit keine Test-Interferenzen entstehen
     @BeforeEach
     void resetArtikelDaoMock() {
         ArtikelController.setArtikelDaoMock(new FakeArtikelDao(Collections.emptyList()));

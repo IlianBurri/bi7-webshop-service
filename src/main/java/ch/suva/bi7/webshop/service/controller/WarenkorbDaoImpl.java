@@ -55,9 +55,6 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
 
     @Override
     public void addArtikelToWarenkorb(String email, int artikelId, int menge) throws DaoException {
-        // Atomares Upsert: ein einziges Statement statt "SELECT prüfen + UPDATE/INSERT".
-        // So können parallele Requests keine Duplikate/Falschmengen erzeugen.
-        // Voraussetzung: UNIQUE-Index auf (userEmail, artikelId) – siehe README.
         String sql = "INSERT INTO warenkorb_item (userEmail, artikelId, menge) VALUES (?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE menge = menge + VALUES(menge)";
         try {
