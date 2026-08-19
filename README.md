@@ -227,8 +227,29 @@ CREATE TABLE IF NOT EXISTS warenkorb_item (
 | Spalte | Typ | Beschreibung |
 |---|---|---|
 ```sql
-TODO
+INSERT INTO adresse (
+    id,
+    email,
+    vorname,
+    nachname,
+    strasse,
+    plz,
+    ort,
+    land,
+    created_at
+) VALUES (
+    23,
+    'steve.rogers@microsoft.com',
+    'Steve',
+    'Rogers',
+    'Musterstrasse 1',
+    '8000',
+    'Zürich',
+    'Schweiz',
+    CURRENT_TIMESTAMP
+);
 ```
+**Hinweis bei Strasse auch Hausnummer mit inbegriffen**
 
 ## 11 Ergebnis prüfen
 
