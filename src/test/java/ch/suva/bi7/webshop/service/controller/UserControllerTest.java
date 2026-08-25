@@ -64,7 +64,6 @@ class UserControllerTest {
         UserController.login.handle(ctxMock);
 
         assertEquals(201, ctxMock.gesetzterStatus);
-        assertEquals(true, ctxMock.sessionAttribute("isAdmin"), "Login muss isAdmin=true in die Session legen");
         assertEquals("bruce.wayne@gotham.com", ctxMock.sessionAttribute("userEmail"));
 
         LoginUserResponse res = (LoginUserResponse) ctxMock.gesendetesJson;
@@ -82,7 +81,6 @@ class UserControllerTest {
         UserController.login.handle(ctxMock);
 
         assertEquals(201, ctxMock.gesetzterStatus);
-        assertEquals(false, ctxMock.sessionAttribute("isAdmin"), "Login muss isAdmin=false in die Session legen");
 
         LoginUserResponse res = (LoginUserResponse) ctxMock.gesendetesJson;
         assertFalse(res.isAdmin, "Login-Antwort muss isAdmin=false enthalten");
@@ -209,6 +207,12 @@ class EinfacherContextMock implements io.javalin.http.Context {
     @Override
     public io.javalin.http.Context status(int status) {
         this.gesetzterStatus = status;
+        return this;
+    }
+
+    @Override
+    public io.javalin.http.Context status(HttpStatus status) {
+        this.gesetzterStatus = status.getCode();
         return this;
     }
 

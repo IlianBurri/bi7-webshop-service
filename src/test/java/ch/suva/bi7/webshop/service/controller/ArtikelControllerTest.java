@@ -233,7 +233,7 @@ class ArtikelControllerTest {
     void addArtikelOhneAdminSessionLiefert403() throws Exception {
         FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
         ArtikelController.setArtikelDaoMock(dao);
-        // TODO: ArtikelController.setUserDaoMock(...)
+        ArtikelController.setUserDaoMock(new EinfachesUserDaoMock(Optional.of(new User("Admin", "","",  false))));
 
         AddArtikelRequest request = new AddArtikelRequest(
                 "iPhone 16 Pro", new BigDecimal("1299.00"), null);
@@ -251,7 +251,7 @@ class ArtikelControllerTest {
     void addArtikelMitNichtAdminSessionLiefert403() throws Exception {
         FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
         ArtikelController.setArtikelDaoMock(dao);
-        // TODO: ArtikelController.setUserDaoMock(...)
+        ArtikelController.setUserDaoMock(new EinfachesUserDaoMock(Optional.of(new User("Admin", "","",  false))));
 
         AddArtikelRequest request = new AddArtikelRequest(
                 "iPhone 16 Pro", new BigDecimal("1299.00"), null);
@@ -332,6 +332,7 @@ class ArtikelControllerTest {
     void addArtikelMitNameGenauAnMaxLaengeWirdAkzeptiert() throws Exception {
         FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
         ArtikelController.setArtikelDaoMock(dao);
+        ArtikelController.setUserDaoMock(new EinfachesUserDaoMock(Optional.of(new User("Admin", "","",  true))));
 
         AddArtikelRequest request = new AddArtikelRequest(
                 "a".repeat(255), new BigDecimal("10.00"), null);
