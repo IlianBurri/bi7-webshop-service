@@ -50,6 +50,6 @@ public class UserDaoImpl implements UserDao {
     @Override
     public void addUser(User newUser) throws Exception {
         String query = "INSERT INTO user (username, email, password) VALUES (?, ?, ?)";
-        dbConnection.execute(query, newUser.username, newUser.email, newUser.password);
+        dbConnection.execute(query, newUser.getEmail(), newUser.getEmail(), newUser.getPassword());
     }
 }

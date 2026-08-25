@@ -1,18 +1,18 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.db.DBConfig;
-import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.model.AddArtikelRequest;
 import ch.suva.bi7.webshop.service.model.Artikel;
+import ch.suva.bi7.webshop.service.model.User;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
+import io.javalin.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class ArtikelController {
 
@@ -24,12 +24,17 @@ public class ArtikelController {
     private static final int MAX_BILD_LAENGE = 500;
 
     private static ArtikelDao artikelDao = null;
+    private static UserDao userDao = null;
 
-    public ArtikelController(ArtikelDao artikelDao) {
+    public ArtikelController(ArtikelDao artikelDao, UserDao userDao) {
         if (artikelDao == null) {
             throw new IllegalArgumentException("artikelDao must not be null");
         }
+        if (userDao == null) {
+            throw new IllegalArgumentException("userDao must not be null");
+        }
         this.artikelDao = artikelDao;
+        this.userDao = userDao;
     }
 
     private static ArtikelDao getArtikelDao() throws Exception {
@@ -38,6 +43,10 @@ public class ArtikelController {
 
     static void setArtikelDaoMock(ArtikelDao artikelDaoMock) {
         artikelDao = artikelDaoMock;
+    }
+
+    static void setUserDaoMock(UserDao userDaoMock) {
+        userDao = userDaoMock;
     }
 
     public static Handler fetchAllArtikel = ctx -> {
@@ -52,12 +61,20 @@ public class ArtikelController {
     };
 
     public static Handler addArtikel = ctx -> {
-        if (!AuthUtil.requireAdmin(ctx)) {
+        String email = ctx.sessionAttribute("userEmail");
+        logger.info("Benutzer '{}' ist Admin, erstelle Artikel...", email);
+
+        Optional<User> userOptional = userDao.getUserByEMail(email);
+
+        if (userOptional.isEmpty()) {
+            ctx.status(HttpStatus.UNAUTHORIZED).json(java.util.Map.of("error", "Nicht angemeldet: " + email));
             return;
         }
 
-        String email = ctx.sessionAttribute("userEmail");
-        logger.info("Benutzer '{}' ist Admin, erstelle Artikel...", email);
+        if (!userOptional.get().isAdmin()) {
+            ctx.status(HttpStatus.FORBIDDEN).json(java.util.Map.of("error", "Nur Administratoren dürfen Artikel anlegen."));
+            return;
+        }
 
         try {
             AddArtikelRequest eingabe = ctx.bodyAsClass(AddArtikelRequest.class);

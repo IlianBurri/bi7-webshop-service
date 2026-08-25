@@ -13,10 +13,11 @@ public class Bi7WebshopService {
             DBConnection dbConnection = new DBConnectionImpl(
                     DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
 
+            UserDao userDao = new UserDaoImpl(dbConnection);
             AdresseController adresseController = new AdresseController(new AdresseDaoImpl(dbConnection));
             WarenkorbController warenkorbController = new WarenkorbController(new WarenkorbDaoImpl(dbConnection));
-            ArtikelController artikelController = new ArtikelController(new ArtikelDaoImpl(dbConnection));
-            UserController userController = new UserController(new UserDaoImpl(dbConnection));
+            ArtikelController artikelController = new ArtikelController(new ArtikelDaoImpl(dbConnection), userDao);
+            UserController userController = new UserController(userDao);
 
             var app = Javalin.create(config -> {
                 config.bundledPlugins.enableCors(cors -> {
@@ -34,7 +35,6 @@ public class Bi7WebshopService {
                 config.routes.get("/users", userController.fetchAllUsernames);
                 config.routes.post("/users/login", userController.login);
                 config.routes.post("/users/logout", userController.logout);
-                config.routes.get("/users/me", userController.currentUser);
                 config.routes.get("/users/{email}", userController.fetchByEMail);
                 config.routes.post("/users/register", userController.register);
                 config.routes.post("/shopping/buy", userController.shoppingBuy);

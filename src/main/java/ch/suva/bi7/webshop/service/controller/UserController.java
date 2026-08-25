@@ -45,16 +45,6 @@ public class UserController {
         }
     };
 
-       public static Handler currentUser = ctx -> {
-        String email = ctx.sessionAttribute("userEmail");
-        if (email == null) {
-            ctx.status(401).json(Map.of("error", "Not logged in"));
-            return;
-        }
-        Boolean isAdmin = ctx.sessionAttribute("isAdmin");
-        ctx.status(200).json(Map.of("email", email, "isAdmin", Boolean.TRUE.equals(isAdmin)));
-    };
-
     public static Handler register = ctx -> {
         try {
             RegisterUserRequest registerUserRequest = ctx.bodyAsClass(RegisterUserRequest.class);
@@ -72,7 +62,8 @@ public class UserController {
             User newUser = new User(
                     registerUserRequest.username,
                     registerUserRequest.email,
-                    registerUserRequest.password
+                    registerUserRequest.password,
+                    false
             );
             dao.addUser(newUser);
 
@@ -97,11 +88,11 @@ public class UserController {
             if (email != null) {
                 if (loginUserRequest.email.equals(email)) {
                     Optional<User> userOptional = userDao.getUserByEMail(email);
-                    String realUsername = userOptional.map(u -> u.username).orElse(email);
+                    String realUsername = userOptional.map(u -> u.getUsername()).orElse(email);
 
                     LoginUserResponse response = new LoginUserResponse(
                             "info", "Du bist bereits als " + realUsername + " eingeloggt.", realUsername,
-                            userOptional.map(u -> u.isAdmin).orElse(false)
+                            userOptional.map(u -> u.isAdmin()).orElse(false)
                     );
                     logger.info("Bereits eingeloggt: {}", response);
                     ctx.status(200).json(response);
@@ -126,17 +117,16 @@ public class UserController {
             }
 
             User user = userOptional.get();
-            if (!user.password.equals(loginUserRequest.password)) {
+            if (!user.getPassword().equals(loginUserRequest.password)) {
                 LoginUserResponse response = new LoginUserResponse("error", "Wrong password for user: " + loginUserRequest.email, null, false);
                 logger.info("Login abgelehnt (falsches Passwort): {}", response);
                 ctx.status(409).json(response);
                 return;
             }
 
-            ctx.sessionAttribute("userEmail", user.email);
-            ctx.sessionAttribute("isAdmin", user.isAdmin);
+            ctx.sessionAttribute("userEmail", user.getEmail());
 
-            LoginUserResponse response = new LoginUserResponse("ok", null, user.username, user.isAdmin);
+            LoginUserResponse response = new LoginUserResponse("ok", null, user.getUsername(), user.isAdmin());
             logger.info("Login erfolgreich: {}", response);
             ctx.status(201).json(response);
 

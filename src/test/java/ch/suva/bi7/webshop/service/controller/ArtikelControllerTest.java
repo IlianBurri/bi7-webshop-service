@@ -2,6 +2,7 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.model.AddArtikelRequest;
 import ch.suva.bi7.webshop.service.model.Artikel;
+import ch.suva.bi7.webshop.service.model.User;
 import io.javalin.http.Context;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -214,6 +216,7 @@ class ArtikelControllerTest {
     void addArtikelMitLeeremNamenLiefert400() throws Exception {
         FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
         ArtikelController.setArtikelDaoMock(dao);
+        ArtikelController.setUserDaoMock(new EinfachesUserDaoMock(Optional.of(new User("Admin", "","",  true))));
 
         AddArtikelRequest request = new AddArtikelRequest(
                 "   ", new BigDecimal("10.00"), null);
@@ -230,6 +233,7 @@ class ArtikelControllerTest {
     void addArtikelOhneAdminSessionLiefert403() throws Exception {
         FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
         ArtikelController.setArtikelDaoMock(dao);
+        // TODO: ArtikelController.setUserDaoMock(...)
 
         AddArtikelRequest request = new AddArtikelRequest(
                 "iPhone 16 Pro", new BigDecimal("1299.00"), null);
@@ -247,6 +251,7 @@ class ArtikelControllerTest {
     void addArtikelMitNichtAdminSessionLiefert403() throws Exception {
         FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
         ArtikelController.setArtikelDaoMock(dao);
+        // TODO: ArtikelController.setUserDaoMock(...)
 
         AddArtikelRequest request = new AddArtikelRequest(
                 "iPhone 16 Pro", new BigDecimal("1299.00"), null);

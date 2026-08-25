@@ -47,7 +47,7 @@ class ArtikelDaoImplTest {
         assertEquals(new BigDecimal("1199.00"), ersterArtikel.preis);
     }
 
-
+// TODO Statt 'echter' Datenbank besser Mocks mit fixen Werten verwenden (...können wir gemeinsam anschauen)
     @Test
     void mehrereArtikelWerdenGeladen() throws Exception {
 

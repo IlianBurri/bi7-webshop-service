@@ -149,7 +149,11 @@ public class ResultSetMock implements ResultSet {
 
     @Override
     public boolean getBoolean(String s) throws SQLException {
-        throw notImplemented("getBoolean(String)");
+        Map<String, Object> map = result.get(index);
+        if (map != null && map.get(s) != null) {
+            return new Boolean(map.get(s).toString());
+        }
+        return false;
     }
 
     @Override

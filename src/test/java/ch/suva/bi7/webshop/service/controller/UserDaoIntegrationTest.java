@@ -57,29 +57,29 @@ class UserDaoIntegrationTest {
 
     @Test
     void addUser() throws Exception {
-        User testuser = new User("Bruce Wayne", "bruce.wayne@gotham.com", "bruce");
+        User testuser = new User("Bruce Wayne", "bruce.wayne@gotham.com", "bruce", false);
 
         userDao.addUser(testuser);
         Optional<User> foundUser = userDao.getUserByEMail("bruce.wayne@gotham.com");
 
         assertTrue(foundUser.isPresent(), "User wurde erfolgreich in der Datenbank registriert sein");
-        assertEquals("Bruce Wayne", foundUser.get().username);
+        assertEquals("Bruce Wayne", foundUser.get().getUsername());
     }
 
     @Test
     void getUserByEMail() throws Exception {
-        User testuser = new User("Peter Parker", "spidey@dailybugle.com", "webslinger");
+        User testuser = new User("Peter Parker", "spidey@dailybugle.com", "webslinger", false);
         userDao.addUser(testuser);
 
         Optional<User> foundUser = userDao.getUserByEMail("spidey@dailybugle.com");
         assertTrue(foundUser.isPresent());
-        assertEquals("Peter Parker", foundUser.get().username);
+        assertEquals("Peter Parker", foundUser.get().getUsername());
     }
 
     @Test
     void getAllUsernames() throws Exception {
-        userDao.addUser(new User("Hawk Eye", "hawk.eye@arrow.com", "target"));
-        userDao.addUser(new User("Black Widow", "black.widow@avengers.com", "spider"));
+        userDao.addUser(new User("Hawk Eye", "hawk.eye@arrow.com", "target", false));
+        userDao.addUser(new User("Black Widow", "black.widow@avengers.com", "spider", false));
 
         List<String> usernames = userDao.getAllUsernames();
 

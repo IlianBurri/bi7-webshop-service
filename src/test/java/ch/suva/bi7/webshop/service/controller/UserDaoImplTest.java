@@ -42,7 +42,7 @@ class UserDaoImplTest {
         Optional<User> userOptional = testee.getUserByEMail("admin@somewhere.com");
 
         assertTrue(userOptional.isPresent());
-        assertTrue(userOptional.get().isAdmin, "Admin-Status muss aus der DB übernommen werden");
+        assertTrue(userOptional.get().isAdmin(), "Admin-Status muss aus der DB übernommen werden");
     }
 
     @Test
@@ -54,7 +54,7 @@ class UserDaoImplTest {
         Optional<User> userOptional = testee.getUserByEMail("test@somewhere.com");
 
         assertTrue(userOptional.isPresent());
-        assertFalse(userOptional.get().isAdmin, "Ohne Admin-Flag muss isAdmin false sein");
+        assertFalse(userOptional.get().isAdmin(), "Ohne Admin-Flag muss isAdmin false sein");
     }
 
     @Test

@@ -3,17 +3,10 @@ package ch.suva.bi7.webshop.service.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class User {
-    public final String username;
-    public final String email;
-    public final String password;
-    public final boolean isAdmin;
-
-    public User(
-            @JsonProperty("username") String username,
-            @JsonProperty("email") String email,
-            @JsonProperty("password") String password) {
-        this(username, email, password, false);
-    }
+    private final String username;
+    private final String email;
+    private final String password;
+    private final boolean isAdmin;
 
     public User(
             @JsonProperty("username") String username,
@@ -41,4 +34,7 @@ public class User {
         return password;
     }
 
+    public boolean isAdmin() {
+        return isAdmin;
+    }
 }
