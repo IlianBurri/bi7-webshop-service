@@ -6,17 +6,27 @@ public class User {
     public final String username;
     public final String email;
     public final String password;
+    public final boolean isAdmin;
 
     public User(
             @JsonProperty("username") String username,
             @JsonProperty("email") String email,
             @JsonProperty("password") String password) {
+        this(username, email, password, false);
+    }
+
+    public User(
+            @JsonProperty("username") String username,
+            @JsonProperty("email") String email,
+            @JsonProperty("password") String password,
+            @JsonProperty("isAdmin") boolean isAdmin) {
         if (username == null || email == null || password == null) {
             throw new IllegalArgumentException("username, email and password must not be null");
         }
         this.username = username;
         this.email = email;
         this.password = password;
+        this.isAdmin = isAdmin;
     }
 
     public String getUsername() {
@@ -30,4 +40,5 @@ public class User {
     public String getPassword() {
         return password;
     }
+
 }

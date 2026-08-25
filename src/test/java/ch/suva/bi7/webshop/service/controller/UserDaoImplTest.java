@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserDaoImplTest {
@@ -33,6 +34,30 @@ class UserDaoImplTest {
     }
 
     @Test
+    void getUserByEMailLiefertAdminStatus() throws SQLException {
+        ResultSet resultSet = createResultSetMock(List.of(user("admin", "admin", "admin@somewhere.com", true)));
+        DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
+        UserDaoImpl testee = createTestee(dbConnection);
+
+        Optional<User> userOptional = testee.getUserByEMail("admin@somewhere.com");
+
+        assertTrue(userOptional.isPresent());
+        assertTrue(userOptional.get().isAdmin, "Admin-Status muss aus der DB übernommen werden");
+    }
+
+    @Test
+    void getUserByEMailOhneAdminFlagLiefertFalse() throws SQLException {
+        ResultSet resultSet = createResultSetMock(List.of(user("testuser", "test", "test@somewhere.com")));
+        DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
+        UserDaoImpl testee = createTestee(dbConnection);
+
+        Optional<User> userOptional = testee.getUserByEMail("test@somewhere.com");
+
+        assertTrue(userOptional.isPresent());
+        assertFalse(userOptional.get().isAdmin, "Ohne Admin-Flag muss isAdmin false sein");
+    }
+
+    @Test
     void getAllUsernamesLiefertAlleBenutzernamen() throws SQLException {
         ResultSet resultSet = createResultSetMock(List.of(
                 user("testuser", "test", "test@somewhere.com"),
@@ -44,7 +69,6 @@ class UserDaoImplTest {
 
         List<String> resultUsernames = testee.getAllUsernames();
 
-        // Prüft Anzahl, Inhalt UND Reihenfolge in einem Schritt
         assertEquals(
                 List.of("testuser", "testuser2", "testuser3"),
                 resultUsernames,
@@ -52,10 +76,15 @@ class UserDaoImplTest {
     }
 
     private Map<String, Object> user(String username, String password, String email) {
+        return user(username, password, email, false);
+    }
+
+    private Map<String, Object> user(String username, String password, String email, boolean isAdmin) {
         return Map.of(
                 "username", username,
                 "password", password,
-                "email", email);
+                "email", email,
+                "isAdmin", isAdmin);
     }
 
     private UserDaoImpl createTestee(DBConnection dbConnection) {

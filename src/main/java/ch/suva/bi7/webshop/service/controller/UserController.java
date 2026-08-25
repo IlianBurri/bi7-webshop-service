@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class UserController {
@@ -42,6 +43,16 @@ public class UserController {
         } else {
             ctx.status(404).result("Not Found: '" + email + "'\n");
         }
+    };
+
+       public static Handler currentUser = ctx -> {
+        String email = ctx.sessionAttribute("userEmail");
+        if (email == null) {
+            ctx.status(401).json(Map.of("error", "Not logged in"));
+            return;
+        }
+        Boolean isAdmin = ctx.sessionAttribute("isAdmin");
+        ctx.status(200).json(Map.of("email", email, "isAdmin", Boolean.TRUE.equals(isAdmin)));
     };
 
     public static Handler register = ctx -> {
@@ -89,14 +100,16 @@ public class UserController {
                     String realUsername = userOptional.map(u -> u.username).orElse(email);
 
                     LoginUserResponse response = new LoginUserResponse(
-                            "info", "Du bist bereits als " + realUsername + " eingeloggt.", realUsername
+                            "info", "Du bist bereits als " + realUsername + " eingeloggt.", realUsername,
+                            userOptional.map(u -> u.isAdmin).orElse(false)
                     );
                     logger.info("Bereits eingeloggt: {}", response);
                     ctx.status(200).json(response);
                     return;
                 } else {
                     LoginUserResponse response = new LoginUserResponse(
-                            "error", "Es ist bereits ein anderer User (" + email + ") in dieser Session eingeloggt. Bitte zuerst ausloggen.", null
+                            "error", "Es ist bereits ein anderer User (" + email + ") in dieser Session eingeloggt. Bitte zuerst ausloggen.", null,
+                            false
                     );
                     logger.info("Login-Konflikt: {}", response);
                     ctx.status(409).json(response);
@@ -106,7 +119,7 @@ public class UserController {
 
             Optional<User> userOptional = userDao.getUserByEMail(loginUserRequest.email);
             if (userOptional.isEmpty()) {
-                LoginUserResponse response = new LoginUserResponse("error", "User does not exist: " + loginUserRequest.email, null);
+                LoginUserResponse response = new LoginUserResponse("error", "User does not exist: " + loginUserRequest.email, null, false);
                 logger.info("Login abgelehnt: {}", response);
                 ctx.status(409).json(response);
                 return;
@@ -114,15 +127,16 @@ public class UserController {
 
             User user = userOptional.get();
             if (!user.password.equals(loginUserRequest.password)) {
-                LoginUserResponse response = new LoginUserResponse("error", "Wrong password for user: " + loginUserRequest.email, null);
+                LoginUserResponse response = new LoginUserResponse("error", "Wrong password for user: " + loginUserRequest.email, null, false);
                 logger.info("Login abgelehnt (falsches Passwort): {}", response);
                 ctx.status(409).json(response);
                 return;
             }
 
             ctx.sessionAttribute("userEmail", user.email);
+            ctx.sessionAttribute("isAdmin", user.isAdmin);
 
-            LoginUserResponse response = new LoginUserResponse("ok", null, user.username);
+            LoginUserResponse response = new LoginUserResponse("ok", null, user.username, user.isAdmin);
             logger.info("Login erfolgreich: {}", response);
             ctx.status(201).json(response);
 

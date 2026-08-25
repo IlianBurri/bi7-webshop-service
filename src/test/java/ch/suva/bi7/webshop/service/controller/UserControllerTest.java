@@ -1,5 +1,7 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.model.LoginUserRequest;
+import ch.suva.bi7.webshop.service.model.LoginUserResponse;
 import ch.suva.bi7.webshop.service.model.RegisterUserRequest;
 import ch.suva.bi7.webshop.service.model.RegisterUserResponse;
 import ch.suva.bi7.webshop.service.model.User;
@@ -49,6 +51,79 @@ class UserControllerTest {
 
         RegisterUserResponse res = (RegisterUserResponse) ctxMock.gesendetesJson;
         assertEquals("ok", res.status);
+    }
+
+    @Test
+    void loginSetztAdminStatusInSession() throws Exception {
+        LoginUserRequest request = new LoginUserRequest("bruce.wayne@gotham.com", "batman");
+        User admin = new User("Bruce Wayne", "bruce.wayne@gotham.com", "batman", true);
+        EinfachesUserDaoMock daoMock = new EinfachesUserDaoMock(Optional.of(admin));
+        EinfacherContextMock ctxMock = new EinfacherContextMock(request);
+
+        UserController.setUserDaoMock(daoMock);
+        UserController.login.handle(ctxMock);
+
+        assertEquals(201, ctxMock.gesetzterStatus);
+        assertEquals(true, ctxMock.sessionAttribute("isAdmin"), "Login muss isAdmin=true in die Session legen");
+        assertEquals("bruce.wayne@gotham.com", ctxMock.sessionAttribute("userEmail"));
+
+        LoginUserResponse res = (LoginUserResponse) ctxMock.gesendetesJson;
+        assertTrue(res.isAdmin, "Login-Antwort muss isAdmin=true enthalten");
+    }
+
+    @Test
+    void loginSetztAdminStatusFalseFuerNormalenUser() throws Exception {
+        LoginUserRequest request = new LoginUserRequest("bruce.wayne@gotham.com", "batman");
+        User normal = new User("Bruce Wayne", "bruce.wayne@gotham.com", "batman", false);
+        EinfachesUserDaoMock daoMock = new EinfachesUserDaoMock(Optional.of(normal));
+        EinfacherContextMock ctxMock = new EinfacherContextMock(request);
+
+        UserController.setUserDaoMock(daoMock);
+        UserController.login.handle(ctxMock);
+
+        assertEquals(201, ctxMock.gesetzterStatus);
+        assertEquals(false, ctxMock.sessionAttribute("isAdmin"), "Login muss isAdmin=false in die Session legen");
+
+        LoginUserResponse res = (LoginUserResponse) ctxMock.gesendetesJson;
+        assertFalse(res.isAdmin, "Login-Antwort muss isAdmin=false enthalten");
+    }
+
+    @Test
+    void currentUserLiefertAdminStatusAusSession() throws Exception {
+        EinfacherContextMock ctxMock = new EinfacherContextMock(null);
+        ctxMock.sessionAttribute("userEmail", "bruce.wayne@gotham.com");
+        ctxMock.sessionAttribute("isAdmin", true);
+
+        UserController.currentUser.handle(ctxMock);
+
+        assertEquals(200, ctxMock.gesetzterStatus);
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> res = (java.util.Map<String, Object>) ctxMock.gesendetesJson;
+        assertEquals("bruce.wayne@gotham.com", res.get("email"));
+        assertEquals(true, res.get("isAdmin"), "Admin-Status muss aus der Session kommen");
+    }
+
+    @Test
+    void currentUserLiefertFalseFuerNormalenUser() throws Exception {
+        EinfacherContextMock ctxMock = new EinfacherContextMock(null);
+        ctxMock.sessionAttribute("userEmail", "peter.parker@dailybugle.com");
+        ctxMock.sessionAttribute("isAdmin", false);
+
+        UserController.currentUser.handle(ctxMock);
+
+        assertEquals(200, ctxMock.gesetzterStatus);
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, Object> res = (java.util.Map<String, Object>) ctxMock.gesendetesJson;
+        assertEquals(false, res.get("isAdmin"), "Ohne Admin-Session muss isAdmin false sein");
+    }
+
+    @Test
+    void currentUserOhneSessionLiefert401() throws Exception {
+        EinfacherContextMock ctxMock = new EinfacherContextMock(null);
+
+        UserController.currentUser.handle(ctxMock);
+
+        assertEquals(401, ctxMock.gesetzterStatus);
     }
 
     @Test

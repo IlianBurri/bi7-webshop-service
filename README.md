@@ -100,6 +100,7 @@ CREATE TABLE user (
   email VARCHAR(100) NOT NULL,
   username VARCHAR(100) NOT NULL,
   password VARCHAR(100) NOT NULL,
+  isAdmin BOOLEAN NOT NULL DEFAULT FALSE,
   PRIMARY KEY (email)
 );
 ```
@@ -109,6 +110,7 @@ CREATE TABLE user (
 | `email` | `VARCHAR(100)` | Primärschlüssel, eindeutige Kennung des Users |
 | `username` | `VARCHAR(100)` | Anzeigename |
 | `password` | `VARCHAR(100)` | Passwort |
+| `isAdmin` | `BOOLEAN` | Admin-Status; standardmäßig `FALSE`. Nur Admins dürfen Artikel anlegen. |
 
 >  **Wichtiger Hinweis für später:** Passwörter sollten in einem echten Webshop **niemals im Klartext** gespeichert werden, sondern gehasht (z. B. mit bcrypt/argon2). Für dieses Testsetup ist Klartext okay, für Produktivbetrieb nicht.
 >
@@ -118,10 +120,16 @@ CREATE TABLE user (
 
 ```sql
 INSERT INTO user VALUES
-  ('steve.rogers@microsoft.com', 'Steve Rogers', 'steve'),
-  ('t.stark@industries.com', 'Tony Stark', 'tony'),
-  ('cd@amazon.com', 'Carol Danvers', 'carol');
+  ('steve.rogers@microsoft.com', 'Steve Rogers', 'steve', FALSE),
+  ('t.stark@industries.com', 'Tony Stark', 'tony', TRUE),
+  ('cd@amazon.com', 'Carol Danvers', 'carol', FALSE);
 ```
+
+> **Für bestehende Datenbanken:** Wenn die `user`-Tabelle bereits ohne `isAdmin`-Spalte angelegt wurde, Spalte nachträglich ergänzen:
+>
+> ```sql
+> ALTER TABLE user ADD COLUMN isAdmin BOOLEAN NOT NULL DEFAULT FALSE;
+> ```
 
 ---
 

@@ -29,7 +29,8 @@ public class UserDaoImpl implements UserDao {
         if (queryResult.next()) {
             String username = queryResult.getString("username");
             String password = queryResult.getString("password");
-            User user = new User(username, email, password);
+            boolean isAdmin = queryResult.getBoolean("isAdmin");
+            User user = new User(username, email, password, isAdmin);
             return Optional.of(user);
         }
         return Optional.empty();

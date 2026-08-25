@@ -5,6 +5,7 @@ import ch.suva.bi7.webshop.service.model.Artikel;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,5 +39,15 @@ public class ArtikelDaoImpl implements ArtikelDao {
             }
         }
         return artikelListe;
+    }
+
+    @Override
+    public int addArtikel(String name, BigDecimal preis, String bild) throws DaoException {
+        String sql = "INSERT INTO artikel (name, preis, bild) VALUES (?, ?, ?)";
+        try {
+            return dbConnection.executeUpdateReturningGeneratedKeys(sql, name, preis, bild);
+        } catch (SQLException e) {
+            throw new DaoException("Fehler beim Speichern des Artikels", e);
+        }
     }
 }
