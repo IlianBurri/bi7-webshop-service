@@ -6,30 +6,183 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd"
         objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
 
-    <changeSet id="20260827-01" author="a2b">
-<!--        <preConditions onFail="MARK_RAN">-->
-<!--            <not>-->
-<!--                <tableExists tableName="user"/>-->
-<!--            </not>-->
-<!--        </preConditions>-->
-
+    <changeSet id="20260109-1" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="user"/>
+            </not>
+        </preConditions>
         <createTable tableName="user">
-            <column name="email" type="VARCHAR(100)">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_user_email"/>
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_USER"/>
             </column>
             <column name="username" type="VARCHAR(100)">
                 <constraints nullable="false"/>
             </column>
-            <column name="password" type="VARCHAR(100)">
+            <column name="email" type="VARCHAR(150)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="UQ_USER_EMAIL"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="isAdmin" type="BOOLEAN" defaultValueBoolean="false">
+            <column name="created_at" type="timestamp(0)" defaultValueComputed="NOW()"/>
+            <column name="isAdmin" type="TINYINT(1)" defaultValueNumeric="0"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260109-2" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="adresse"/>
+            </not>
+        </preConditions>
+        <createTable tableName="adresse">
+            <column name="adressId" type="INT" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_ADRESSE"/>
+            </column>
+            <column name="userEmail" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vorname" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="nachname" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="strasse" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="plz" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ort" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="land" type="VARCHAR(100)" defaultValue="Schweiz">
+                <constraints nullable="false"/>
+            </column>
+            <column name="createdAt" type="timestamp(0)" defaultValueComputed="NOW()"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260109-3" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="artikel"/>
+            </not>
+        </preConditions>
+        <createTable tableName="artikel">
+            <column name="artikelId" type="INT" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_ARTIKEL"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="preis" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bild" type="VARCHAR(500)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20260109-4" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="warenkorb_item"/>
+            </not>
+        </preConditions>
+        <createTable tableName="warenkorb_item">
+            <column name="warenkorbItemId" type="INT" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WARENKORB_ITEM"/>
+            </column>
+            <column name="userEmail" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="artikelId" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="menge" type="INT" defaultValueNumeric="1">
                 <constraints nullable="false"/>
             </column>
         </createTable>
+    </changeSet>
 
+    <changeSet id="20260109-5" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="warenkorb_item" indexName="uq_warenkorb_user_artikel"/>
+            </not>
+        </preConditions>
+        <addUniqueConstraint tableName="warenkorb_item"
+                             columnNames="userEmail, artikelId"
+                             constraintName="uq_warenkorb_user_artikel"/>
+    </changeSet>
+
+    <changeSet id="20260109-6" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="warenkorb_item" indexName="artikelId"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="artikelId" tableName="warenkorb_item">
+            <column name="artikelId"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260109-7" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <indexExists tableName="adresse" indexName="idx_adresse_user"/>
+            </not>
+        </preConditions>
+        <createIndex indexName="idx_adresse_user" tableName="adresse">
+            <column name="userEmail"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20260109-8" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyTableName="adresse" foreignKeyName="fk_adresse_user"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="adresse"
+                                 baseColumnNames="userEmail"
+                                 constraintName="fk_adresse_user"
+                                 referencedTableName="user"
+                                 referencedColumnNames="email"
+                                 onUpdate="RESTRICT"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="20260109-9" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyTableName="warenkorb_item" foreignKeyName="fk_warenkorb_user"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="warenkorb_item"
+                                 baseColumnNames="userEmail"
+                                 constraintName="fk_warenkorb_user"
+                                 referencedTableName="user"
+                                 referencedColumnNames="email"
+                                 onUpdate="RESTRICT"
+                                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="20260109-10" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <foreignKeyConstraintExists foreignKeyTableName="warenkorb_item" foreignKeyName="fk_warenkorb_artikel"/>
+            </not>
+        </preConditions>
+        <addForeignKeyConstraint baseTableName="warenkorb_item"
+                                 baseColumnNames="artikelId"
+                                 constraintName="fk_warenkorb_artikel"
+                                 referencedTableName="artikel"
+                                 referencedColumnNames="artikelId"
+                                 onUpdate="RESTRICT"
+                                 onDelete="CASCADE"/>
     </changeSet>
 
 </databaseChangeLog>
-
-
