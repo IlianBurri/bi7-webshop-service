@@ -4,11 +4,19 @@ import ch.suva.bi7.webshop.service.controller.*;
 import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
+import ch.suva.bi7.webshop.service.db.LiquibaseMigrationRunner;
 import io.javalin.Javalin;
 
 public class Bi7WebshopService {
     public static void main(String[] args) {
         try {
+
+            LiquibaseMigrationRunner.migrate(
+                    DBConfig.getHost(),
+                    DBConfig.getPort(),
+                    DBConfig.getSchema(),
+                    DBConfig.getUser(),
+                    DBConfig.getPassword());
 
             DBConnection dbConnection = new DBConnectionImpl(
                     DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());

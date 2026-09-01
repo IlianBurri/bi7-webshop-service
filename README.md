@@ -95,6 +95,10 @@ mysql -h 127.0.0.1 -P 3306 -u webshopuser -pwebshoppassword webshopdb
 
 ## 6 Tabelle `user` anlegen
 
+> Die Tabelle wird im Backend beim Start automatisch per Liquibase aus
+> `src/main/resources/db/...` erstellt. Das folgende SQL zeigt die
+> Zielstruktur, die der Migration entspricht.
+
 ```sql
 CREATE TABLE user (
   email VARCHAR(100) NOT NULL,
