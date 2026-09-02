@@ -25,10 +25,10 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
         List<WarenkorbItem> items = new ArrayList<>();
 
         String sql = "SELECT w.warenkorbItemId, w.userEmail, w.artikelId, w.menge, " +
-                     "a.name AS artikelName, a.preis AS artikelPreis, a.bild AS artikelBild " +
-                     "FROM warenkorb_item w " +
-                     "JOIN artikel a ON w.artikelId = a.artikelId " +
-                     "WHERE w.userEmail = ?";
+                "a.name AS artikelName, a.preis AS artikelPreis, a.bild AS artikelBild " +
+                "FROM warenkorb_item w " +
+                "JOIN artikel a ON w.artikelId = a.artikelId " +
+                "WHERE w.userEmail = ?";
 
         try (ResultSet rs = dbConnection.execute(sql, email)) {
             if (rs != null) {
@@ -81,6 +81,16 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
             return dbConnection.executeUpdate(sql, warenkorbItemId) > 0;
         } catch (SQLException e) {
             throw new DaoException("Fehler beim Löschen des Warenkorb-Items", e);
+        }
+    }
+
+    @Override
+    public boolean clearWarenkorbByUser(String email) throws DaoException {
+        String sql = "DELETE FROM warenkorb_item WHERE userEmail = ?";
+        try {
+            return dbConnection.executeUpdate(sql, email) > 0;
+        } catch (SQLException e) {
+            throw new DaoException("Fehler beim Leeren des Warenkorbs für den Benutzer " + email, e);
         }
     }
 }

@@ -22,5 +22,20 @@ public interface DBConnection {
                 "executeUpdateReturningGeneratedKeys wird von dieser Implementierung nicht unterstützt");
     }
 
+    default void beginTransaction() throws SQLException {
+        throw new UnsupportedOperationException(
+                "beginTransaction wird von dieser Implementierung nicht unterstützt");
+    }
+
+    default void commit() throws SQLException {
+        throw new UnsupportedOperationException(
+                "commit wird von dieser Implementierung nicht unterstützt");
+    }
+
+    default void rollback() throws SQLException {
+        throw new UnsupportedOperationException(
+                "rollback wird von dieser Implementierung nicht unterstützt");
+    }
+
     void close();
 }

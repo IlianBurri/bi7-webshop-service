@@ -55,6 +55,29 @@ public class DBConnectionImpl implements DBConnection {
     }
 
     @Override
+    public void beginTransaction() throws SQLException {
+        con.setAutoCommit(false);
+    }
+
+    @Override
+    public void commit() throws SQLException {
+        try {
+            con.commit();
+        } finally {
+            con.setAutoCommit(true);
+        }
+    }
+
+    @Override
+    public void rollback() throws SQLException {
+        try {
+            con.rollback();
+        } finally {
+            con.setAutoCommit(true);
+        }
+    }
+
+    @Override
     public void close() {
         if (con != null) {
             try {

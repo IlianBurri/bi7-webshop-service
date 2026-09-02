@@ -22,10 +22,14 @@ public class Bi7WebshopService {
                     DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
 
             UserDao userDao = new UserDaoImpl(dbConnection);
+            WarenkorbDao warenkorbDao = new WarenkorbDaoImpl(dbConnection);
             AdresseController adresseController = new AdresseController(new AdresseDaoImpl(dbConnection));
             WarenkorbController warenkorbController = new WarenkorbController(new WarenkorbDaoImpl(dbConnection));
             ArtikelController artikelController = new ArtikelController(new ArtikelDaoImpl(dbConnection), userDao);
             UserController userController = new UserController(userDao);
+
+            BestellungDao bestellungDao = new BestellungDaoImpl(dbConnection);
+            BestellungController bestellungController = new BestellungController(bestellungDao, warenkorbDao);
 
             var app = Javalin.create(config -> {
                 config.bundledPlugins.enableCors(cors -> {
@@ -45,7 +49,6 @@ public class Bi7WebshopService {
                 config.routes.post("/users/logout", userController.logout);
                 config.routes.get("/users/{email}", userController.fetchByEMail);
                 config.routes.post("/users/register", userController.register);
-                config.routes.post("/shopping/buy", userController.shoppingBuy);
                 config.routes.get("/artikel", artikelController.fetchAllArtikel);
                 config.routes.post("/artikel", artikelController.addArtikel);
 
@@ -54,10 +57,13 @@ public class Bi7WebshopService {
                 config.routes.post("/api/warenkorb/add", warenkorbController.addToWarenkorb);
                 config.routes.delete("/api/warenkorb/item/{id}", warenkorbController.deleteWarenkorbItem);
                 config.routes.put("/api/warenkorb/item/{id}", warenkorbController.updateMenge);
-                config.routes.get("/api/adressen/{email}", adresseController.getAdressen);
-                config.routes.post("/api/adressen", adresseController.createAdresse);
-                config.routes.put("/api/adressen/{adressId}", adresseController.updateAdresse);
-                config.routes.delete("/api/adressen/{adressId}", adresseController.deleteAdresse);
+
+                config.routes.get("/api/adresse/{email}", adresseController.getAdressen);
+                config.routes.post("/api/adresse", adresseController.createAdresse);
+                config.routes.put("/api/adresse/{adressId}", adresseController.updateAdresse);
+
+                config.routes.post("/api/bestellung/checkout", bestellungController.createBestellung);
+                config.routes.get("/api/bestellung/{email}", bestellungController.getBestellungenByUser);
             }).start(7070);
         } catch (Exception e) {
             System.err.println("Webshop konnte nicht gestartet werden: " + e.getMessage());

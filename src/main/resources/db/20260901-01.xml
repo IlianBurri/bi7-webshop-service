@@ -185,4 +185,95 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
+    <changeSet id="20260109-11" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bestellung"/>
+            </not>
+        </preConditions>
+        <createTable tableName="bestellung">
+            <column name="bestellungId" type="INT" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_BESTELLUNG"/>
+            </column>
+            <column name="userEmail" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="adressId" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bestelldatum" type="timestamp(0)" defaultValueComputed="NOW()"/>
+            <column name="status" type="VARCHAR(50)" defaultValue="OFFEN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="bestellung"
+                                 baseColumnNames="userEmail"
+                                 constraintName="fk_bestellung_user"
+                                 referencedTableName="user"
+                                 referencedColumnNames="email"
+                                 onUpdate="RESTRICT"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="bestellung"
+                                 baseColumnNames="adressId"
+                                 constraintName="fk_bestellung_adresse"
+                                 referencedTableName="adresse"
+                                 referencedColumnNames="adressId"
+                                 onUpdate="RESTRICT"
+                                 onDelete="RESTRICT"/>
+    </changeSet>
+
+    <changeSet id="20260109-12" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="bestellposition"/>
+            </not>
+        </preConditions>
+        <createTable tableName="bestellposition">
+            <column name="bestellpositionId" type="INT" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_BESTELLPOSITION"/>
+            </column>
+            <column name="bestellungId" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="artikelId" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="anzahl" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="einzelpreis" type="DECIMAL(10, 2)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="bestellposition"
+                                 baseColumnNames="bestellungId"
+                                 constraintName="fk_bestellposition_bestellung"
+                                 referencedTableName="bestellung"
+                                 referencedColumnNames="bestellungId"
+                                 onUpdate="RESTRICT"
+                                 onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint baseTableName="bestellposition"
+                                 baseColumnNames="artikelId"
+                                 constraintName="fk_bestellposition_artikel"
+                                 referencedTableName="artikel"
+                                 referencedColumnNames="artikelId"
+                                 onUpdate="RESTRICT"
+                                 onDelete="RESTRICT"/>
+    </changeSet>
+
+    <changeSet id="20260901-1" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="bestellung" columnName="gesamtpreis"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="bestellung">
+            <column name="gesamtpreis" type="DECIMAL(10, 2)"/>
+        </addColumn>
+    </changeSet>
+
 </databaseChangeLog>

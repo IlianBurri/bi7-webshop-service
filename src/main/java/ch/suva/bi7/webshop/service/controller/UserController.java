@@ -150,22 +150,4 @@ public class UserController {
         logger.info("Logout: {}", response.info);
         ctx.status(200).json(response);
     };
-
-    public static Handler shoppingBuy = ctx -> {
-
-        String email = ctx.sessionAttribute("userEmail");
-        if (email == null) {
-            logger.info("No user logged in, redirect to login");
-            ctx.redirect("login.html");
-        } else {
-            UserDao userDao = getUserDao();
-            Optional<User> userOptional = userDao.getUserByEMail(email);
-            if (userOptional.isEmpty()) {
-                logger.info("User '{}' not found, redirect to error page", email);
-                ctx.redirect("error.html");
-            } else {
-                logger.info("User found, finish shopping: {}", userOptional.get());
-            }
-        }
-    };
 }

@@ -13,4 +13,6 @@ public interface WarenkorbDao {
     boolean updateMenge(int warenkorbItemId, int menge) throws DaoException;
 
     boolean deleteWarenkorbItem(int warenkorbItemId) throws DaoException;
+
+    boolean clearWarenkorbByUser(String email) throws DaoException;
 }
