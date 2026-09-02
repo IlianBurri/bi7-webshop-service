@@ -9,11 +9,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Instanzbasierter Controller: Das DAO wird per Konstruktor injiziert (manuelle
- * Dependency Injection). Dadurch ist der Controller ohne statischen Zustand
- * testbar und thread-sicher.
- */
 public class AdresseController {
 
     private static final Logger logger = LoggerFactory.getLogger(AdresseController.class);

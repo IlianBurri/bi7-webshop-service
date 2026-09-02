@@ -247,6 +247,11 @@ class FakeWarenkorbDao implements WarenkorbDao {
         this.deleteId = warenkorbItemId;
         return deleteErgebnis;
     }
+
+    @Override
+    public boolean clearWarenkorbByUser(String email) {
+        return true;
+    }
 }
 
 class FehlerWarenkorbDao implements WarenkorbDao {
@@ -268,6 +273,11 @@ class FehlerWarenkorbDao implements WarenkorbDao {
 
     @Override
     public boolean deleteWarenkorbItem(int warenkorbItemId) throws DaoException {
+        throw new DaoException("Datenbank Fehler");
+    }
+
+    @Override
+    public boolean clearWarenkorbByUser(String email) throws DaoException {
         throw new DaoException("Datenbank Fehler");
     }
 }
