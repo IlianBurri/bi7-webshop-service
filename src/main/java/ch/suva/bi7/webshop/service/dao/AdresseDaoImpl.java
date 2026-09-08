@@ -48,8 +48,8 @@ public class AdresseDaoImpl implements AdresseDao {
         int adressId;
         try {
             adressId = dbConnection.executeUpdateReturningGeneratedKeys(insertSql,
-                    adresse.userEmail(), adresse.vorname(), adresse.nachname(),
-                    adresse.strasse(), adresse.plz(), adresse.ort(), adresse.land());
+                    adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
+                    adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand());
         } catch (SQLException e) {
             throw new DaoException("Fehler beim Speichern der Adresse", e);
         }
@@ -62,8 +62,8 @@ public class AdresseDaoImpl implements AdresseDao {
                 "plz = ?, ort = ?, land = ? WHERE adressId = ?";
         try {
             return dbConnection.executeUpdate(sql,
-                    adresse.userEmail(), adresse.vorname(), adresse.nachname(),
-                    adresse.strasse(), adresse.plz(), adresse.ort(), adresse.land(), adressId) > 0;
+                    adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
+                    adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand(), adressId) > 0;
         } catch (SQLException e) {
             throw new DaoException("Fehler beim Aktualisieren der Adresse", e);
         }
@@ -85,8 +85,8 @@ public class AdresseDaoImpl implements AdresseDao {
                 "WHERE userEmail = ? AND vorname = ? AND nachname = ? AND strasse = ? " +
                 "AND plz = ? AND ort = ? AND land = ?";
         try (ResultSet rs = dbConnection.execute(sql,
-                adresse.userEmail(), adresse.vorname(), adresse.nachname(),
-                adresse.strasse(), adresse.plz(), adresse.ort(), adresse.land())) {
+                adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
+                adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand())) {
             return rs != null && rs.next();
         } catch (SQLException e) {
             throw new DaoException("Fehler beim Prüfen auf identische Adresse", e);
@@ -94,8 +94,8 @@ public class AdresseDaoImpl implements AdresseDao {
     }
 
     private AdresseEntity mitAdressId(AdresseEntity adresse, int adressId) {
-        return new AdresseEntity(adressId, adresse.userEmail(), adresse.vorname(), adresse.nachname(),
-                adresse.strasse(), adresse.plz(), adresse.ort(), adresse.land());
+        return new AdresseEntity(adressId, adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
+                adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand());
     }
 
     private AdresseEntity mapAdresse(ResultSet rs) throws SQLException {

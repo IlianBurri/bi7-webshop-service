@@ -172,17 +172,14 @@ class BestellungDaoImplTest {
 
             @Override
             public void beginTransaction() throws SQLException {
-                // Erfolgspfad: Transaktion einfach zulassen
             }
 
             @Override
             public void commit() throws SQLException {
-                // Erfolgspfad: Commit zulassen
             }
 
             @Override
             public void rollback() throws SQLException {
-                // Erfolgspfad: kein Rollback noetig
             }
 
             @Override
@@ -193,7 +190,7 @@ class BestellungDaoImplTest {
 
     @Test
     void fehlerBeimBestellenFuehrtZuRollbackUndKeinemCommit() {
-        int[] transaktion = new int[3]; // index 0 = begin, 1 = commit, 2 = rollback
+        int[] transaktion = new int[3];
         BestellungDaoImpl testee = new BestellungDaoImpl(new DBConnection() {
             @Override
             public ResultSet execute(String sql, Object... params) {

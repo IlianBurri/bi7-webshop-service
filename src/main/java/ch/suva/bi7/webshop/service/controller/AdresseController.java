@@ -3,6 +3,7 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.AdresseDao;
 import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
+import ch.suva.bi7.webshop.service.model.AdresseDto;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
@@ -34,8 +35,10 @@ public class AdresseController {
             try {
                 String email = ctx.pathParam("email");
                 List<AdresseEntity> adressen = adresseDao.findByUserEmail(email);
-                // TODO GetAdressenResponse erstellen und zurückgeben, anstatt die Liste von Entities
-                ctx.status(200).json(adressen);
+                List<AdresseDto> response = adressen.stream()
+                        .map(AdresseController::adresseEntity2Dto)
+                        .toList();
+                ctx.status(200).json(response);
             } catch (Exception e) {
                 logger.error("Fehler beim Abrufen der Adressen: {}", e.getMessage(), e);
                 ctx.status(500).json(Map.of("error", "Fehler beim Abrufen der Adressen."));
@@ -44,17 +47,17 @@ public class AdresseController {
 
         this.createAdresse = ctx -> {
             try {
-                AdresseEntity eingabe = ctx.bodyAsClass(AdresseEntity.class);
+                AdresseDto eingabe = ctx.bodyAsClass(AdresseDto.class);
                 AdresseEntity adresse = validiereUndNormalisiere(eingabe);
 
                 if (adresseDao.existsIdentical(adresse)) {
                     AdresseEntity bestehende = findeBestehendeIdentische(adresseDao, adresse);
-                    ctx.status(200).json(bestehende);
+                    ctx.status(200).json(adresseEntity2Dto(bestehende));
                     return;
                 }
 
                 AdresseEntity gespeichert = adresseDao.insert(adresse);
-                ctx.status(201).json(gespeichert);
+                ctx.status(201).json(adresseEntity2Dto(gespeichert));
             } catch (BadRequestResponse e) {
                 ctx.status(400).json(Map.of("error", "Ungültiger JSON-Request-Body."));
             } catch (IllegalArgumentException e) {
@@ -69,7 +72,7 @@ public class AdresseController {
             try {
                 int adressId = Integer.parseInt(ctx.pathParam("adressId"));
 
-                AdresseEntity eingabe = ctx.bodyAsClass(AdresseEntity.class);
+                AdresseDto eingabe = ctx.bodyAsClass(AdresseDto.class);
                 AdresseEntity adresse = validiereUndNormalisiere(eingabe);
 
                 if (!adresseDao.update(adressId, adresse)) {
@@ -77,7 +80,7 @@ public class AdresseController {
                     return;
                 }
 
-                ctx.status(200).json(mitAdressId(adresse, adressId));
+                ctx.status(200).json(adresseEntity2Dto(mitAdressId(adresse, adressId)));
             } catch (NumberFormatException e) {
                 ctx.status(400).json(Map.of("error", "adressId muss eine Zahl sein."));
             } catch (BadRequestResponse e) {
@@ -109,27 +112,27 @@ public class AdresseController {
         };
     }
 
-    private static AdresseEntity validiereUndNormalisiere(AdresseEntity eingabe) {
-        String userEmail = pflichtfeld(eingabe.userEmail(), "userEmail");
-        String vorname = pflichtfeld(eingabe.vorname(), "vorname");
-        String nachname = pflichtfeld(eingabe.nachname(), "nachname");
-        String strasse = pflichtfeld(eingabe.strasse(), "strasse");
-        String plz = pflichtfeld(eingabe.plz(), "plz");
-        String ort = pflichtfeld(eingabe.ort(), "ort");
+    private static AdresseEntity validiereUndNormalisiere(AdresseDto eingabe) {
+        String userEmail = pflichtfeld(eingabe.getUserEmail(), "userEmail");
+        String vorname = pflichtfeld(eingabe.getVorname(), "vorname");
+        String nachname = pflichtfeld(eingabe.getNachname(), "nachname");
+        String strasse = pflichtfeld(eingabe.getStrasse(), "strasse");
+        String plz = pflichtfeld(eingabe.getPlz(), "plz");
+        String ort = pflichtfeld(eingabe.getOrt(), "ort");
 
-        String land = eingabe.land();
+        String land = eingabe.getLand();
         if (land == null || land.trim().isEmpty()) {
             land = STANDARD_LAND;
         } else {
             land = land.trim();
         }
 
-        return new AdresseEntity(0, userEmail, vorname, nachname, strasse, plz, ort, land);
+        return new AdresseEntity(null, userEmail, vorname, nachname, strasse, plz, ort, land);
     }
 
     private static AdresseEntity mitAdressId(AdresseEntity adresse, int adressId) {
-        return new AdresseEntity(adressId, adresse.userEmail(), adresse.vorname(), adresse.nachname(),
-                adresse.strasse(), adresse.plz(), adresse.ort(), adresse.land());
+        return new AdresseEntity(adressId, adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
+                adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand());
     }
 
     private static String pflichtfeld(String wert, String feld) {
@@ -140,7 +143,7 @@ public class AdresseController {
     }
 
     private static AdresseEntity findeBestehendeIdentische(AdresseDao dao, AdresseEntity adresse) throws DaoException {
-        List<AdresseEntity> vorhandene = dao.findByUserEmail(adresse.userEmail());
+        List<AdresseEntity> vorhandene = dao.findByUserEmail(adresse.getUserEmail());
         for (AdresseEntity a : vorhandene) {
             if (istIdentisch(a, adresse)) {
                 return a;
@@ -150,11 +153,28 @@ public class AdresseController {
     }
 
     private static boolean istIdentisch(AdresseEntity a, AdresseEntity b) {
-        return a.vorname().equals(b.vorname())
-                && a.nachname().equals(b.nachname())
-                && a.strasse().equals(b.strasse())
-                && a.plz().equals(b.plz())
-                && a.ort().equals(b.ort())
-                && a.land().equals(b.land());
+        return a.getVorname().equals(b.getVorname())
+                && a.getNachname().equals(b.getNachname())
+                && a.getStrasse().equals(b.getStrasse())
+                && a.getPlz().equals(b.getPlz())
+                && a.getOrt().equals(b.getOrt())
+                && a.getLand().equals(b.getLand());
+    }
+
+    static AdresseDto adresseEntity2Dto(AdresseEntity entity) {
+        if (entity == null) {
+            throw new IllegalArgumentException("AdresseEntity darf nicht null sein");
+        }
+
+        return new AdresseDto(
+                entity.getAdressId(),
+                entity.getUserEmail(),
+                entity.getVorname(),
+                entity.getNachname(),
+                entity.getStrasse(),
+                entity.getPlz(),
+                entity.getOrt(),
+                entity.getLand()
+        );
     }
 }
