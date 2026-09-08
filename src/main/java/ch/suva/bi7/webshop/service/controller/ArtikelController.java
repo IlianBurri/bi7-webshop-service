@@ -7,6 +7,7 @@ import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.UserEntity;
 import ch.suva.bi7.webshop.service.model.AddArtikelResponse;
 import ch.suva.bi7.webshop.service.model.ArtikelDto;
+import ch.suva.bi7.webshop.service.model.DtoAndEntetyMapper;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import io.javalin.http.HttpStatus;
@@ -57,7 +58,7 @@ public class ArtikelController {
         try {
             List<ArtikelEntity> artikelListe = getArtikelDao().getAllArtikel();
             List<ArtikelDto> response = artikelListe.stream()
-                    .map(ArtikelController::artikelEntity2ArtikelDto)
+                    .map(DtoAndEntetyMapper::artikelEntity2ArtikelDto)
                     .toList();
             ctx.status(200).json(response);
         } catch (Exception e) {
@@ -93,7 +94,7 @@ public class ArtikelController {
 
             int artikelId = getArtikelDao().addNewArtikel(name, eingabe.preis, bild);
             ArtikelEntity artikelEntity = new ArtikelEntity(artikelId, name, eingabe.preis, bild);
-            ArtikelDto artikelDto = artikelEntity2ArtikelDto(artikelEntity);
+            ArtikelDto artikelDto = DtoAndEntetyMapper.artikelEntity2ArtikelDto(artikelEntity);
             logger.info("Artikel erfolgreich von '{}' erstellt: {}", email, artikelDto);
             ctx.status(201).json(new AddArtikelResponse(artikelDto));
         } catch (BadRequestResponse e) {
@@ -124,9 +125,5 @@ public class ArtikelController {
         if (bild != null && bild.length() > MAX_BILD_LAENGE) {
             throw new IllegalArgumentException("'bild' darf höchstens " + MAX_BILD_LAENGE + " Zeichen lang sein.");
         }
-    }
-
-    static ArtikelDto artikelEntity2ArtikelDto(ArtikelEntity entity) {
-        return new ArtikelDto(entity.getArtikelId(), entity.getName(), entity.getPreis(), entity.getBild());
     }
 }
