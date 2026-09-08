@@ -1,9 +1,9 @@
-package ch.suva.bi7.webshop.service.model;
+package ch.suva.bi7.webshop.service.db.entity;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-public class Bestellung {
+public class BestellungEntity {
 
     private int bestellungId;
     private String userEmail;
@@ -12,10 +12,10 @@ public class Bestellung {
     private String status;
     private Timestamp bestelltAm;
 
-    public Bestellung() {
+    public BestellungEntity() {
     }
 
-    public Bestellung(int bestellungId, String userEmail, int adressId, BigDecimal gesamtpreis, String status, Timestamp bestelltAm) {
+    public BestellungEntity(int bestellungId, String userEmail, int adressId, BigDecimal gesamtpreis, String status, Timestamp bestelltAm) {
         this.bestellungId = bestellungId;
         this.userEmail = userEmail;
         this.adressId = adressId;

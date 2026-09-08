@@ -1,6 +1,7 @@
 package ch.suva.bi7.webshop.service;
 
 import ch.suva.bi7.webshop.service.controller.*;
+import ch.suva.bi7.webshop.service.dao.*;
 import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
@@ -49,10 +50,10 @@ public class Bi7WebshopService {
                 config.routes.post("/users/logout", userController.logout);
                 config.routes.get("/users/{email}", userController.fetchByEMail);
                 config.routes.post("/users/register", userController.register);
-                config.routes.get("/artikel", artikelController.fetchAllArtikel);
-                config.routes.post("/artikel", artikelController.addArtikel);
 
-                config.routes.put("/artikel/add", artikelController.addArtikel);
+                config.routes.get("/artikel", artikelController.fetchAllArtikel);
+                config.routes.post("/artikel/addNew", artikelController.addNewArtikel);
+
                 config.routes.get("/api/warenkorb/{email}", warenkorbController.getWarenkorb);
                 config.routes.post("/api/warenkorb/add", warenkorbController.addToWarenkorb);
                 config.routes.delete("/api/warenkorb/item/{id}", warenkorbController.deleteWarenkorbItem);

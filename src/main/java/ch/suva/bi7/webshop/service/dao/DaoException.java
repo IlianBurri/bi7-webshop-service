@@ -1,4 +1,4 @@
-package ch.suva.bi7.webshop.service.controller;
+package ch.suva.bi7.webshop.service.dao;
 
 public class DaoException extends Exception {
 

@@ -1,7 +1,7 @@
-package ch.suva.bi7.webshop.service.controller;
+package ch.suva.bi7.webshop.service.dao;
 
 import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.model.WarenkorbItem;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -21,8 +21,8 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
     }
 
     @Override
-    public List<WarenkorbItem> getWarenkorbByUser(String email) throws DaoException {
-        List<WarenkorbItem> items = new ArrayList<>();
+    public List<WarenkorbItemEntity> getWarenkorbByUser(String email) throws DaoException {
+        List<WarenkorbItemEntity> items = new ArrayList<>();
 
         String sql = "SELECT w.warenkorbItemId, w.userEmail, w.artikelId, w.menge, " +
                 "a.name AS artikelName, a.preis AS artikelPreis, a.bild AS artikelBild " +
@@ -41,7 +41,7 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
                     BigDecimal artikelPreis = rs.getBigDecimal("artikelPreis");
                     String artikelBild = rs.getString("artikelBild");
 
-                    items.add(new WarenkorbItem(
+                    items.add(new WarenkorbItemEntity(
                             warenkorbItemId, userEmail, artikelId, menge,
                             artikelName, artikelPreis, artikelBild
                     ));

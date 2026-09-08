@@ -1,14 +1,14 @@
-package ch.suva.bi7.webshop.service.model;
+package ch.suva.bi7.webshop.service.db.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class User {
+public class UserEntity {
     private final String username;
     private final String email;
     private final String password;
     private final boolean isAdmin;
 
-    public User(
+    public UserEntity(
             @JsonProperty("username") String username,
             @JsonProperty("email") String email,
             @JsonProperty("password") String password,

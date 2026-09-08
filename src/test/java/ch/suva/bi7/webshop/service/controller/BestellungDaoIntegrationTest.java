@@ -1,10 +1,14 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.BestellungDao;
+import ch.suva.bi7.webshop.service.dao.BestellungDaoImpl;
+import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
+import ch.suva.bi7.webshop.service.dao.WarenkorbDaoImpl;
 import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
-import ch.suva.bi7.webshop.service.model.Bestellung;
-import ch.suva.bi7.webshop.service.model.WarenkorbItem;
+import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,7 +63,7 @@ class BestellungDaoIntegrationTest {
         warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 2);
         warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 2, 1);
 
-        List<WarenkorbItem> items = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
+        List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
         assertEquals(2, items.size());
         BigDecimal gesamtpreis = items.stream()
                 .map(item -> item.getArtikelPreis().multiply(BigDecimal.valueOf(item.getMenge())))
@@ -71,9 +75,9 @@ class BestellungDaoIntegrationTest {
         assertTrue(warenkorbDao.getWarenkorbByUser(TEST_EMAIL).isEmpty(),
                 "Nach der Bestellung muss der Warenkorb geleert sein");
 
-        Optional<Bestellung> gespeichert = bestellungDao.getBestellungById(bestellungId);
+        Optional<BestellungEntity> gespeichert = bestellungDao.getBestellungById(bestellungId);
         assertTrue(gespeichert.isPresent(), "Die Bestellung muss sich per ID lesen lassen");
-        Bestellung bestellung = gespeichert.get();
+        BestellungEntity bestellung = gespeichert.get();
         assertEquals(TEST_EMAIL, bestellung.getUserEmail());
         assertEquals(adressId, bestellung.getAdressId());
         assertEquals(gesamtpreis, bestellung.getGesamtpreis(),
@@ -86,7 +90,7 @@ class BestellungDaoIntegrationTest {
                 "Der Preis muss zum Bestellzeitpunkt festgehalten werden");
         assertEquals(anfangsPreisVonArtikel(2), einzelpreisVonPosition(bestellungId, 2));
 
-        List<Bestellung> proUser = bestellungDao.getBestellungenByUserEmail(TEST_EMAIL);
+        List<BestellungEntity> proUser = bestellungDao.getBestellungenByUserEmail(TEST_EMAIL);
         assertEquals(1, proUser.size(), "Die Bestellung muss über die User-Liste auffindbar sein");
         assertEquals(bestellungId, proUser.get(0).getBestellungId());
         assertEquals(gesamtpreis, proUser.get(0).getGesamtpreis());

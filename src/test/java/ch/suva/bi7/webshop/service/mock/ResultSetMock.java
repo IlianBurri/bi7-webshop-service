@@ -5,6 +5,8 @@ import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -203,7 +205,15 @@ public class ResultSetMock implements ResultSet {
 
     @Override
     public Timestamp getTimestamp(String s) throws SQLException {
-        throw notImplemented("getTimestamp(String)");
+        Map<String, Object> map = result.get(index);
+        if (map != null && map.get(s) != null) {
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            LocalDateTime ldt = LocalDateTime.parse(map.get(s).toString(), formatter);
+            return Timestamp.valueOf(ldt);
+        }
+        return null;
     }
 
     @Override

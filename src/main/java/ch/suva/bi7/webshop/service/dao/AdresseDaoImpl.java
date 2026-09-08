@@ -1,7 +1,7 @@
-package ch.suva.bi7.webshop.service.controller;
+package ch.suva.bi7.webshop.service.dao;
 
 import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.model.Adresse;
+import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,8 +23,8 @@ public class AdresseDaoImpl implements AdresseDao {
     }
 
     @Override
-    public List<Adresse> findByUserEmail(String email) throws DaoException {
-        List<Adresse> adressen = new ArrayList<>();
+    public List<AdresseEntity> findByUserEmail(String email) throws DaoException {
+        List<AdresseEntity> adressen = new ArrayList<>();
 
         String sql = "SELECT " + ALLE_SPALTEN +
                      " FROM adresse WHERE userEmail = ? ORDER BY createdAt DESC";
@@ -42,7 +42,7 @@ public class AdresseDaoImpl implements AdresseDao {
     }
 
     @Override
-    public Adresse insert(Adresse adresse) throws DaoException {
+    public AdresseEntity insert(AdresseEntity adresse) throws DaoException {
         String insertSql = "INSERT INTO adresse (userEmail, vorname, nachname, strasse, plz, ort, land) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
         int adressId;
@@ -57,7 +57,7 @@ public class AdresseDaoImpl implements AdresseDao {
     }
 
     @Override
-    public boolean update(int adressId, Adresse adresse) throws DaoException {
+    public boolean update(int adressId, AdresseEntity adresse) throws DaoException {
         String sql = "UPDATE adresse SET userEmail = ?, vorname = ?, nachname = ?, strasse = ?, " +
                 "plz = ?, ort = ?, land = ? WHERE adressId = ?";
         try {
@@ -80,7 +80,7 @@ public class AdresseDaoImpl implements AdresseDao {
     }
 
     @Override
-    public boolean existsIdentical(Adresse adresse) throws DaoException {
+    public boolean existsIdentical(AdresseEntity adresse) throws DaoException {
         String sql = "SELECT adressId FROM adresse " +
                 "WHERE userEmail = ? AND vorname = ? AND nachname = ? AND strasse = ? " +
                 "AND plz = ? AND ort = ? AND land = ?";
@@ -93,13 +93,13 @@ public class AdresseDaoImpl implements AdresseDao {
         }
     }
 
-    private Adresse mitAdressId(Adresse adresse, int adressId) {
-        return new Adresse(adressId, adresse.userEmail(), adresse.vorname(), adresse.nachname(),
+    private AdresseEntity mitAdressId(AdresseEntity adresse, int adressId) {
+        return new AdresseEntity(adressId, adresse.userEmail(), adresse.vorname(), adresse.nachname(),
                 adresse.strasse(), adresse.plz(), adresse.ort(), adresse.land());
     }
 
-    private Adresse mapAdresse(ResultSet rs) throws SQLException {
-        return new Adresse(
+    private AdresseEntity mapAdresse(ResultSet rs) throws SQLException {
+        return new AdresseEntity(
                 rs.getInt("adressId"),
                 rs.getString("userEmail"),
                 rs.getString("vorname"),

@@ -1,6 +1,9 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.model.Adresse;
+import ch.suva.bi7.webshop.service.dao.AdresseDao;
+import ch.suva.bi7.webshop.service.dao.DaoException;
+import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
+import ch.suva.bi7.webshop.service.mock.EinfacherContextMock;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import org.junit.jupiter.api.Test;
@@ -16,12 +19,12 @@ class AdresseControllerTest {
 
     private static final String TEST_EMAIL = "max@example.ch";
 
-    private static final Adresse BEISPIEL_ADRESSE =
-            new Adresse(0, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
+    private static final AdresseEntity BEISPIEL_ADRESSE =
+            new AdresseEntity(0, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
 
     @Test
     void adressenAbrufenLiefertAdressenAlsJson() throws Exception {
-        Adresse adresse = new Adresse(1, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
+        AdresseEntity adresse = new AdresseEntity(1, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
         AdresseContextMock ctx = new AdresseContextMock();
         ctx.setPathParam("email", TEST_EMAIL);
         AdresseController controller = new AdresseController(new FakeAdresseDao(List.of(adresse)));
@@ -31,7 +34,7 @@ class AdresseControllerTest {
         assertEquals(200, ctx.gesetzterStatus);
         List<?> json = (List<?>) ctx.gesendetesJson;
         assertEquals(1, json.size());
-        Adresse zurueckgegeben = (Adresse) json.get(0);
+        AdresseEntity zurueckgegeben = (AdresseEntity) json.get(0);
         assertEquals(1, zurueckgegeben.adressId());
         assertEquals("Schweiz", zurueckgegeben.land());
 
@@ -48,7 +51,7 @@ class AdresseControllerTest {
     @Test
     void adresseAnlegenTrimmtFelderUndSetztDefaultLand() throws Exception {
         FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
-        Adresse mitLeerzeichen = new Adresse(0, "  " + TEST_EMAIL + "  ", "  Max  ", " Muster ", " Musterstrasse 1 ",
+        AdresseEntity mitLeerzeichen = new AdresseEntity(0, "  " + TEST_EMAIL + "  ", "  Max  ", " Muster ", " Musterstrasse 1 ",
                 " 8000 ", " Zuerich ", "  ");
         AdresseContextMock ctx = new AdresseContextMock(mitLeerzeichen);
         AdresseController controller = new AdresseController(dao);
@@ -56,12 +59,12 @@ class AdresseControllerTest {
         controller.createAdresse.handle(ctx);
 
         assertEquals(201, ctx.gesetzterStatus);
-        Adresse gespeichert = dao.gespeicherteAdresse;
+        AdresseEntity gespeichert = dao.gespeicherteAdresse;
         assertNotNull(gespeichert, "DAO.insert muss aufgerufen werden");
         assertEquals(TEST_EMAIL, gespeichert.userEmail(), "userEmail muss getrimmt werden");
         assertEquals("Zuerich", gespeichert.ort());
         assertEquals("Schweiz", gespeichert.land(), "Ohne land muss der Default Schweiz verwendet werden");
-        assertEquals(42, ((Adresse) ctx.gesendetesJson).adressId(), "Die vergebene adressId muss im JSON stehen");
+        assertEquals(42, ((AdresseEntity) ctx.gesendetesJson).adressId(), "Die vergebene adressId muss im JSON stehen");
     }
 
     @Test
@@ -94,7 +97,7 @@ class AdresseControllerTest {
     @Test
     void adresseAnlegenMitFehlendemPflichtfeldLiefert400() throws Exception {
         FakeAdresseDao daoOhneEmail = new FakeAdresseDao(Collections.emptyList());
-        Adresse ohneEmail = new Adresse(0, null, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
+        AdresseEntity ohneEmail = new AdresseEntity(0, null, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
         AdresseContextMock fehlerCtx = new AdresseContextMock(ohneEmail);
         AdresseController controller = new AdresseController(daoOhneEmail);
 
@@ -205,35 +208,35 @@ class AdresseControllerTest {
 
 class FakeAdresseDao implements AdresseDao {
 
-    private final List<Adresse> adressen;
+    private final List<AdresseEntity> adressen;
 
     boolean existsIdenticalErgebnis = false;
     boolean updateErgebnis = true;
     boolean deleteErgebnis = true;
 
-    Adresse gespeicherteAdresse;
+    AdresseEntity gespeicherteAdresse;
     Integer updateId;
-    Adresse updateAdresse;
+    AdresseEntity updateAdresse;
     Integer deleteId;
 
-    FakeAdresseDao(List<Adresse> adressen) {
+    FakeAdresseDao(List<AdresseEntity> adressen) {
         this.adressen = adressen;
     }
 
     @Override
-    public List<Adresse> findByUserEmail(String email) {
+    public List<AdresseEntity> findByUserEmail(String email) {
         return adressen;
     }
 
     @Override
-    public Adresse insert(Adresse adresse) {
+    public AdresseEntity insert(AdresseEntity adresse) {
         this.gespeicherteAdresse = adresse;
-        return new Adresse(42, adresse.userEmail(), adresse.vorname(), adresse.nachname(),
+        return new AdresseEntity(42, adresse.userEmail(), adresse.vorname(), adresse.nachname(),
                 adresse.strasse(), adresse.plz(), adresse.ort(), adresse.land());
     }
 
     @Override
-    public boolean update(int adressId, Adresse adresse) {
+    public boolean update(int adressId, AdresseEntity adresse) {
         this.updateId = adressId;
         this.updateAdresse = adresse;
         return updateErgebnis;
@@ -246,7 +249,7 @@ class FakeAdresseDao implements AdresseDao {
     }
 
     @Override
-    public boolean existsIdentical(Adresse adresse) {
+    public boolean existsIdentical(AdresseEntity adresse) {
         return existsIdenticalErgebnis;
     }
 }
@@ -254,17 +257,17 @@ class FakeAdresseDao implements AdresseDao {
 class FehlerAdresseDao implements AdresseDao {
 
     @Override
-    public List<Adresse> findByUserEmail(String email) throws DaoException {
+    public List<AdresseEntity> findByUserEmail(String email) throws DaoException {
         throw new DaoException("Datenbank Fehler");
     }
 
     @Override
-    public Adresse insert(Adresse adresse) throws DaoException {
+    public AdresseEntity insert(AdresseEntity adresse) throws DaoException {
         throw new DaoException("Datenbank Fehler");
     }
 
     @Override
-    public boolean update(int adressId, Adresse adresse) throws DaoException {
+    public boolean update(int adressId, AdresseEntity adresse) throws DaoException {
         throw new DaoException("Datenbank Fehler");
     }
 
@@ -274,7 +277,7 @@ class FehlerAdresseDao implements AdresseDao {
     }
 
     @Override
-    public boolean existsIdentical(Adresse adresse) throws DaoException {
+    public boolean existsIdentical(AdresseEntity adresse) throws DaoException {
         throw new DaoException("Datenbank Fehler");
     }
 }

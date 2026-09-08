@@ -1,7 +1,9 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.model.Bestellung;
-import ch.suva.bi7.webshop.service.model.WarenkorbItem;
+import ch.suva.bi7.webshop.service.dao.BestellungDao;
+import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
+import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,7 @@ public class BestellungController {
                 Map<String, Object> body = ctx.bodyAsClass(Map.class);
                 int adressId = ((Number) body.get("adressId")).intValue();
 
-                List<WarenkorbItem> cartItems = warenkorbDao.getWarenkorbByUser(sessionEmail);
+                List<WarenkorbItemEntity> cartItems = warenkorbDao.getWarenkorbByUser(sessionEmail);
                 if (cartItems.isEmpty()) {
                     ctx.status(400).result("Warenkorb ist leer.");
                     return;
@@ -58,7 +60,8 @@ public class BestellungController {
         this.getBestellungenByUser = ctx -> {
             String email = ctx.pathParam("email");
             try {
-                List<Bestellung> bestellungen = bestellungDao.getBestellungenByUserEmail(email);
+                List<BestellungEntity> bestellungen = bestellungDao.getBestellungenByUserEmail(email);
+                // TODO GetBestellungenResponse erstellen und zurückgeben, anstatt die Liste von Entities
                 ctx.status(200).json(bestellungen);
             } catch (Exception e) {
                 logger.error("Fehler beim Abrufen der Bestellungen: {}", e.getMessage(), e);

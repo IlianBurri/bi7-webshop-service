@@ -1,7 +1,7 @@
-package ch.suva.bi7.webshop.service.controller;
+package ch.suva.bi7.webshop.service.dao;
 
 import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.model.User;
+import ch.suva.bi7.webshop.service.db.entity.UserEntity;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,7 +21,7 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public Optional<User> getUserByEMail(String email) throws SQLException {
+    public Optional<UserEntity> getUserByEMail(String email) throws SQLException {
         if (email == null || email.isBlank()) {
             return Optional.empty();
         }
@@ -30,7 +30,7 @@ public class UserDaoImpl implements UserDao {
             String username = queryResult.getString("username");
             String password = queryResult.getString("password");
             boolean isAdmin = queryResult.getBoolean("isAdmin");
-            User user = new User(username, email, password, isAdmin);
+            UserEntity user = new UserEntity(username, email, password, isAdmin);
             return Optional.of(user);
         }
         return Optional.empty();
@@ -48,7 +48,7 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public void addUser(User newUser) throws Exception {
+    public void addUser(UserEntity newUser) throws Exception {
         String query = "INSERT INTO user (username, email, password) VALUES (?, ?, ?)";
         dbConnection.execute(query, newUser.getUsername(), newUser.getEmail(), newUser.getPassword());
     }

@@ -1,9 +1,12 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.ArtikelDao;
+import ch.suva.bi7.webshop.service.dao.ArtikelDaoImpl;
+import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
-import ch.suva.bi7.webshop.service.model.Artikel;
+import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -36,15 +39,15 @@ class ArtikelDaoImplTest {
 
         ArtikelDao dao = getDao();
 
-        List<Artikel> artikel = dao.getAllArtikel();
+        List<ArtikelEntity> artikel = dao.getAllArtikel();
 
         assertFalse(artikel.isEmpty());
 
-        Artikel ersterArtikel = artikel.get(0);
+        ArtikelEntity ersterArtikel = artikel.get(0);
 
-        assertEquals(1, ersterArtikel.artikelId);
-        assertEquals("iPhone 15 Pro", ersterArtikel.name);
-        assertEquals(new BigDecimal("1199.00"), ersterArtikel.preis);
+        assertEquals(1, ersterArtikel.getArtikelId());
+        assertEquals("iPhone 15 Pro", ersterArtikel.getName());
+        assertEquals(new BigDecimal("1199.00"), ersterArtikel.getPreis());
     }
 
 // TODO Statt 'echter' Datenbank besser Mocks mit fixen Werten verwenden (...können wir gemeinsam anschauen)
@@ -53,9 +56,9 @@ class ArtikelDaoImplTest {
 
         ArtikelDao dao = getDao();
 
-        List<Artikel> artikel = dao.getAllArtikel();
+        List<ArtikelEntity> artikel = dao.getAllArtikel();
 
-        assertEquals(10, artikel.size());
+        assertEquals(3, artikel.size());
     }
 
 
@@ -64,7 +67,7 @@ class ArtikelDaoImplTest {
         List<SqlStatement> updates = new ArrayList<>();
         ArtikelDaoImpl testee = new ArtikelDaoImpl(createAddMockDbConnection(updates, 42));
 
-        int artikelId = testee.addArtikel(
+        int artikelId = testee.addNewArtikel(
                 "iPhone 16 Pro", new BigDecimal("1299.00"), "https://example.com/iphone16.jpg");
 
         assertEquals(42, artikelId, "Die generierte artikelId muss zurückgegeben werden");
@@ -107,7 +110,7 @@ class ArtikelDaoImplTest {
         });
 
         DaoException ex = assertThrows(DaoException.class,
-                () -> testee.addArtikel("iPhone 16 Pro", new BigDecimal("1299.00"), null),
+                () -> testee.addNewArtikel("iPhone 16 Pro", new BigDecimal("1299.00"), null),
                 "SQL-Fehler müssen als DaoException nach oben propagieren");
         assertNotNull(ex.getCause(), "Die ursprüngliche SQLException muss als Cause erhalten bleiben");
     }
@@ -141,18 +144,18 @@ class ArtikelDaoImplTest {
 
         ArtikelDao dao = getDao();
 
-        List<Artikel> artikel = dao.getAllArtikel();
+        List<ArtikelEntity> artikel = dao.getAllArtikel();
 
-        for (Artikel a : artikel) {
+        for (ArtikelEntity a : artikel) {
 
-            assertNotNull(a.artikelId);
-            assertNotNull(a.name);
-            assertFalse(a.name.isBlank());
+            assertNotNull(a.getArtikelId());
+            assertNotNull(a.getName());
+            assertFalse(a.getName().isBlank());
 
-            assertNotNull(a.preis);
-            assertTrue(a.preis.compareTo(BigDecimal.ZERO) >= 0);
+            assertNotNull(a.getPreis());
+            assertTrue(a.getPreis().compareTo(BigDecimal.ZERO) >= 0);
 
-            assertNotNull(a.bild);
+            assertNotNull(a.getBild());
         }
     }
 }

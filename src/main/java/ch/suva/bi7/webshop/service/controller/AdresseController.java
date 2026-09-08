@@ -1,6 +1,8 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.model.Adresse;
+import ch.suva.bi7.webshop.service.dao.AdresseDao;
+import ch.suva.bi7.webshop.service.dao.DaoException;
+import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
@@ -31,7 +33,8 @@ public class AdresseController {
         this.getAdressen = ctx -> {
             try {
                 String email = ctx.pathParam("email");
-                List<Adresse> adressen = adresseDao.findByUserEmail(email);
+                List<AdresseEntity> adressen = adresseDao.findByUserEmail(email);
+                // TODO GetAdressenResponse erstellen und zurückgeben, anstatt die Liste von Entities
                 ctx.status(200).json(adressen);
             } catch (Exception e) {
                 logger.error("Fehler beim Abrufen der Adressen: {}", e.getMessage(), e);
@@ -41,16 +44,16 @@ public class AdresseController {
 
         this.createAdresse = ctx -> {
             try {
-                Adresse eingabe = ctx.bodyAsClass(Adresse.class);
-                Adresse adresse = validiereUndNormalisiere(eingabe);
+                AdresseEntity eingabe = ctx.bodyAsClass(AdresseEntity.class);
+                AdresseEntity adresse = validiereUndNormalisiere(eingabe);
 
                 if (adresseDao.existsIdentical(adresse)) {
-                    Adresse bestehende = findeBestehendeIdentische(adresseDao, adresse);
+                    AdresseEntity bestehende = findeBestehendeIdentische(adresseDao, adresse);
                     ctx.status(200).json(bestehende);
                     return;
                 }
 
-                Adresse gespeichert = adresseDao.insert(adresse);
+                AdresseEntity gespeichert = adresseDao.insert(adresse);
                 ctx.status(201).json(gespeichert);
             } catch (BadRequestResponse e) {
                 ctx.status(400).json(Map.of("error", "Ungültiger JSON-Request-Body."));
@@ -66,8 +69,8 @@ public class AdresseController {
             try {
                 int adressId = Integer.parseInt(ctx.pathParam("adressId"));
 
-                Adresse eingabe = ctx.bodyAsClass(Adresse.class);
-                Adresse adresse = validiereUndNormalisiere(eingabe);
+                AdresseEntity eingabe = ctx.bodyAsClass(AdresseEntity.class);
+                AdresseEntity adresse = validiereUndNormalisiere(eingabe);
 
                 if (!adresseDao.update(adressId, adresse)) {
                     ctx.status(404).json(Map.of("error", "Adresse nicht gefunden"));
@@ -106,7 +109,7 @@ public class AdresseController {
         };
     }
 
-    private static Adresse validiereUndNormalisiere(Adresse eingabe) {
+    private static AdresseEntity validiereUndNormalisiere(AdresseEntity eingabe) {
         String userEmail = pflichtfeld(eingabe.userEmail(), "userEmail");
         String vorname = pflichtfeld(eingabe.vorname(), "vorname");
         String nachname = pflichtfeld(eingabe.nachname(), "nachname");
@@ -121,11 +124,11 @@ public class AdresseController {
             land = land.trim();
         }
 
-        return new Adresse(0, userEmail, vorname, nachname, strasse, plz, ort, land);
+        return new AdresseEntity(0, userEmail, vorname, nachname, strasse, plz, ort, land);
     }
 
-    private static Adresse mitAdressId(Adresse adresse, int adressId) {
-        return new Adresse(adressId, adresse.userEmail(), adresse.vorname(), adresse.nachname(),
+    private static AdresseEntity mitAdressId(AdresseEntity adresse, int adressId) {
+        return new AdresseEntity(adressId, adresse.userEmail(), adresse.vorname(), adresse.nachname(),
                 adresse.strasse(), adresse.plz(), adresse.ort(), adresse.land());
     }
 
@@ -136,9 +139,9 @@ public class AdresseController {
         return wert.trim();
     }
 
-    private static Adresse findeBestehendeIdentische(AdresseDao dao, Adresse adresse) throws DaoException {
-        List<Adresse> vorhandene = dao.findByUserEmail(adresse.userEmail());
-        for (Adresse a : vorhandene) {
+    private static AdresseEntity findeBestehendeIdentische(AdresseDao dao, AdresseEntity adresse) throws DaoException {
+        List<AdresseEntity> vorhandene = dao.findByUserEmail(adresse.userEmail());
+        for (AdresseEntity a : vorhandene) {
             if (istIdentisch(a, adresse)) {
                 return a;
             }
@@ -146,7 +149,7 @@ public class AdresseController {
         return adresse;
     }
 
-    private static boolean istIdentisch(Adresse a, Adresse b) {
+    private static boolean istIdentisch(AdresseEntity a, AdresseEntity b) {
         return a.vorname().equals(b.vorname())
                 && a.nachname().equals(b.nachname())
                 && a.strasse().equals(b.strasse())

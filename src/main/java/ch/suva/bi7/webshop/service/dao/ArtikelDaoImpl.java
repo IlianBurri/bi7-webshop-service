@@ -1,7 +1,7 @@
-package ch.suva.bi7.webshop.service.controller;
+package ch.suva.bi7.webshop.service.dao;
 
 import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.model.Artikel;
+import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -21,8 +21,8 @@ public class ArtikelDaoImpl implements ArtikelDao {
     }
 
     @Override
-    public List<Artikel> getAllArtikel() throws Exception {
-        List<Artikel> artikelListe = new ArrayList<>();
+    public List<ArtikelEntity> getAllArtikel() throws Exception {
+        List<ArtikelEntity> artikelListe = new ArrayList<>();
 
         String sql = "SELECT artikelId, name, preis, bild FROM artikel";
 
@@ -34,7 +34,7 @@ public class ArtikelDaoImpl implements ArtikelDao {
                     BigDecimal preis = rs.getBigDecimal("preis");
                     String bild = rs.getString("bild");
 
-                    artikelListe.add(new Artikel(id, name, preis, bild));
+                    artikelListe.add(new ArtikelEntity(id, name, preis, bild));
                 }
             }
         }
@@ -42,7 +42,7 @@ public class ArtikelDaoImpl implements ArtikelDao {
     }
 
     @Override
-    public int addArtikel(String name, BigDecimal preis, String bild) throws DaoException {
+    public int addNewArtikel(String name, BigDecimal preis, String bild) throws DaoException {
         String sql = "INSERT INTO artikel (name, preis, bild) VALUES (?, ?, ?)";
         try {
             return dbConnection.executeUpdateReturningGeneratedKeys(sql, name, preis, bild);

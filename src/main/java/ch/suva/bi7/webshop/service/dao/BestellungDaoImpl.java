@@ -1,8 +1,8 @@
-package ch.suva.bi7.webshop.service.controller;
+package ch.suva.bi7.webshop.service.dao;
 
 import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.model.Bestellung;
-import ch.suva.bi7.webshop.service.model.WarenkorbItem;
+import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,7 @@ public class BestellungDaoImpl implements BestellungDao {
     }
 
     @Override
-    public int createBestellungWithItems(String userEmail, int adressId, BigDecimal gesamtpreis, List<WarenkorbItem> items) throws DaoException {
+    public int createBestellungWithItems(String userEmail, int adressId, BigDecimal gesamtpreis, List<WarenkorbItemEntity> items) throws DaoException {
         String insertBestellungSql = "INSERT INTO bestellung (userEmail, adressId, gesamtpreis, bestelldatum, status) " +
                 "VALUES (?, ?, ?, NOW(), 'BEZAHLT')";
         String insertItemSql = "INSERT INTO bestellposition (bestellungId, artikelId, anzahl, einzelpreis) VALUES (?, ?, ?, ?)";
@@ -37,7 +37,7 @@ public class BestellungDaoImpl implements BestellungDao {
             dbConnection.beginTransaction();
             int generatedBestellungId = dbConnection.executeUpdateReturningGeneratedKeys(insertBestellungSql, userEmail, adressId, gesamtpreis);
 
-            for (WarenkorbItem item : items) {
+            for (WarenkorbItemEntity item : items) {
                 dbConnection.executeUpdate(insertItemSql, generatedBestellungId, item.getArtikelId(), item.getMenge(), item.getArtikelPreis());
             }
 
@@ -62,7 +62,7 @@ public class BestellungDaoImpl implements BestellungDao {
     }
 
     @Override
-    public Optional<Bestellung> getBestellungById(int bestellungId) throws DaoException {
+    public Optional<BestellungEntity> getBestellungById(int bestellungId) throws DaoException {
         String sql = "SELECT * FROM bestellung WHERE bestellungId = ?";
         try (ResultSet rs = dbConnection.execute(sql, bestellungId)) {
             if (rs != null && rs.next()) {
@@ -75,8 +75,8 @@ public class BestellungDaoImpl implements BestellungDao {
     }
 
     @Override
-    public List<Bestellung> getBestellungenByUserEmail(String userEmail) throws DaoException {
-        List<Bestellung> bestellungen = new ArrayList<>();
+    public List<BestellungEntity> getBestellungenByUserEmail(String userEmail) throws DaoException {
+        List<BestellungEntity> bestellungen = new ArrayList<>();
         String sql = "SELECT * FROM bestellung WHERE userEmail = ? ORDER BY bestelldatum DESC";
 
         try (ResultSet rs = dbConnection.execute(sql, userEmail)) {
@@ -91,8 +91,8 @@ public class BestellungDaoImpl implements BestellungDao {
         return bestellungen;
     }
 
-    private Bestellung mapResultSetToBestellung(ResultSet rs) throws SQLException {
-        Bestellung b = new Bestellung();
+    private BestellungEntity mapResultSetToBestellung(ResultSet rs) throws SQLException {
+        BestellungEntity b = new BestellungEntity();
         b.setBestellungId(rs.getInt("bestellungId"));
         b.setUserEmail(rs.getString("userEmail"));
         b.setAdressId(rs.getInt("adressId"));

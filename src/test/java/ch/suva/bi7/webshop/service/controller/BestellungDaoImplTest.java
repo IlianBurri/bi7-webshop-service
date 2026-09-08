@@ -1,11 +1,13 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.BestellungDaoImpl;
+import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.mock.ResultSetMock;
-import ch.suva.bi7.webshop.service.model.Bestellung;
+import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import org.junit.jupiter.api.Test;
 
-import ch.suva.bi7.webshop.service.model.WarenkorbItem;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -66,10 +68,10 @@ class BestellungDaoImplTest {
                 "bestelldatum", "2026-09-01 10:15:30"));
         BestellungDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(zeilen), new ArrayList<>(), new ArrayList<>()));
 
-        List<Bestellung> bestellungen = testee.getBestellungenByUserEmail(TEST_EMAIL);
+        List<BestellungEntity> bestellungen = testee.getBestellungenByUserEmail(TEST_EMAIL);
 
         assertEquals(1, bestellungen.size(), "Es sollte genau 1 Bestellung zurückgegeben werden");
-        Bestellung bestellung = bestellungen.get(0);
+        BestellungEntity bestellung = bestellungen.get(0);
         assertEquals(7, bestellung.getBestellungId());
         assertEquals(TEST_EMAIL, bestellung.getUserEmail());
         assertEquals(3, bestellung.getAdressId());
@@ -84,9 +86,9 @@ class BestellungDaoImplTest {
     void bestellungErzeugenPersistiertGesamtpreisUndBestellpositionen() throws Exception {
         BigDecimal gesamtpreis = new BigDecimal("1199.00").multiply(BigDecimal.valueOf(2))
                 .add(new BigDecimal("899.90"));
-        List<WarenkorbItem> items = List.of(
-                new WarenkorbItem(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro", new BigDecimal("1199.00"), "bild"),
-                new WarenkorbItem(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24", new BigDecimal("899.90"), "bild"));
+        List<WarenkorbItemEntity> items = List.of(
+                new WarenkorbItemEntity(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro", new BigDecimal("1199.00"), "bild"),
+                new WarenkorbItemEntity(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24", new BigDecimal("899.90"), "bild"));
         List<SqlStatement> updates = new ArrayList<>();
         List<SqlStatement> selects = new ArrayList<>();
         BestellungDaoImpl testee = createTestee(createDBConnectionMock(
@@ -122,7 +124,7 @@ class BestellungDaoImplTest {
     void bestellungPerIdOhneTrefferLiefertEmpty() throws Exception {
         BestellungDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), new ArrayList<>()));
 
-        Optional<Bestellung> ergebnis = testee.getBestellungById(999);
+        Optional<BestellungEntity> ergebnis = testee.getBestellungById(999);
 
         assertTrue(ergebnis.isEmpty(), "Ohne Treffer muss Optional.empty kommen");
     }
@@ -230,7 +232,7 @@ class BestellungDaoImplTest {
 
         DaoException ex = assertThrows(DaoException.class,
                 () -> testee.createBestellungWithItems(TEST_EMAIL, 3, new BigDecimal("10.00"),
-                        List.of(new WarenkorbItem(1, TEST_EMAIL, 5, 1, "iPhone 15 Pro", new BigDecimal("10.00"), "bild"))),
+                        List.of(new WarenkorbItemEntity(1, TEST_EMAIL, 5, 1, "iPhone 15 Pro", new BigDecimal("10.00"), "bild"))),
                 "SQL-Fehler müssen als DaoException geworfen werden");
         assertNotNull(ex.getCause(), "Die ursprüngliche SQLException muss erhalten bleiben");
         assertEquals(1, transaktion[0], "Die Transaktion muss begonnen werden");

@@ -1,8 +1,9 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.UserDaoImpl;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.mock.ResultSetMock;
-import ch.suva.bi7.webshop.service.model.User;
+import ch.suva.bi7.webshop.service.db.entity.UserEntity;
 import org.junit.jupiter.api.Test;
 
 import java.sql.ResultSet;
@@ -25,7 +26,7 @@ class UserDaoImplTest {
         UserDaoImpl testee = createTestee(dbConnection);
 
         // Act
-        Optional<User> userOptional = testee.getUserByEMail("test@somewhere.com");
+        Optional<UserEntity> userOptional = testee.getUserByEMail("test@somewhere.com");
 
         // Assert
         assertTrue(userOptional.isPresent());
@@ -39,7 +40,7 @@ class UserDaoImplTest {
         DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
         UserDaoImpl testee = createTestee(dbConnection);
 
-        Optional<User> userOptional = testee.getUserByEMail("admin@somewhere.com");
+        Optional<UserEntity> userOptional = testee.getUserByEMail("admin@somewhere.com");
 
         assertTrue(userOptional.isPresent());
         assertTrue(userOptional.get().isAdmin(), "Admin-Status muss aus der DB übernommen werden");
@@ -51,7 +52,7 @@ class UserDaoImplTest {
         DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
         UserDaoImpl testee = createTestee(dbConnection);
 
-        Optional<User> userOptional = testee.getUserByEMail("test@somewhere.com");
+        Optional<UserEntity> userOptional = testee.getUserByEMail("test@somewhere.com");
 
         assertTrue(userOptional.isPresent());
         assertFalse(userOptional.get().isAdmin(), "Ohne Admin-Flag muss isAdmin false sein");

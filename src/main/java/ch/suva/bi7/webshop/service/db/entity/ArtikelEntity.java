@@ -1,22 +1,21 @@
-package ch.suva.bi7.webshop.service.model;
+package ch.suva.bi7.webshop.service.db.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 
-public class Artikel {
+public class ArtikelEntity {
 
     private static final BigDecimal MINDESTPREIS = new BigDecimal("0.01");
 
-    public final Integer artikelId;
-    public final String name;
-    public final BigDecimal preis;
-    public final String bild;
+    private Integer artikelId;
+    private String name;
+    private BigDecimal preis;
+    private String bild;
 
-    public Artikel(
-            @JsonProperty("artikelId") Integer artikelId,
-            @JsonProperty("name") String name,
-            @JsonProperty("preis") BigDecimal preis,
-            @JsonProperty("bild") String bild) {
+    public ArtikelEntity(
+            Integer artikelId,
+            String name,
+            BigDecimal preis,
+            String bild) {
         if (artikelId == null) {
             throw new IllegalArgumentException("artikelId darf nicht null sein");
         }
@@ -34,5 +33,21 @@ public class Artikel {
         this.name = name.trim();
         this.preis = preis;
         this.bild = bild == null ? null : bild.trim();
+    }
+
+    public Integer getArtikelId() {
+        return artikelId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public BigDecimal getPreis() {
+        return preis;
+    }
+
+    public String getBild() {
+        return bild;
     }
 }

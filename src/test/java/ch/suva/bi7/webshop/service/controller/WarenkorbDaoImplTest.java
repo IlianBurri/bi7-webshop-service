@@ -1,8 +1,9 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.WarenkorbDaoImpl;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.mock.ResultSetMock;
-import ch.suva.bi7.webshop.service.model.WarenkorbItem;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -37,10 +38,10 @@ class WarenkorbDaoImplTest {
         );
         WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(zeilen), new ArrayList<>()));
 
-        List<WarenkorbItem> items = testee.getWarenkorbByUser("test@somewhere.com");
+        List<WarenkorbItemEntity> items = testee.getWarenkorbByUser("test@somewhere.com");
 
         assertEquals(2, items.size(), "Es sollten genau 2 Warenkorb-Items zurück gegeben werden");
-        WarenkorbItem erster = items.get(0);
+        WarenkorbItemEntity erster = items.get(0);
         assertEquals(1, erster.getWarenkorbItemId());
         assertEquals("test@somewhere.com", erster.getUserEmail());
         assertEquals(5, erster.getArtikelId());

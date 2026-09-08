@@ -1,6 +1,6 @@
-package ch.suva.bi7.webshop.service.model;
+package ch.suva.bi7.webshop.service.db.entity;
 
-public record Adresse(
+public record AdresseEntity(
         int adressId,
         String userEmail,
         String vorname,

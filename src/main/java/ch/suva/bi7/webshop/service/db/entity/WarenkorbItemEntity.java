@@ -1,9 +1,9 @@
-package ch.suva.bi7.webshop.service.model;
+package ch.suva.bi7.webshop.service.db.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 
-public class WarenkorbItem {
+public class WarenkorbItemEntity {
     public final Integer warenkorbItemId;
     public final String userEmail;
     public final Integer artikelId;
@@ -12,7 +12,7 @@ public class WarenkorbItem {
     public final BigDecimal artikelPreis;
     public final String artikelBild;
 
-    public WarenkorbItem(
+    public WarenkorbItemEntity(
             @JsonProperty("warenkorbItemId") Integer warenkorbItemId,
             @JsonProperty("userEmail") String userEmail,
             @JsonProperty("artikelId") Integer artikelId,

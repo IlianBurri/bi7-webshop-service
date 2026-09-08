@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.model;
 
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -10,7 +11,7 @@ class WarenkorbItemTest {
 
     @Test
     void gueltigesWarenkorbItemKannErstelltWerden() {
-        WarenkorbItem item = new WarenkorbItem(
+        WarenkorbItemEntity item = new WarenkorbItemEntity(
                 1, "user@example.com", 5, 3,
                 "iPhone 15 Pro", new BigDecimal("1199.00"), "https://example.com/bild.jpg"
         );
@@ -26,7 +27,7 @@ class WarenkorbItemTest {
 
     @Test
     void warenkorbItemOhneIdDarfErstelltWerden() {
-        WarenkorbItem item = new WarenkorbItem(
+        WarenkorbItemEntity item = new WarenkorbItemEntity(
                 null, "user@example.com", 5, 1,
                 "iPhone 15 Pro", new BigDecimal("1199.00"), null
         );
@@ -39,16 +40,16 @@ class WarenkorbItemTest {
     void erstellenWirftIllegalArgumentExceptionWennEmailFehlt() {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new WarenkorbItem(1, null, 5, 1, "iPhone", new BigDecimal("1.00"), null)),
+                        () -> new WarenkorbItemEntity(1, null, 5, 1, "iPhone", new BigDecimal("1.00"), null)),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new WarenkorbItem(1, "   ", 5, 1, "iPhone", new BigDecimal("1.00"), null))
+                        () -> new WarenkorbItemEntity(1, "   ", 5, 1, "iPhone", new BigDecimal("1.00"), null))
         );
     }
 
     @Test
     void leererEmailLiefertErwarteteFehlermeldung() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> new WarenkorbItem(1, "", 5, 1, "iPhone", new BigDecimal("1.00"), null));
+                () -> new WarenkorbItemEntity(1, "", 5, 1, "iPhone", new BigDecimal("1.00"), null));
 
         assertEquals("userEmail darf nicht null/leer sein", ex.getMessage());
     }
@@ -57,18 +58,18 @@ class WarenkorbItemTest {
     void erstellenWirftIllegalArgumentExceptionWennArtikelIdUngueltigIst() {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new WarenkorbItem(1, "user@example.com", null, 1, "iPhone", new BigDecimal("1.00"), null)),
+                        () -> new WarenkorbItemEntity(1, "user@example.com", null, 1, "iPhone", new BigDecimal("1.00"), null)),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new WarenkorbItem(1, "user@example.com", 0, 1, "iPhone", new BigDecimal("1.00"), null)),
+                        () -> new WarenkorbItemEntity(1, "user@example.com", 0, 1, "iPhone", new BigDecimal("1.00"), null)),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new WarenkorbItem(1, "user@example.com", -1, 1, "iPhone", new BigDecimal("1.00"), null))
+                        () -> new WarenkorbItemEntity(1, "user@example.com", -1, 1, "iPhone", new BigDecimal("1.00"), null))
         );
     }
 
     @Test
     void ungueltigeArtikelIdLiefertErwarteteFehlermeldung() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> new WarenkorbItem(1, "user@example.com", 0, 1, "iPhone", new BigDecimal("1.00"), null));
+                () -> new WarenkorbItemEntity(1, "user@example.com", 0, 1, "iPhone", new BigDecimal("1.00"), null));
 
         assertEquals("artikelId muss > 0 sein", ex.getMessage());
     }
@@ -77,18 +78,18 @@ class WarenkorbItemTest {
     void erstellenWirftIllegalArgumentExceptionWennMengeUngueltigIst() {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new WarenkorbItem(1, "user@example.com", 5, null, "iPhone", new BigDecimal("1.00"), null)),
+                        () -> new WarenkorbItemEntity(1, "user@example.com", 5, null, "iPhone", new BigDecimal("1.00"), null)),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new WarenkorbItem(1, "user@example.com", 5, 0, "iPhone", new BigDecimal("1.00"), null)),
+                        () -> new WarenkorbItemEntity(1, "user@example.com", 5, 0, "iPhone", new BigDecimal("1.00"), null)),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new WarenkorbItem(1, "user@example.com", 5, -2, "iPhone", new BigDecimal("1.00"), null))
+                        () -> new WarenkorbItemEntity(1, "user@example.com", 5, -2, "iPhone", new BigDecimal("1.00"), null))
         );
     }
 
     @Test
     void ungueltigeMengeLiefertErwarteteFehlermeldung() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> new WarenkorbItem(1, "user@example.com", 5, 0, "iPhone", new BigDecimal("1.00"), null));
+                () -> new WarenkorbItemEntity(1, "user@example.com", 5, 0, "iPhone", new BigDecimal("1.00"), null));
 
         assertEquals("menge muss > 0 sein", ex.getMessage());
     }

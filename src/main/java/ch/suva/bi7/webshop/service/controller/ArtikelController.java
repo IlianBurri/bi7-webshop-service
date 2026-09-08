@@ -1,8 +1,12 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.ArtikelDao;
+import ch.suva.bi7.webshop.service.dao.UserDao;
 import ch.suva.bi7.webshop.service.model.AddArtikelRequest;
-import ch.suva.bi7.webshop.service.model.Artikel;
-import ch.suva.bi7.webshop.service.model.User;
+import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
+import ch.suva.bi7.webshop.service.db.entity.UserEntity;
+import ch.suva.bi7.webshop.service.model.AddArtikelResponse;
+import ch.suva.bi7.webshop.service.model.ArtikelDto;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import io.javalin.http.HttpStatus;
@@ -51,7 +55,8 @@ public class ArtikelController {
 
     public static Handler fetchAllArtikel = ctx -> {
         try {
-            List<Artikel> artikelListe = getArtikelDao().getAllArtikel();
+            List<ArtikelEntity> artikelListe = getArtikelDao().getAllArtikel();
+            // TODO GetAllArtikelResponse erstellen und zurückgeben, anstatt die Liste von Entities
             ctx.status(200).json(artikelListe);
         } catch (Exception e) {
             logger.error("Fehler beim Abrufen der Artikel: {}", e.getMessage(), e);
@@ -60,11 +65,11 @@ public class ArtikelController {
         }
     };
 
-    public static Handler addArtikel = ctx -> {
+    public static Handler addNewArtikel = ctx -> {
         String email = ctx.sessionAttribute("userEmail");
         logger.info("Benutzer '{}' ist Admin, erstelle Artikel...", email);
 
-        Optional<User> userOptional = userDao.getUserByEMail(email);
+        Optional<UserEntity> userOptional = userDao.getUserByEMail(email);
 
         if (userOptional.isEmpty()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(java.util.Map.of("error", "Nicht angemeldet: " + email));
@@ -84,11 +89,12 @@ public class ArtikelController {
 
             validiere(name, eingabe.preis, bild);
 
-            int artikelId = getArtikelDao().addArtikel(name, eingabe.preis, bild);
-            Artikel artikel = new Artikel(artikelId, name, eingabe.preis, bild);
-
-            logger.info("Artikel erfolgreich von '{}' erstellt: {}", email, artikel);
-            ctx.status(201).json(artikel);
+            // TODO addArtikel liefert das DTO
+            int artikelId = getArtikelDao().addNewArtikel(name, eingabe.preis, bild);
+            ArtikelEntity artikelEntity = new ArtikelEntity(artikelId, name, eingabe.preis, bild);
+            ArtikelDto artikelDto = artikelEntity2ArtikelDto(artikelEntity);
+            logger.info("Artikel erfolgreich von '{}' erstellt: {}", email, artikelDto);
+            ctx.status(201).json(new AddArtikelResponse(artikelDto));
         } catch (BadRequestResponse e) {
             ctx.status(400).json(Map.of("error", "Ungültiger JSON-Request-Body."));
         } catch (IllegalArgumentException | NullPointerException e) {
@@ -117,5 +123,9 @@ public class ArtikelController {
         if (bild != null && bild.length() > MAX_BILD_LAENGE) {
             throw new IllegalArgumentException("'bild' darf höchstens " + MAX_BILD_LAENGE + " Zeichen lang sein.");
         }
+    }
+
+    static ArtikelDto artikelEntity2ArtikelDto(ArtikelEntity entity) {
+        return new ArtikelDto(entity.getArtikelId(), entity.getName(), entity.getPreis(), entity.getBild());
     }
 }

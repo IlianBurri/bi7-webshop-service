@@ -1,8 +1,10 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.AdresseDaoImpl;
+import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.mock.ResultSetMock;
-import ch.suva.bi7.webshop.service.model.Adresse;
+import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 import org.junit.jupiter.api.Test;
 
 import java.sql.ResultSet;
@@ -17,8 +19,8 @@ class AdresseDaoImplTest {
 
     private static final String TEST_EMAIL = "max@example.ch";
 
-    private static final Adresse BEISPIEL_ADRESSE =
-            new Adresse(0, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
+    private static final AdresseEntity BEISPIEL_ADRESSE =
+            new AdresseEntity(0, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
 
     private static final int GENERIERTER_KEY = 42;
 
@@ -46,10 +48,10 @@ class AdresseDaoImplTest {
         );
         AdresseDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(zeilen), new ArrayList<>(), 1));
 
-        List<Adresse> adressen = testee.findByUserEmail(TEST_EMAIL);
+        List<AdresseEntity> adressen = testee.findByUserEmail(TEST_EMAIL);
 
         assertEquals(2, adressen.size(), "Es sollten genau 2 Adressen zurückgegeben werden");
-        Adresse erste = adressen.get(0);
+        AdresseEntity erste = adressen.get(0);
         assertEquals(1, erste.adressId());
         assertEquals(TEST_EMAIL, erste.userEmail());
         assertEquals("Max", erste.vorname());
@@ -74,7 +76,7 @@ class AdresseDaoImplTest {
         AdresseDaoImpl testee = createTestee(createDBConnectionMock(
                 createResultSetMock(List.of()), updates, 1, selects, GENERIERTER_KEY));
 
-        Adresse gespeichert = testee.insert(BEISPIEL_ADRESSE);
+        AdresseEntity gespeichert = testee.insert(BEISPIEL_ADRESSE);
 
         assertEquals(GENERIERTER_KEY, gespeichert.adressId(),
                 "Die adressId muss direkt aus dem JDBC-generierten Key kommen");

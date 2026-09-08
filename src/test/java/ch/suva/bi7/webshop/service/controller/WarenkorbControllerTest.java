@@ -1,6 +1,9 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.model.WarenkorbItem;
+import ch.suva.bi7.webshop.service.dao.DaoException;
+import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.mock.EinfacherContextMock;
 import io.javalin.http.Context;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +19,7 @@ class WarenkorbControllerTest {
 
     @Test
     void warenkorbAbrufenLiefertItemsAlsJson() throws Exception {
-        WarenkorbItem item = new WarenkorbItem(
+        WarenkorbItemEntity item = new WarenkorbItemEntity(
                 1, "test@example.com", 5, 3,
                 "iPhone 15 Pro", new BigDecimal("1199.00"), null);
         WarenkorbContextMock ctx = new WarenkorbContextMock();
@@ -207,7 +210,7 @@ class WarenkorbControllerTest {
 
 class FakeWarenkorbDao implements WarenkorbDao {
 
-    private final List<WarenkorbItem> items;
+    private final List<WarenkorbItemEntity> items;
 
     boolean updateErgebnis = true;
     boolean deleteErgebnis = true;
@@ -219,12 +222,12 @@ class FakeWarenkorbDao implements WarenkorbDao {
     Integer updateNeueMenge;
     Integer deleteId;
 
-    FakeWarenkorbDao(List<WarenkorbItem> items) {
+    FakeWarenkorbDao(List<WarenkorbItemEntity> items) {
         this.items = items;
     }
 
     @Override
-    public List<WarenkorbItem> getWarenkorbByUser(String email) {
+    public List<WarenkorbItemEntity> getWarenkorbByUser(String email) {
         return items;
     }
 
@@ -257,7 +260,7 @@ class FakeWarenkorbDao implements WarenkorbDao {
 class FehlerWarenkorbDao implements WarenkorbDao {
 
     @Override
-    public List<WarenkorbItem> getWarenkorbByUser(String email) throws DaoException {
+    public List<WarenkorbItemEntity> getWarenkorbByUser(String email) throws DaoException {
         throw new DaoException("Datenbank Fehler");
     }
 

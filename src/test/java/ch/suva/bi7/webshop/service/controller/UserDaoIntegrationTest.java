@@ -1,9 +1,11 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.UserDao;
+import ch.suva.bi7.webshop.service.dao.UserDaoImpl;
 import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
-import ch.suva.bi7.webshop.service.model.User;
+import ch.suva.bi7.webshop.service.db.entity.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -57,10 +59,10 @@ class UserDaoIntegrationTest {
 
     @Test
     void addUser() throws Exception {
-        User testuser = new User("Bruce Wayne", "bruce.wayne@gotham.com", "bruce", false);
+        UserEntity testuser = new UserEntity("Bruce Wayne", "bruce.wayne@gotham.com", "bruce", false);
 
         userDao.addUser(testuser);
-        Optional<User> foundUser = userDao.getUserByEMail("bruce.wayne@gotham.com");
+        Optional<UserEntity> foundUser = userDao.getUserByEMail("bruce.wayne@gotham.com");
 
         assertTrue(foundUser.isPresent(), "User wurde erfolgreich in der Datenbank registriert sein");
         assertEquals("Bruce Wayne", foundUser.get().getUsername());
@@ -68,18 +70,18 @@ class UserDaoIntegrationTest {
 
     @Test
     void getUserByEMail() throws Exception {
-        User testuser = new User("Peter Parker", "spidey@dailybugle.com", "webslinger", false);
+        UserEntity testuser = new UserEntity("Peter Parker", "spidey@dailybugle.com", "webslinger", false);
         userDao.addUser(testuser);
 
-        Optional<User> foundUser = userDao.getUserByEMail("spidey@dailybugle.com");
+        Optional<UserEntity> foundUser = userDao.getUserByEMail("spidey@dailybugle.com");
         assertTrue(foundUser.isPresent());
         assertEquals("Peter Parker", foundUser.get().getUsername());
     }
 
     @Test
     void getAllUsernames() throws Exception {
-        userDao.addUser(new User("Hawk Eye", "hawk.eye@arrow.com", "target", false));
-        userDao.addUser(new User("Black Widow", "black.widow@avengers.com", "spider", false));
+        userDao.addUser(new UserEntity("Hawk Eye", "hawk.eye@arrow.com", "target", false));
+        userDao.addUser(new UserEntity("Black Widow", "black.widow@avengers.com", "spider", false));
 
         List<String> usernames = userDao.getAllUsernames();
 

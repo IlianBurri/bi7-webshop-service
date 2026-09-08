@@ -1,12 +1,12 @@
-package ch.suva.bi7.webshop.service.controller;
+package ch.suva.bi7.webshop.service.dao;
 
-import ch.suva.bi7.webshop.service.model.WarenkorbItem;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
 
 import java.util.List;
 
 public interface WarenkorbDao {
 
-    List<WarenkorbItem> getWarenkorbByUser(String email) throws DaoException;
+    List<WarenkorbItemEntity> getWarenkorbByUser(String email) throws DaoException;
 
     void addArtikelToWarenkorb(String email, int artikelId, int menge) throws DaoException;
 

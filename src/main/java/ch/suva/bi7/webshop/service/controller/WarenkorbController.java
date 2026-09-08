@@ -1,6 +1,7 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.model.WarenkorbItem;
+import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,8 @@ public class WarenkorbController {
         this.getWarenkorb = ctx -> {
             try {
                 String email = ctx.pathParam("email");
-                List<WarenkorbItem> items = warenkorbDao.getWarenkorbByUser(email);
+                List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(email);
+                // TODO GetWarenkorbResponse erstellen und zurückgeben, anstatt die Liste von Entities
                 ctx.status(200).json(items);
             } catch (Exception e) {
                 logger.error("Fehler beim Abrufen des Warenkorbs: {}", e.getMessage(), e);

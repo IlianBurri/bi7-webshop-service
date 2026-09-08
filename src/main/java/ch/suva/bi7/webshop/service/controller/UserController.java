@@ -1,12 +1,13 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.UserDao;
+import ch.suva.bi7.webshop.service.db.entity.UserEntity;
 import ch.suva.bi7.webshop.service.model.*;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class UserController {
@@ -37,7 +38,7 @@ public class UserController {
 
     public static Handler fetchByEMail = ctx -> {
         String email = ctx.pathParam("email");
-        Optional<User> user = getUserDao().getUserByEMail(email);
+        Optional<UserEntity> user = getUserDao().getUserByEMail(email);
         if (user.isPresent()) {
             ctx.json(user.get());
         } else {
@@ -59,7 +60,7 @@ public class UserController {
                 return;
             }
 
-            User newUser = new User(
+            UserEntity newUser = new UserEntity(
                     registerUserRequest.username,
                     registerUserRequest.email,
                     registerUserRequest.password,
@@ -87,7 +88,7 @@ public class UserController {
 
             if (email != null) {
                 if (loginUserRequest.email.equals(email)) {
-                    Optional<User> userOptional = userDao.getUserByEMail(email);
+                    Optional<UserEntity> userOptional = userDao.getUserByEMail(email);
                     String realUsername = userOptional.map(u -> u.getUsername()).orElse(email);
 
                     LoginUserResponse response = new LoginUserResponse(
@@ -108,7 +109,7 @@ public class UserController {
                 }
             }
 
-            Optional<User> userOptional = userDao.getUserByEMail(loginUserRequest.email);
+            Optional<UserEntity> userOptional = userDao.getUserByEMail(loginUserRequest.email);
             if (userOptional.isEmpty()) {
                 LoginUserResponse response = new LoginUserResponse("error", "User does not exist: " + loginUserRequest.email, null, false);
                 logger.info("Login abgelehnt: {}", response);
@@ -116,7 +117,7 @@ public class UserController {
                 return;
             }
 
-            User user = userOptional.get();
+            UserEntity user = userOptional.get();
             if (!user.getPassword().equals(loginUserRequest.password)) {
                 LoginUserResponse response = new LoginUserResponse("error", "Wrong password for user: " + loginUserRequest.email, null, false);
                 logger.info("Login abgelehnt (falsches Passwort): {}", response);

@@ -1,7 +1,10 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.model.Bestellung;
-import ch.suva.bi7.webshop.service.model.WarenkorbItem;
+import ch.suva.bi7.webshop.service.dao.BestellungDao;
+import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
+import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.mock.EinfacherContextMock;
 import io.javalin.http.Context;
 import org.junit.jupiter.api.Test;
 
@@ -18,9 +21,9 @@ class BestellungControllerTest {
 
     @Test
     void checkoutLiefertBestellungIdGesamtpreisUndStatus() throws Exception {
-        List<WarenkorbItem> warenkorb = List.of(
-                new WarenkorbItem(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro", new BigDecimal("1199.00"), "bild"),
-                new WarenkorbItem(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24", new BigDecimal("899.90"), "bild"));
+        List<WarenkorbItemEntity> warenkorb = List.of(
+                new WarenkorbItemEntity(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro", new BigDecimal("1199.00"), "bild"),
+                new WarenkorbItemEntity(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24", new BigDecimal("899.90"), "bild"));
         FakeBestellungDao bestellungDao = new FakeBestellungDao();
         CheckoutWarenkorbDao warenkorbDao = new CheckoutWarenkorbDao(warenkorb);
         BestellungContextMock ctx = new BestellungContextMock(Map.of("adressId", 3));
@@ -76,10 +79,10 @@ class FakeBestellungDao implements BestellungDao {
     String letzterUserEmail;
     int letzteAdressId;
     BigDecimal letzterGesamtpreis;
-    List<WarenkorbItem> letzteItems;
+    List<WarenkorbItemEntity> letzteItems;
 
     @Override
-    public int createBestellungWithItems(String userEmail, int adressId, BigDecimal gesamtpreis, List<WarenkorbItem> items) {
+    public int createBestellungWithItems(String userEmail, int adressId, BigDecimal gesamtpreis, List<WarenkorbItemEntity> items) {
         wurdeAufgerufen = true;
         letzterUserEmail = userEmail;
         letzteAdressId = adressId;
@@ -89,26 +92,26 @@ class FakeBestellungDao implements BestellungDao {
     }
 
     @Override
-    public Optional<Bestellung> getBestellungById(int bestellungId) {
+    public Optional<BestellungEntity> getBestellungById(int bestellungId) {
         return Optional.empty();
     }
 
     @Override
-    public List<Bestellung> getBestellungenByUserEmail(String userEmail) {
+    public List<BestellungEntity> getBestellungenByUserEmail(String userEmail) {
         return List.of();
     }
 }
 
 class CheckoutWarenkorbDao implements WarenkorbDao {
 
-    private final List<WarenkorbItem> items;
+    private final List<WarenkorbItemEntity> items;
 
-    CheckoutWarenkorbDao(List<WarenkorbItem> items) {
+    CheckoutWarenkorbDao(List<WarenkorbItemEntity> items) {
         this.items = items;
     }
 
     @Override
-    public List<WarenkorbItem> getWarenkorbByUser(String email) {
+    public List<WarenkorbItemEntity> getWarenkorbByUser(String email) {
         return items;
     }
 
