@@ -4,6 +4,7 @@ import ch.suva.bi7.webshop.service.dao.BestellungDao;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.model.BestellungDto;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,12 +62,29 @@ public class BestellungController {
             String email = ctx.pathParam("email");
             try {
                 List<BestellungEntity> bestellungen = bestellungDao.getBestellungenByUserEmail(email);
-                // TODO GetBestellungenResponse erstellen und zurückgeben, anstatt die Liste von Entities
-                ctx.status(200).json(bestellungen);
+                List<BestellungDto> response = bestellungen.stream()
+                        .map(BestellungController::bestellungEntity2Dto)
+                        .toList();
+                ctx.status(200).json(response);
             } catch (Exception e) {
                 logger.error("Fehler beim Abrufen der Bestellungen: {}", e.getMessage(), e);
                 ctx.status(500).result("Fehler beim Laden der Bestellungen.");
             }
         };
+    }
+
+    static BestellungDto bestellungEntity2Dto(BestellungEntity entity) {
+        if (entity == null) {
+            throw new IllegalArgumentException("BestellungEntity darf nicht null sein");
+        }
+
+        return new BestellungDto(
+                entity.getBestellungId(),
+                entity.getUserEmail(),
+                entity.getAdressId(),
+                entity.getGesamtpreis(),
+                entity.getStatus(),
+                entity.getBestelltAm()
+        );
     }
 }

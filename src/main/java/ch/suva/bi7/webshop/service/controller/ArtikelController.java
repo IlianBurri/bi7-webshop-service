@@ -56,8 +56,10 @@ public class ArtikelController {
     public static Handler fetchAllArtikel = ctx -> {
         try {
             List<ArtikelEntity> artikelListe = getArtikelDao().getAllArtikel();
-            // TODO GetAllArtikelResponse erstellen und zurückgeben, anstatt die Liste von Entities
-            ctx.status(200).json(artikelListe);
+            List<ArtikelDto> response = artikelListe.stream()
+                    .map(ArtikelController::artikelEntity2ArtikelDto)
+                    .toList();
+            ctx.status(200).json(response);
         } catch (Exception e) {
             logger.error("Fehler beim Abrufen der Artikel: {}", e.getMessage(), e);
 
@@ -77,7 +79,7 @@ public class ArtikelController {
         }
 
         if (!userOptional.get().isAdmin()) {
-            ctx.status(HttpStatus.FORBIDDEN).json(java.util.Map.of("error", "Nur Administratoren dürfen Artikel anlegen."));
+            ctx.status(HttpStatus.UNAUTHORIZED).json(java.util.Map.of("error", "Nur Administratoren dürfen Artikel anlegen."));
             return;
         }
 
@@ -89,7 +91,6 @@ public class ArtikelController {
 
             validiere(name, eingabe.preis, bild);
 
-            // TODO addArtikel liefert das DTO
             int artikelId = getArtikelDao().addNewArtikel(name, eingabe.preis, bild);
             ArtikelEntity artikelEntity = new ArtikelEntity(artikelId, name, eingabe.preis, bild);
             ArtikelDto artikelDto = artikelEntity2ArtikelDto(artikelEntity);

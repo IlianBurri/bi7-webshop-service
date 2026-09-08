@@ -37,9 +37,12 @@ public final class LiquibaseMigrationRunner {
 
             for (String changelogFile : changelogFiles) {
                 System.out.println("Applying migration: " + changelogFile);
-                try (Liquibase liquibase = new Liquibase(changelogFile, new ClassLoaderResourceAccessor(), database)) {
-                    liquibase.update(new Contexts(), new LabelExpression());
-                }
+                Liquibase liquibase = new Liquibase(
+                        changelogFile,
+                        new ClassLoaderResourceAccessor(),
+                        database
+                );
+                liquibase.update(new Contexts(), new LabelExpression());
             }
         }
     }
@@ -73,4 +76,3 @@ public final class LiquibaseMigrationRunner {
         return files;
     }
 }
-

@@ -92,13 +92,13 @@ public class BestellungDaoImpl implements BestellungDao {
     }
 
     private BestellungEntity mapResultSetToBestellung(ResultSet rs) throws SQLException {
-        BestellungEntity b = new BestellungEntity();
-        b.setBestellungId(rs.getInt("bestellungId"));
-        b.setUserEmail(rs.getString("userEmail"));
-        b.setAdressId(rs.getInt("adressId"));
-        b.setGesamtpreis(rs.getBigDecimal("gesamtpreis"));
-        b.setStatus(rs.getString("status"));
-        b.setBestelltAm(rs.getTimestamp("bestelldatum"));
-        return b;
+        return new BestellungEntity(
+                rs.getInt("bestellungId"),
+                rs.getString("userEmail"),
+                rs.getInt("adressId"),
+                rs.getBigDecimal("gesamtpreis"),
+                rs.getString("status"),
+                rs.getTimestamp("bestelldatum")
+        );
     }
 }

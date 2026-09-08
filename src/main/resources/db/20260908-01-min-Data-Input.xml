@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <changeSet id="20260908-01-admin" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM user WHERE email = 'admin@example.com'
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="user">
+            <column name="username" value="Admin"/>
+            <column name="email" value="admin@example.com"/>
+            <column name="password" value="admin123"/>
+            <column name="isAdmin" valueNumeric="1"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="20260908-02-iphone" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM artikel WHERE name = 'iPhone 15 Pro'
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="artikel">
+            <column name="name" value="iPhone 15 Pro"/>
+            <column name="preis" valueNumeric="1199.00"/>
+            <column name="bild" value="https://example.com/iphone.jpg"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="20260908-03-samsung" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM artikel WHERE name = 'Samsung Galaxy S24'
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="artikel">
+            <column name="name" value="Samsung Galaxy S24"/>
+            <column name="preis" valueNumeric="899.90"/>
+            <column name="bild" value="https://example.com/galaxy.jpg"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="20260908-04-remove-macbook" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM artikel WHERE name = 'MacBook Pro'
+            </sqlCheck>
+        </preConditions>
+        <delete tableName="artikel">
+            <where>name = 'MacBook Pro'</where>
+        </delete>
+    </changeSet>
+</databaseChangeLog>

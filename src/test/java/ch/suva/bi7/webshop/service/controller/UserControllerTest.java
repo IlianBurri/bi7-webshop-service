@@ -6,32 +6,10 @@ import ch.suva.bi7.webshop.service.model.LoginUserRequest;
 import ch.suva.bi7.webshop.service.model.LoginUserResponse;
 import ch.suva.bi7.webshop.service.model.RegisterUserRequest;
 import ch.suva.bi7.webshop.service.model.RegisterUserResponse;
+import ch.suva.bi7.webshop.service.model.UserDto;
 import ch.suva.bi7.webshop.service.db.entity.UserEntity;
-import io.javalin.config.Key;
-import io.javalin.config.MultipartConfig;
-import io.javalin.http.Context;
-import io.javalin.http.HttpStatus;
-import io.javalin.json.JsonMapper;
-import io.javalin.plugin.ContextPlugin;
-import io.javalin.router.Endpoint;
-import io.javalin.router.Endpoints;
-import io.javalin.security.RouteRole;
-import jakarta.servlet.ServletOutputStream;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserControllerTest {
@@ -87,44 +65,6 @@ class UserControllerTest {
         LoginUserResponse res = (LoginUserResponse) ctxMock.gesendetesJson;
         assertFalse(res.isAdmin, "Login-Antwort muss isAdmin=false enthalten");
     }
-// TODO Löschen oder Umschreiben:
-//    @Test
-//    void currentUserLiefertAdminStatusAusSession() throws Exception {
-//        EinfacherContextMock ctxMock = new EinfacherContextMock(null);
-//        ctxMock.sessionAttribute("userEmail", "bruce.wayne@gotham.com");
-//        ctxMock.sessionAttribute("isAdmin", true);
-//
-//        UserController.currentUser.handle(ctxMock);
-//
-//        assertEquals(200, ctxMock.gesetzterStatus);
-//        @SuppressWarnings("unchecked")
-//        java.util.Map<String, Object> res = (java.util.Map<String, Object>) ctxMock.gesendetesJson;
-//        assertEquals("bruce.wayne@gotham.com", res.get("email"));
-//        assertEquals(true, res.get("isAdmin"), "Admin-Status muss aus der Session kommen");
-//    }
-//
-//    @Test
-//    void currentUserLiefertFalseFuerNormalenUser() throws Exception {
-//        EinfacherContextMock ctxMock = new EinfacherContextMock(null);
-//        ctxMock.sessionAttribute("userEmail", "peter.parker@dailybugle.com");
-//        ctxMock.sessionAttribute("isAdmin", false);
-//
-//        UserController.currentUser.handle(ctxMock);
-//
-//        assertEquals(200, ctxMock.gesetzterStatus);
-//        @SuppressWarnings("unchecked")
-//        java.util.Map<String, Object> res = (java.util.Map<String, Object>) ctxMock.gesendetesJson;
-//        assertEquals(false, res.get("isAdmin"), "Ohne Admin-Session muss isAdmin false sein");
-//    }
-//
-//    @Test
-//    void currentUserOhneSessionLiefert401() throws Exception {
-//        EinfacherContextMock ctxMock = new EinfacherContextMock(null);
-//
-//        UserController.currentUser.handle(ctxMock);
-//
-//        assertEquals(401, ctxMock.gesetzterStatus);
-//    }
 
     @Test
     void registerBeiExistierendemUserLiefert409() throws Exception {

@@ -40,11 +40,23 @@ public class UserController {
         String email = ctx.pathParam("email");
         Optional<UserEntity> user = getUserDao().getUserByEMail(email);
         if (user.isPresent()) {
-            ctx.json(user.get());
+            ctx.json(userEntity2Dto(user.get()));
         } else {
             ctx.status(404).result("Not Found: '" + email + "'\n");
         }
     };
+
+    static UserDto userEntity2Dto(UserEntity entity) {
+        if (entity == null) {
+            throw new IllegalArgumentException("UserEntity darf nicht null sein");
+        }
+
+        return new UserDto(
+                entity.getUsername(),
+                entity.getEmail(),
+                entity.isAdmin()
+        );
+    }
 
     public static Handler register = ctx -> {
         try {

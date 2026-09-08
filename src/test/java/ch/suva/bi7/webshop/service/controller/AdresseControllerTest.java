@@ -4,6 +4,7 @@ import ch.suva.bi7.webshop.service.dao.AdresseDao;
 import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 import ch.suva.bi7.webshop.service.mock.EinfacherContextMock;
+import ch.suva.bi7.webshop.service.model.AdresseDto;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ class AdresseControllerTest {
     private static final String TEST_EMAIL = "max@example.ch";
 
     private static final AdresseEntity BEISPIEL_ADRESSE =
-            new AdresseEntity(0, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
+            new AdresseEntity(null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
 
     @Test
     void adressenAbrufenLiefertAdressenAlsJson() throws Exception {
@@ -34,9 +35,9 @@ class AdresseControllerTest {
         assertEquals(200, ctx.gesetzterStatus);
         List<?> json = (List<?>) ctx.gesendetesJson;
         assertEquals(1, json.size());
-        AdresseEntity zurueckgegeben = (AdresseEntity) json.get(0);
-        assertEquals(1, zurueckgegeben.adressId());
-        assertEquals("Schweiz", zurueckgegeben.land());
+        AdresseDto zurueckgegeben = (AdresseDto) json.get(0);
+        assertEquals(1, zurueckgegeben.getAdressId());
+        assertEquals("Schweiz", zurueckgegeben.getLand());
 
         AdresseContextMock leererCtx = new AdresseContextMock();
         leererCtx.setPathParam("email", TEST_EMAIL);
@@ -51,8 +52,8 @@ class AdresseControllerTest {
     @Test
     void adresseAnlegenTrimmtFelderUndSetztDefaultLand() throws Exception {
         FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
-        AdresseEntity mitLeerzeichen = new AdresseEntity(0, "  " + TEST_EMAIL + "  ", "  Max  ", " Muster ", " Musterstrasse 1 ",
-                " 8000 ", " Zuerich ", "  ");
+        AdresseDto mitLeerzeichen = new AdresseDto(null, "  " + TEST_EMAIL + "  ", "  Max  ", " Muster ",
+                " Musterstrasse 1 ", " 8000 ", " Zuerich ", "  ");
         AdresseContextMock ctx = new AdresseContextMock(mitLeerzeichen);
         AdresseController controller = new AdresseController(dao);
 
@@ -61,16 +62,18 @@ class AdresseControllerTest {
         assertEquals(201, ctx.gesetzterStatus);
         AdresseEntity gespeichert = dao.gespeicherteAdresse;
         assertNotNull(gespeichert, "DAO.insert muss aufgerufen werden");
-        assertEquals(TEST_EMAIL, gespeichert.userEmail(), "userEmail muss getrimmt werden");
-        assertEquals("Zuerich", gespeichert.ort());
-        assertEquals("Schweiz", gespeichert.land(), "Ohne land muss der Default Schweiz verwendet werden");
-        assertEquals(42, ((AdresseEntity) ctx.gesendetesJson).adressId(), "Die vergebene adressId muss im JSON stehen");
+        assertEquals(TEST_EMAIL, gespeichert.getUserEmail(), "userEmail muss getrimmt werden");
+        assertEquals("Zuerich", gespeichert.getOrt());
+        assertEquals("Schweiz", gespeichert.getLand(), "Ohne land muss der Default Schweiz verwendet werden");
+        assertEquals(42, ((AdresseDto) ctx.gesendetesJson).getAdressId(), "Die vergebene adressId muss im JSON stehen");
     }
 
     @Test
     void adresseAktualisierenGibtErfolgreichZurueck() throws Exception {
         FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
-        AdresseContextMock updateCtx = new AdresseContextMock(BEISPIEL_ADRESSE);
+        AdresseContextMock updateCtx = new AdresseContextMock(new AdresseDto(
+                null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1",
+                "8000", "Zuerich", "Schweiz"));
         updateCtx.setPathParam("adressId", "7");
         AdresseController controller = new AdresseController(dao);
 
@@ -78,7 +81,7 @@ class AdresseControllerTest {
 
         assertEquals(200, updateCtx.gesetzterStatus);
         assertEquals(7, dao.updateId);
-        assertEquals(TEST_EMAIL, dao.updateAdresse.userEmail());
+        assertEquals(TEST_EMAIL, dao.updateAdresse.getUserEmail());
     }
 
     @Test
@@ -97,7 +100,8 @@ class AdresseControllerTest {
     @Test
     void adresseAnlegenMitFehlendemPflichtfeldLiefert400() throws Exception {
         FakeAdresseDao daoOhneEmail = new FakeAdresseDao(Collections.emptyList());
-        AdresseEntity ohneEmail = new AdresseEntity(0, null, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
+        AdresseDto ohneEmail = new AdresseDto(null, null, "Max", "Muster", "Musterstrasse 1",
+                "8000", "Zuerich", "Schweiz");
         AdresseContextMock fehlerCtx = new AdresseContextMock(ohneEmail);
         AdresseController controller = new AdresseController(daoOhneEmail);
 
@@ -125,7 +129,9 @@ class AdresseControllerTest {
     void adresseAnlegenBeiIdentischerAdresseLiefert200UndInsertiertNicht() throws Exception {
         FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
         dao.existsIdenticalErgebnis = true;
-        AdresseContextMock ctx = new AdresseContextMock(BEISPIEL_ADRESSE);
+        AdresseContextMock ctx = new AdresseContextMock(new AdresseDto(
+                null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1",
+                "8000", "Zuerich", "Schweiz"));
         AdresseController controller = new AdresseController(dao);
 
         controller.createAdresse.handle(ctx);
@@ -138,7 +144,9 @@ class AdresseControllerTest {
     void adresseAktualisierenBeiFehlendemDatensatzLiefert404() throws Exception {
         FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
         dao.updateErgebnis = false;
-        AdresseContextMock ctx = new AdresseContextMock(BEISPIEL_ADRESSE);
+        AdresseContextMock ctx = new AdresseContextMock(new AdresseDto(
+                null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1",
+                "8000", "Zuerich", "Schweiz"));
         ctx.setPathParam("adressId", "7");
         AdresseController controller = new AdresseController(dao);
 
@@ -231,8 +239,8 @@ class FakeAdresseDao implements AdresseDao {
     @Override
     public AdresseEntity insert(AdresseEntity adresse) {
         this.gespeicherteAdresse = adresse;
-        return new AdresseEntity(42, adresse.userEmail(), adresse.vorname(), adresse.nachname(),
-                adresse.strasse(), adresse.plz(), adresse.ort(), adresse.land());
+        return new AdresseEntity(42, adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
+                adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand());
     }
 
     @Override

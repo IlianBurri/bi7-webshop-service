@@ -2,11 +2,13 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.model.WarenkorbDto;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class WarenkorbController {
 
@@ -25,9 +27,16 @@ public class WarenkorbController {
         this.getWarenkorb = ctx -> {
             try {
                 String email = ctx.pathParam("email");
+                if (email == null || email.trim().isEmpty()) {
+                    ctx.status(400).result("Parameter 'email' erforderlich.");
+                    return;
+                }
+
                 List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(email);
-                // TODO GetWarenkorbResponse erstellen und zurückgeben, anstatt die Liste von Entities
-                ctx.status(200).json(items);
+                List<WarenkorbDto> response = items.stream()
+                        .map(WarenkorbController::warenkorbEntity2Dto)
+                        .collect(Collectors.toList());
+                ctx.status(200).json(response);
             } catch (Exception e) {
                 logger.error("Fehler beim Abrufen des Warenkorbs: {}", e.getMessage(), e);
                 ctx.status(500).result("Fehler beim Abrufen des Warenkorbs.");
@@ -49,6 +58,10 @@ public class WarenkorbController {
                 }
 
                 int artikelId = Integer.parseInt(artikelIdStr);
+                if (artikelId <= 0) {
+                    ctx.status(400).result("artikelId muss > 0 sein.");
+                    return;
+                }
 
                 int menge = 1;
                 String mengeStr = ctx.queryParam("menge");
@@ -75,6 +88,10 @@ public class WarenkorbController {
             try {
                 String idStr = ctx.pathParam("id");
                 int warenkorbItemId = Integer.parseInt(idStr);
+                if (warenkorbItemId <= 0) {
+                    ctx.status(400).result("ID muss > 0 sein.");
+                    return;
+                }
 
                 String mengeStr = ctx.queryParam("menge");
                 if (mengeStr == null || mengeStr.trim().isEmpty()) {
@@ -107,6 +124,10 @@ public class WarenkorbController {
             try {
                 String idStr = ctx.pathParam("id");
                 int warenkorbItemId = Integer.parseInt(idStr);
+                if (warenkorbItemId <= 0) {
+                    ctx.status(400).result("ID muss > 0 sein.");
+                    return;
+                }
                 if (!warenkorbDao.deleteWarenkorbItem(warenkorbItemId)) {
                     ctx.status(404).result("Warenkorb-Item nicht gefunden.");
                     return;
@@ -120,5 +141,20 @@ public class WarenkorbController {
                 ctx.status(500).result("Fehler beim Löschen des Warenkorb-Items.");
             }
         };
+    }
+
+    static WarenkorbDto warenkorbEntity2Dto(WarenkorbItemEntity entity) {
+        if (entity == null) {
+            throw new IllegalArgumentException("WarenkorbItemEntity darf nicht null sein");
+        }
+
+        return new WarenkorbDto(
+                entity.getWarenkorbItemId(),
+                entity.getArtikelId(),
+                entity.getMenge(),
+                entity.getArtikelName(),
+                entity.getArtikelPreis(),
+                entity.getArtikelBild()
+        );
     }
 }

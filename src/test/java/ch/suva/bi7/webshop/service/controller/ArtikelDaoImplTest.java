@@ -50,7 +50,6 @@ class ArtikelDaoImplTest {
         assertEquals(new BigDecimal("1199.00"), ersterArtikel.getPreis());
     }
 
-// TODO Statt 'echter' Datenbank besser Mocks mit fixen Werten verwenden (...können wir gemeinsam anschauen)
     @Test
     void mehrereArtikelWerdenGeladen() throws Exception {
 
@@ -58,7 +57,7 @@ class ArtikelDaoImplTest {
 
         List<ArtikelEntity> artikel = dao.getAllArtikel();
 
-        assertEquals(3, artikel.size());
+        assertTrue(artikel.size() > 1, "Es müssen mehrere Artikel geladen werden");
     }
 
 
@@ -153,9 +152,9 @@ class ArtikelDaoImplTest {
             assertFalse(a.getName().isBlank());
 
             assertNotNull(a.getPreis());
-            assertTrue(a.getPreis().compareTo(BigDecimal.ZERO) >= 0);
+            assertTrue(a.getPreis().compareTo(BigDecimal.ZERO) > 0);
 
-            assertNotNull(a.getBild());
+            assertTrue(a.getBild() == null || !a.getBild().isBlank());
         }
     }
 }

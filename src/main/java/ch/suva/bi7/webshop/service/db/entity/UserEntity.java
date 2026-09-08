@@ -1,23 +1,26 @@
 package ch.suva.bi7.webshop.service.db.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class UserEntity {
     private final String username;
     private final String email;
     private final String password;
     private final boolean isAdmin;
 
-    public UserEntity(
-            @JsonProperty("username") String username,
-            @JsonProperty("email") String email,
-            @JsonProperty("password") String password,
-            @JsonProperty("isAdmin") boolean isAdmin) {
-        if (username == null || email == null || password == null) {
-            throw new IllegalArgumentException("username, email and password must not be null");
+    public UserEntity(String username,
+                      String email,
+                      String password,
+                      boolean isAdmin) {
+
+
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username darf nicht null/leer sein");
         }
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalArgumentException("Passwort darf nicht null/leer sein");
+        }
+
         this.username = username;
-        this.email = email;
+        this.email = email.trim();
         this.password = password;
         this.isAdmin = isAdmin;
     }

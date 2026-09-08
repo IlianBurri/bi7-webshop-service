@@ -5,17 +5,54 @@ import java.sql.Timestamp;
 
 public class BestellungEntity {
 
-    private int bestellungId;
-    private String userEmail;
-    private int adressId;
-    private BigDecimal gesamtpreis;
-    private String status;
-    private Timestamp bestelltAm;
+    private final Integer bestellungId;
+    private final String userEmail;
+    private final Integer adressId;
+    private final BigDecimal gesamtpreis;
+    private final String status;
+    private final Timestamp bestelltAm;
 
-    public BestellungEntity() {
-    }
 
-    public BestellungEntity(int bestellungId, String userEmail, int adressId, BigDecimal gesamtpreis, String status, Timestamp bestelltAm) {
+    public BestellungEntity(Integer bestellungId,
+                            String userEmail,
+                            Integer adressId,
+                            BigDecimal gesamtpreis,
+                            String status,
+                            Timestamp bestelltAm) {
+
+        if (bestellungId == null || bestellungId <= 0) {
+            throw new IllegalArgumentException("bestellungId muss > 0 sein");
+        }
+
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            throw new IllegalArgumentException("userEmail darf nicht null/leer sein");
+        }
+
+        if (userEmail.length() > 150) {
+            throw new IllegalArgumentException("userEmail darf maximal 150 Zeichen lang sein");
+        }
+
+        if (adressId == null || adressId <= 0) {
+            throw new IllegalArgumentException("adressId muss > 0 sein");
+        }
+
+        if (gesamtpreis == null || gesamtpreis.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("gesamtpreis muss > 0 sein");
+        }
+
+        if (status == null || status.trim().isEmpty()) {
+            throw new IllegalArgumentException("status darf nicht null/leer sein");
+        }
+
+        if (status.length() > 50) {
+            throw new IllegalArgumentException("status darf maximal 50 Zeichen lang sein");
+        }
+
+        if (bestelltAm == null) {
+            throw new IllegalArgumentException("bestelltAm darf nicht null sein");
+        }
+
+
         this.bestellungId = bestellungId;
         this.userEmail = userEmail;
         this.adressId = adressId;
@@ -24,51 +61,33 @@ public class BestellungEntity {
         this.bestelltAm = bestelltAm;
     }
 
-    public int getBestellungId() {
-        return bestellungId;
-    }
 
-    public void setBestellungId(int bestellungId) {
-        this.bestellungId = bestellungId;
+    public Integer getBestellungId() {
+        return bestellungId;
     }
 
     public String getUserEmail() {
         return userEmail;
     }
 
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
-    }
 
-    public int getAdressId() {
+    public Integer getAdressId() {
         return adressId;
     }
 
-    public void setAdressId(int adressId) {
-        this.adressId = adressId;
-    }
 
     public BigDecimal getGesamtpreis() {
         return gesamtpreis;
     }
 
-    public void setGesamtpreis(BigDecimal gesamtpreis) {
-        this.gesamtpreis = gesamtpreis;
-    }
 
     public String getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
 
     public Timestamp getBestelltAm() {
         return bestelltAm;
     }
 
-    public void setBestelltAm(Timestamp bestelltAm) {
-        this.bestelltAm = bestelltAm;
-    }
 }

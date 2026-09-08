@@ -1,26 +1,29 @@
 package ch.suva.bi7.webshop.service.db.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 
 public class WarenkorbItemEntity {
-    public final Integer warenkorbItemId;
-    public final String userEmail;
-    public final Integer artikelId;
-    public final Integer menge;
-    public final String artikelName;
-    public final BigDecimal artikelPreis;
-    public final String artikelBild;
+    private final Integer warenkorbItemId;
+    private final String userEmail;
+    private final Integer artikelId;
+    private final Integer menge;
+    private final String artikelName;
+    private final BigDecimal artikelPreis;
+    private final String artikelBild;
+
 
     public WarenkorbItemEntity(
-            @JsonProperty("warenkorbItemId") Integer warenkorbItemId,
-            @JsonProperty("userEmail") String userEmail,
-            @JsonProperty("artikelId") Integer artikelId,
-            @JsonProperty("menge") Integer menge,
-            @JsonProperty("artikelName") String artikelName,
-            @JsonProperty("artikelPreis") BigDecimal artikelPreis,
-            @JsonProperty("artikelBild") String artikelBild) {
+            Integer warenkorbItemId,
+            String userEmail,
+            Integer artikelId,
+            Integer menge,
+            String artikelName,
+            BigDecimal artikelPreis,
+            String artikelBild) {
 
+        if (warenkorbItemId != null && warenkorbItemId <= 0) {
+            throw new IllegalArgumentException("warenkorbItemId muss > 0 sein");
+        }
         if (userEmail == null || userEmail.trim().isEmpty()) {
             throw new IllegalArgumentException("userEmail darf nicht null/leer sein");
         }
@@ -29,6 +32,15 @@ public class WarenkorbItemEntity {
         }
         if (menge == null || menge <= 0) {
             throw new IllegalArgumentException("menge muss > 0 sein");
+        }
+        if (artikelName == null || artikelName.trim().isEmpty()) {
+            throw new IllegalArgumentException("artikelName darf nicht null/leer sein");
+        }
+        if (artikelPreis == null || artikelPreis.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("artikelPreis muss > 0 sein");
+        }
+        if (artikelBild != null && artikelBild.trim().isEmpty()) {
+            throw new IllegalArgumentException("artikelBild darf nicht leer sein");
         }
 
         this.warenkorbItemId = warenkorbItemId;

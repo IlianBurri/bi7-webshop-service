@@ -185,6 +185,8 @@
                                  onDelete="CASCADE"/>
     </changeSet>
 
+    <!-- NEUE CHANGESETS FÜR BESTELLUNGEN -->
+
     <changeSet id="20260109-11" author="ilian">
         <preConditions onFail="MARK_RAN">
             <not>
@@ -263,17 +265,6 @@
                                  referencedColumnNames="artikelId"
                                  onUpdate="RESTRICT"
                                  onDelete="RESTRICT"/>
-    </changeSet>
-
-    <changeSet id="20260901-1" author="ilian">
-        <preConditions onFail="MARK_RAN">
-            <not>
-                <columnExists tableName="bestellung" columnName="gesamtpreis"/>
-            </not>
-        </preConditions>
-        <addColumn tableName="bestellung">
-            <column name="gesamtpreis" type="DECIMAL(10, 2)"/>
-        </addColumn>
     </changeSet>
 
 </databaseChangeLog>

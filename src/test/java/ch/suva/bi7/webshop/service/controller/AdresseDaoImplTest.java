@@ -20,7 +20,7 @@ class AdresseDaoImplTest {
     private static final String TEST_EMAIL = "max@example.ch";
 
     private static final AdresseEntity BEISPIEL_ADRESSE =
-            new AdresseEntity(0, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
+            new AdresseEntity(null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
 
     private static final int GENERIERTER_KEY = 42;
 
@@ -52,14 +52,14 @@ class AdresseDaoImplTest {
 
         assertEquals(2, adressen.size(), "Es sollten genau 2 Adressen zurückgegeben werden");
         AdresseEntity erste = adressen.get(0);
-        assertEquals(1, erste.adressId());
-        assertEquals(TEST_EMAIL, erste.userEmail());
-        assertEquals("Max", erste.vorname());
-        assertEquals("Muster", erste.nachname());
-        assertEquals("Musterstrasse 1", erste.strasse());
-        assertEquals("8000", erste.plz());
-        assertEquals("Zuerich", erste.ort());
-        assertEquals("Schweiz", erste.land());
+        assertEquals(1, erste.getAdressId());
+        assertEquals(TEST_EMAIL, erste.getUserEmail());
+        assertEquals("Max", erste.getVorname());
+        assertEquals("Muster", erste.getNachname());
+        assertEquals("Musterstrasse 1", erste.getStrasse());
+        assertEquals("8000", erste.getPlz());
+        assertEquals("Zuerich", erste.getOrt());
+        assertEquals("Schweiz", erste.getLand());
     }
 
     @Test
@@ -78,7 +78,7 @@ class AdresseDaoImplTest {
 
         AdresseEntity gespeichert = testee.insert(BEISPIEL_ADRESSE);
 
-        assertEquals(GENERIERTER_KEY, gespeichert.adressId(),
+        assertEquals(GENERIERTER_KEY, gespeichert.getAdressId(),
                 "Die adressId muss direkt aus dem JDBC-generierten Key kommen");
         assertTrue(selects.isEmpty(),
                 "Nach dem INSERT darf kein SELECT mehr zum Wiederfinden nötig sein (Race-Condition-Fix)");
