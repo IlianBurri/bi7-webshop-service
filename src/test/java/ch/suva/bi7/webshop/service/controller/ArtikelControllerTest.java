@@ -1,8 +1,9 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.dao.ArtikelDao;
 import ch.suva.bi7.webshop.service.mock.ArtikelContextMock;
 import ch.suva.bi7.webshop.service.mock.EinfachesUserDaoMock;
+import ch.suva.bi7.webshop.service.mock.FakeArtikelDao;
+import ch.suva.bi7.webshop.service.mock.FehlerArtikelDao;
 import ch.suva.bi7.webshop.service.model.AddArtikelRequest;
 import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.UserEntity;
@@ -20,49 +21,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ArtikelControllerTest {
-
-    static class FakeArtikelDao implements ArtikelDao {
-
-        private final List<ArtikelEntity> artikel;
-        int callCount = 0;
-        int addArtikelCallCount = 0;
-        int generierterKey = 1;
-
-        FakeArtikelDao(List<ArtikelEntity> artikel) {
-            this.artikel = artikel;
-        }
-
-        @Override
-        public List<ArtikelEntity> getAllArtikel() {
-            callCount++;
-            return artikel;
-        }
-
-        @Override
-        public int addNewArtikel(String name, BigDecimal preis, String bild) {
-            addArtikelCallCount++;
-            return generierterKey;
-        }
-    }
-
-
-    static class FehlerArtikelDao implements ArtikelDao {
-
-        int callCount = 0;
-
-        @Override
-        public List<ArtikelEntity> getAllArtikel() throws Exception {
-            callCount++;
-            throw new Exception("Datenbank Fehler");
-        }
-
-        @Override
-        public int addNewArtikel(String name, BigDecimal preis, String bild) throws Exception {
-            callCount++;
-            throw new Exception("Datenbank Fehler");
-        }
-    }
-
 
     @BeforeEach
     void resetArtikelDaoMock() {

@@ -5,6 +5,7 @@ import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
 import ch.suva.bi7.webshop.service.model.BestellungDto;
+import ch.suva.bi7.webshop.service.model.DtoAndEntetyMapper;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,7 @@ public class BestellungController {
             try {
                 List<BestellungEntity> bestellungen = bestellungDao.getBestellungenByUserEmail(email);
                 List<BestellungDto> response = bestellungen.stream()
-                        .map(BestellungController::bestellungEntity2Dto)
+                        .map(DtoAndEntetyMapper::bestellungEntity2Dto)
                         .toList();
                 ctx.status(200).json(response);
             } catch (Exception e) {
@@ -71,20 +72,5 @@ public class BestellungController {
                 ctx.status(500).result("Fehler beim Laden der Bestellungen.");
             }
         };
-    }
-
-    static BestellungDto bestellungEntity2Dto(BestellungEntity entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("BestellungEntity darf nicht null sein");
-        }
-
-        return new BestellungDto(
-                entity.getBestellungId(),
-                entity.getUserEmail(),
-                entity.getAdressId(),
-                entity.getGesamtpreis(),
-                entity.getStatus(),
-                entity.getBestelltAm()
-        );
     }
 }

@@ -1,17 +1,15 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.dao.BestellungDao;
-import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
-import ch.suva.bi7.webshop.service.mock.EinfacherContextMock;
-import io.javalin.http.Context;
+import ch.suva.bi7.webshop.service.mock.BestellungContextMock;
+import ch.suva.bi7.webshop.service.mock.CheckoutWarenkorbDao;
+import ch.suva.bi7.webshop.service.mock.FakeBestellungDao;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -70,82 +68,5 @@ class BestellungControllerTest {
         assertEquals(400, ctx.gesetzterStatus);
         assertEquals("Warenkorb ist leer.", ctx.gesendetesResult);
         assertFalse(bestellungDao.wurdeAufgerufen, "Bei leerem Warenkorb darf keine Bestellung erstellt werden");
-    }
-}
-
-class FakeBestellungDao implements BestellungDao {
-
-    boolean wurdeAufgerufen = false;
-    String letzterUserEmail;
-    int letzteAdressId;
-    BigDecimal letzterGesamtpreis;
-    List<WarenkorbItemEntity> letzteItems;
-
-    @Override
-    public int createBestellungWithItems(String userEmail, int adressId, BigDecimal gesamtpreis, List<WarenkorbItemEntity> items) {
-        wurdeAufgerufen = true;
-        letzterUserEmail = userEmail;
-        letzteAdressId = adressId;
-        letzterGesamtpreis = gesamtpreis;
-        letzteItems = items;
-        return 5;
-    }
-
-    @Override
-    public Optional<BestellungEntity> getBestellungById(int bestellungId) {
-        return Optional.empty();
-    }
-
-    @Override
-    public List<BestellungEntity> getBestellungenByUserEmail(String userEmail) {
-        return List.of();
-    }
-}
-
-class CheckoutWarenkorbDao implements WarenkorbDao {
-
-    private final List<WarenkorbItemEntity> items;
-
-    CheckoutWarenkorbDao(List<WarenkorbItemEntity> items) {
-        this.items = items;
-    }
-
-    @Override
-    public List<WarenkorbItemEntity> getWarenkorbByUser(String email) {
-        return items;
-    }
-
-    @Override
-    public void addArtikelToWarenkorb(String email, int artikelId, int menge) {
-    }
-
-    @Override
-    public boolean updateMenge(int warenkorbItemId, int menge) {
-        return true;
-    }
-
-    @Override
-    public boolean deleteWarenkorbItem(int warenkorbItemId) {
-        return true;
-    }
-
-    @Override
-    public boolean clearWarenkorbByUser(String email) {
-        return true;
-    }
-}
-
-class BestellungContextMock extends EinfacherContextMock {
-
-    String gesendetesResult;
-
-    BestellungContextMock(Object body) {
-        super(body);
-    }
-
-    @Override
-    public Context result(String result) {
-        this.gesendetesResult = result;
-        return this;
     }
 }

@@ -1,17 +1,14 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.dao.DaoException;
-import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
-import ch.suva.bi7.webshop.service.mock.EinfacherContextMock;
-import io.javalin.http.Context;
+import ch.suva.bi7.webshop.service.mock.FakeWarenkorbDao;
+import ch.suva.bi7.webshop.service.mock.FehlerWarenkorbDao;
+import ch.suva.bi7.webshop.service.mock.WarenkorbContextMock;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -205,118 +202,5 @@ class WarenkorbControllerTest {
         assertEquals(500, dbFehlerCtx.gesetzterStatus);
         assertEquals("Fehler beim Abrufen des Warenkorbs.", dbFehlerCtx.gesendetesResult,
                 "Der API-Vertrag muss eine konkrete Fehlermeldung liefern");
-    }
-}
-
-class FakeWarenkorbDao implements WarenkorbDao {
-
-    private final List<WarenkorbItemEntity> items;
-
-    boolean updateErgebnis = true;
-    boolean deleteErgebnis = true;
-
-    String addEmail;
-    Integer addArtikelId;
-    Integer addMenge;
-    Integer updateId;
-    Integer updateNeueMenge;
-    Integer deleteId;
-
-    FakeWarenkorbDao(List<WarenkorbItemEntity> items) {
-        this.items = items;
-    }
-
-    @Override
-    public List<WarenkorbItemEntity> getWarenkorbByUser(String email) {
-        return items;
-    }
-
-    @Override
-    public void addArtikelToWarenkorb(String email, int artikelId, int menge) {
-        this.addEmail = email;
-        this.addArtikelId = artikelId;
-        this.addMenge = menge;
-    }
-
-    @Override
-    public boolean updateMenge(int warenkorbItemId, int menge) {
-        this.updateId = warenkorbItemId;
-        this.updateNeueMenge = menge;
-        return updateErgebnis;
-    }
-
-    @Override
-    public boolean deleteWarenkorbItem(int warenkorbItemId) {
-        this.deleteId = warenkorbItemId;
-        return deleteErgebnis;
-    }
-
-    @Override
-    public boolean clearWarenkorbByUser(String email) {
-        return true;
-    }
-}
-
-class FehlerWarenkorbDao implements WarenkorbDao {
-
-    @Override
-    public List<WarenkorbItemEntity> getWarenkorbByUser(String email) throws DaoException {
-        throw new DaoException("Datenbank Fehler");
-    }
-
-    @Override
-    public void addArtikelToWarenkorb(String email, int artikelId, int menge) throws DaoException {
-        throw new DaoException("Datenbank Fehler");
-    }
-
-    @Override
-    public boolean updateMenge(int warenkorbItemId, int menge) throws DaoException {
-        throw new DaoException("Datenbank Fehler");
-    }
-
-    @Override
-    public boolean deleteWarenkorbItem(int warenkorbItemId) throws DaoException {
-        throw new DaoException("Datenbank Fehler");
-    }
-
-    @Override
-    public boolean clearWarenkorbByUser(String email) throws DaoException {
-        throw new DaoException("Datenbank Fehler");
-    }
-}
-
-
-class WarenkorbContextMock extends EinfacherContextMock {
-
-    private final Map<String, String> pathParams = new HashMap<>();
-    private final Map<String, String> queryParams = new HashMap<>();
-    String gesendetesResult;
-
-    WarenkorbContextMock() {
-        super(null);
-    }
-
-    void setPathParam(String key, String value) {
-        pathParams.put(key, value);
-    }
-
-    void setQueryParam(String key, String value) {
-        queryParams.put(key, value);
-    }
-
-    @Override
-    public String pathParam(String key) {
-        return pathParams.getOrDefault(key, "");
-    }
-
-    @Override
-    public String queryParam(String key) {
-        return queryParams.get(key);
-    }
-
-    @Override
-    public Context result(String result) {
-        this.gesendetesResult = result;
-        return this;
     }
 }

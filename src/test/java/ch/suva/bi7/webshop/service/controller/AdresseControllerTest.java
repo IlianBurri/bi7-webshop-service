@@ -1,16 +1,13 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.dao.AdresseDao;
-import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
-import ch.suva.bi7.webshop.service.mock.EinfacherContextMock;
+import ch.suva.bi7.webshop.service.mock.AdresseContextMock;
+import ch.suva.bi7.webshop.service.mock.FakeAdresseDao;
+import ch.suva.bi7.webshop.service.mock.FehlerAdresseDao;
 import ch.suva.bi7.webshop.service.model.AdresseDto;
-import io.javalin.http.BadRequestResponse;
-import io.javalin.http.Context;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -211,119 +208,5 @@ class AdresseControllerTest {
         Map<String, Object> fehler = (Map<String, Object>) ctx.gesendetesJson;
         assertNotNull(fehler, "Es muss ein JSON-Fehlerobjekt gesendet werden");
         return (String) fehler.get("error");
-    }
-}
-
-class FakeAdresseDao implements AdresseDao {
-
-    private final List<AdresseEntity> adressen;
-
-    boolean existsIdenticalErgebnis = false;
-    boolean updateErgebnis = true;
-    boolean deleteErgebnis = true;
-
-    AdresseEntity gespeicherteAdresse;
-    Integer updateId;
-    AdresseEntity updateAdresse;
-    Integer deleteId;
-
-    FakeAdresseDao(List<AdresseEntity> adressen) {
-        this.adressen = adressen;
-    }
-
-    @Override
-    public List<AdresseEntity> findByUserEmail(String email) {
-        return adressen;
-    }
-
-    @Override
-    public AdresseEntity insert(AdresseEntity adresse) {
-        this.gespeicherteAdresse = adresse;
-        return new AdresseEntity(42, adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
-                adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand());
-    }
-
-    @Override
-    public boolean update(int adressId, AdresseEntity adresse) {
-        this.updateId = adressId;
-        this.updateAdresse = adresse;
-        return updateErgebnis;
-    }
-
-    @Override
-    public boolean delete(int adressId) {
-        this.deleteId = adressId;
-        return deleteErgebnis;
-    }
-
-    @Override
-    public boolean existsIdentical(AdresseEntity adresse) {
-        return existsIdenticalErgebnis;
-    }
-}
-
-class FehlerAdresseDao implements AdresseDao {
-
-    @Override
-    public List<AdresseEntity> findByUserEmail(String email) throws DaoException {
-        throw new DaoException("Datenbank Fehler");
-    }
-
-    @Override
-    public AdresseEntity insert(AdresseEntity adresse) throws DaoException {
-        throw new DaoException("Datenbank Fehler");
-    }
-
-    @Override
-    public boolean update(int adressId, AdresseEntity adresse) throws DaoException {
-        throw new DaoException("Datenbank Fehler");
-    }
-
-    @Override
-    public boolean delete(int adressId) throws DaoException {
-        throw new DaoException("Datenbank Fehler");
-    }
-
-    @Override
-    public boolean existsIdentical(AdresseEntity adresse) throws DaoException {
-        throw new DaoException("Datenbank Fehler");
-    }
-}
-
-class AdresseContextMock extends EinfacherContextMock {
-
-    private final Map<String, String> pathParams = new HashMap<>();
-    String gesendetesResult;
-    boolean jsonFehler = false;
-
-    AdresseContextMock() {
-        super(null);
-    }
-
-    AdresseContextMock(Object vorgegebenerBody) {
-        super(vorgegebenerBody);
-    }
-
-    void setPathParam(String key, String value) {
-        pathParams.put(key, value);
-    }
-
-    @Override
-    public String pathParam(String key) {
-        return pathParams.getOrDefault(key, "");
-    }
-
-    @Override
-    public <T> T bodyAsClass(Class<T> clazz) {
-        if (jsonFehler) {
-            throw new BadRequestResponse("Invalid body");
-        }
-        return super.bodyAsClass(clazz);
-    }
-
-    @Override
-    public Context result(String result) {
-        this.gesendetesResult = result;
-        return this;
     }
 }

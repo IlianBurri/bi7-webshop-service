@@ -2,6 +2,7 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.model.DtoAndEntetyMapper;
 import ch.suva.bi7.webshop.service.model.WarenkorbDto;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ public class WarenkorbController {
 
                 List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(email);
                 List<WarenkorbDto> response = items.stream()
-                        .map(WarenkorbController::warenkorbEntity2Dto)
+                        .map(DtoAndEntetyMapper::warenkorbEntity2Dto)
                         .collect(Collectors.toList());
                 ctx.status(200).json(response);
             } catch (Exception e) {
@@ -141,20 +142,5 @@ public class WarenkorbController {
                 ctx.status(500).result("Fehler beim Löschen des Warenkorb-Items.");
             }
         };
-    }
-
-    static WarenkorbDto warenkorbEntity2Dto(WarenkorbItemEntity entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("WarenkorbItemEntity darf nicht null sein");
-        }
-
-        return new WarenkorbDto(
-                entity.getWarenkorbItemId(),
-                entity.getArtikelId(),
-                entity.getMenge(),
-                entity.getArtikelName(),
-                entity.getArtikelPreis(),
-                entity.getArtikelBild()
-        );
     }
 }

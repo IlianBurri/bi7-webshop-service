@@ -4,6 +4,7 @@ import ch.suva.bi7.webshop.service.dao.AdresseDao;
 import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 import ch.suva.bi7.webshop.service.model.AdresseDto;
+import ch.suva.bi7.webshop.service.model.DtoAndEntetyMapper;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class AdresseController {
                 String email = ctx.pathParam("email");
                 List<AdresseEntity> adressen = adresseDao.findByUserEmail(email);
                 List<AdresseDto> response = adressen.stream()
-                        .map(AdresseController::adresseEntity2Dto)
+                        .map(DtoAndEntetyMapper::adresseEntity2Dto)
                         .toList();
                 ctx.status(200).json(response);
             } catch (Exception e) {
@@ -52,12 +53,12 @@ public class AdresseController {
 
                 if (adresseDao.existsIdentical(adresse)) {
                     AdresseEntity bestehende = findeBestehendeIdentische(adresseDao, adresse);
-                    ctx.status(200).json(adresseEntity2Dto(bestehende));
+                    ctx.status(200).json(DtoAndEntetyMapper.adresseEntity2Dto(bestehende));
                     return;
                 }
 
                 AdresseEntity gespeichert = adresseDao.insert(adresse);
-                ctx.status(201).json(adresseEntity2Dto(gespeichert));
+                ctx.status(201).json(DtoAndEntetyMapper.adresseEntity2Dto(gespeichert));
             } catch (BadRequestResponse e) {
                 ctx.status(400).json(Map.of("error", "Ungültiger JSON-Request-Body."));
             } catch (IllegalArgumentException e) {
@@ -80,7 +81,7 @@ public class AdresseController {
                     return;
                 }
 
-                ctx.status(200).json(adresseEntity2Dto(mitAdressId(adresse, adressId)));
+                ctx.status(200).json(DtoAndEntetyMapper.adresseEntity2Dto(mitAdressId(adresse, adressId)));
             } catch (NumberFormatException e) {
                 ctx.status(400).json(Map.of("error", "adressId muss eine Zahl sein."));
             } catch (BadRequestResponse e) {
@@ -161,20 +162,4 @@ public class AdresseController {
                 && a.getLand().equals(b.getLand());
     }
 
-    static AdresseDto adresseEntity2Dto(AdresseEntity entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("AdresseEntity darf nicht null sein");
-        }
-
-        return new AdresseDto(
-                entity.getAdressId(),
-                entity.getUserEmail(),
-                entity.getVorname(),
-                entity.getNachname(),
-                entity.getStrasse(),
-                entity.getPlz(),
-                entity.getOrt(),
-                entity.getLand()
-        );
-    }
 }

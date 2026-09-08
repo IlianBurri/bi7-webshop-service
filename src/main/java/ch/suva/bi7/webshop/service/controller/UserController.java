@@ -40,23 +40,11 @@ public class UserController {
         String email = ctx.pathParam("email");
         Optional<UserEntity> user = getUserDao().getUserByEMail(email);
         if (user.isPresent()) {
-            ctx.json(userEntity2Dto(user.get()));
+            ctx.json(DtoAndEntetyMapper.userEntity2Dto(user.get()));
         } else {
             ctx.status(404).result("Not Found: '" + email + "'\n");
         }
     };
-
-    static UserDto userEntity2Dto(UserEntity entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("UserEntity darf nicht null sein");
-        }
-
-        return new UserDto(
-                entity.getUsername(),
-                entity.getEmail(),
-                entity.isAdmin()
-        );
-    }
 
     public static Handler register = ctx -> {
         try {
@@ -144,7 +132,12 @@ public class UserController {
             ctx.status(201).json(response);
 
         } catch (Exception e) {
-            RegisterUserResponse response = new RegisterUserResponse("error", "Bad Request: " + e.getMessage() + "\n");
+            LoginUserResponse response = new LoginUserResponse(
+                    "error",
+                    "Bad Request: " + e.getMessage() + "\n",
+                    null,
+                    false
+            );
             logger.error("Login fehlgeschlagen: {}", e.getMessage(), e);
             ctx.status(400).json(response);
         }

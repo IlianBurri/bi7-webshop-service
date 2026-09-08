@@ -62,6 +62,7 @@ public class Bi7WebshopService {
                 config.routes.get("/api/adresse/{email}", adresseController.getAdressen);
                 config.routes.post("/api/adresse", adresseController.createAdresse);
                 config.routes.put("/api/adresse/{adressId}", adresseController.updateAdresse);
+                config.routes.delete("/api/adresse/{adressId}", adresseController.deleteAdresse);
 
                 config.routes.post("/api/bestellung/checkout", bestellungController.createBestellung);
                 config.routes.get("/api/bestellung/{email}", bestellungController.getBestellungenByUser);
