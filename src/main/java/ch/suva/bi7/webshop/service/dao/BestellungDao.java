@@ -9,7 +9,8 @@ import java.util.Optional;
 
 public interface BestellungDao {
 
-    int createBestellungWithItems(String userEmail, int adressId, BigDecimal gesamtpreis, List<WarenkorbItemEntity> items) throws DaoException;
+    int erstelleBestellungMitWarenkorbItems(String userEmail, int adressId, BigDecimal gesamtpreis,
+                                            List<WarenkorbItemEntity> warenkorbItemEntityList) throws DaoException;
 
     Optional<BestellungEntity> getBestellungById(int bestellungId) throws DaoException;
 

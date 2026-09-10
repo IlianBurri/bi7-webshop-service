@@ -17,8 +17,8 @@ public class FakeBestellungDao implements BestellungDao {
     public List<WarenkorbItemEntity> letzteItems;
 
     @Override
-    public int createBestellungWithItems(String userEmail, int adressId, BigDecimal gesamtpreis,
-                                         List<WarenkorbItemEntity> items) {
+    public int erstelleBestellungMitWarenkorbItems(String userEmail, int adressId, BigDecimal gesamtpreis,
+                                                   List<WarenkorbItemEntity> items) {
         wurdeAufgerufen = true;
         letzterUserEmail = userEmail;
         letzteAdressId = adressId;

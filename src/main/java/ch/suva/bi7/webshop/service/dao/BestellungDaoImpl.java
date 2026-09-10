@@ -27,18 +27,26 @@ public class BestellungDaoImpl implements BestellungDao {
     }
 
     @Override
-    public int createBestellungWithItems(String userEmail, int adressId, BigDecimal gesamtpreis, List<WarenkorbItemEntity> items) throws DaoException {
+    public int erstelleBestellungMitWarenkorbItems(String userEmail, int adressId, BigDecimal gesamtpreis,
+                                                   List<WarenkorbItemEntity> warenkorbItemEntityList) throws DaoException {
         String insertBestellungSql = "INSERT INTO bestellung (userEmail, adressId, gesamtpreis, bestelldatum, status) " +
                 "VALUES (?, ?, ?, NOW(), 'BEZAHLT')";
-        String insertItemSql = "INSERT INTO bestellposition (bestellungId, artikelId, anzahl, einzelpreis) VALUES (?, ?, ?, ?)";
+        String insertBestellpositionSql =
+                "INSERT INTO bestellposition (bestellungId, artikelId, anzahl, einzelpreis) VALUES (?, ?, ?, ?)";
         String deleteWarenkorbSql = "DELETE FROM warenkorb_item WHERE userEmail = ?";
 
         try {
             dbConnection.beginTransaction();
             int generatedBestellungId = dbConnection.executeUpdateReturningGeneratedKeys(insertBestellungSql, userEmail, adressId, gesamtpreis);
 
-            for (WarenkorbItemEntity item : items) {
-                dbConnection.executeUpdate(insertItemSql, generatedBestellungId, item.getArtikelId(), item.getMenge(), item.getArtikelPreis());
+            for (WarenkorbItemEntity warenkorbItemEntity : warenkorbItemEntityList) {
+                dbConnection.executeUpdate(
+                        insertBestellpositionSql,
+                        generatedBestellungId,
+                        warenkorbItemEntity.getArtikelId(),
+                        warenkorbItemEntity.getMenge(),
+                        warenkorbItemEntity.getArtikelPreis()
+                );
             }
 
             dbConnection.executeUpdate(deleteWarenkorbSql, userEmail);

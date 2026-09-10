@@ -22,7 +22,7 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
 
     @Override
     public List<WarenkorbItemEntity> getWarenkorbByUser(String email) throws DaoException {
-        List<WarenkorbItemEntity> items = new ArrayList<>();
+        List<WarenkorbItemEntity> warenkorbItemEntityList = new ArrayList<>();
 
         String sql = "SELECT w.warenkorbItemId, w.userEmail, w.artikelId, w.menge, " +
                 "a.name AS artikelName, a.preis AS artikelPreis, a.bild AS artikelBild " +
@@ -41,7 +41,7 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
                     BigDecimal artikelPreis = rs.getBigDecimal("artikelPreis");
                     String artikelBild = rs.getString("artikelBild");
 
-                    items.add(new WarenkorbItemEntity(
+                    warenkorbItemEntityList.add(new WarenkorbItemEntity(
                             warenkorbItemId, userEmail, artikelId, menge,
                             artikelName, artikelPreis, artikelBild
                     ));
@@ -50,7 +50,7 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
         } catch (SQLException e) {
             throw new DaoException("Fehler beim Abrufen des Warenkorbs", e);
         }
-        return items;
+        return warenkorbItemEntityList;
     }
 
     @Override

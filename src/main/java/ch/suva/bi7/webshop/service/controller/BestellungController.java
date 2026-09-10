@@ -5,7 +5,7 @@ import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
 import ch.suva.bi7.webshop.service.model.BestellungDto;
-import ch.suva.bi7.webshop.service.model.DtoAndEntetyMapper;
+import ch.suva.bi7.webshop.service.mapper.BestellungMapper;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,17 +37,19 @@ public class BestellungController {
                 Map<String, Object> body = ctx.bodyAsClass(Map.class);
                 int adressId = ((Number) body.get("adressId")).intValue();
 
-                List<WarenkorbItemEntity> cartItems = warenkorbDao.getWarenkorbByUser(sessionEmail);
-                if (cartItems.isEmpty()) {
+                List<WarenkorbItemEntity> warenkorbItemEntityList = warenkorbDao.getWarenkorbByUser(sessionEmail);
+                if (warenkorbItemEntityList.isEmpty()) {
                     ctx.status(400).result("Warenkorb ist leer.");
                     return;
                 }
 
-                BigDecimal gesamtpreis = cartItems.stream()
-                        .map(item -> item.getArtikelPreis().multiply(BigDecimal.valueOf(item.getMenge())))
+                BigDecimal gesamtpreis = warenkorbItemEntityList.stream()
+                        .map(warenkorbItemEntity -> warenkorbItemEntity.getArtikelPreis()
+                                .multiply(BigDecimal.valueOf(warenkorbItemEntity.getMenge())))
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                int bestellungId = bestellungDao.createBestellungWithItems(sessionEmail, adressId, gesamtpreis, cartItems);
+                int bestellungId = bestellungDao.erstelleBestellungMitWarenkorbItems(
+                        sessionEmail, adressId, gesamtpreis, warenkorbItemEntityList);
 
                 ctx.status(201).json(Map.of(
                         "bestellungId", bestellungId,
@@ -62,11 +64,11 @@ public class BestellungController {
         this.getBestellungenByUser = ctx -> {
             String email = ctx.pathParam("email");
             try {
-                List<BestellungEntity> bestellungen = bestellungDao.getBestellungenByUserEmail(email);
-                List<BestellungDto> response = bestellungen.stream()
-                        .map(DtoAndEntetyMapper::bestellungEntity2Dto)
+                List<BestellungEntity> bestellungEntityList = bestellungDao.getBestellungenByUserEmail(email);
+                List<BestellungDto> bestellungDtoList = bestellungEntityList.stream()
+                        .map(BestellungMapper::toDto)
                         .toList();
-                ctx.status(200).json(response);
+                ctx.status(200).json(bestellungDtoList);
             } catch (Exception e) {
                 logger.error("Fehler beim Abrufen der Bestellungen: {}", e.getMessage(), e);
                 ctx.status(500).result("Fehler beim Laden der Bestellungen.");

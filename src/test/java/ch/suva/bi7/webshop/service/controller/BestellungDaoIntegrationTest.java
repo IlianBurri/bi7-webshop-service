@@ -69,7 +69,7 @@ class BestellungDaoIntegrationTest {
                 .map(item -> item.getArtikelPreis().multiply(BigDecimal.valueOf(item.getMenge())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        int bestellungId = bestellungDao.createBestellungWithItems(TEST_EMAIL, adressId, gesamtpreis, items);
+        int bestellungId = bestellungDao.erstelleBestellungMitWarenkorbItems(TEST_EMAIL, adressId, gesamtpreis, items);
 
         assertTrue(bestellungId > 0, "Der generierte Bestell-Key muss zurückkommen");
         assertTrue(warenkorbDao.getWarenkorbByUser(TEST_EMAIL).isEmpty(),

@@ -7,7 +7,7 @@ import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.UserEntity;
 import ch.suva.bi7.webshop.service.model.AddArtikelResponse;
 import ch.suva.bi7.webshop.service.model.ArtikelDto;
-import ch.suva.bi7.webshop.service.model.DtoAndEntetyMapper;
+import ch.suva.bi7.webshop.service.mapper.ArtikelMapper;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import io.javalin.http.HttpStatus;
@@ -56,11 +56,11 @@ public class ArtikelController {
 
     public static Handler fetchAllArtikel = ctx -> {
         try {
-            List<ArtikelEntity> artikelListe = getArtikelDao().getAllArtikel();
-            List<ArtikelDto> response = artikelListe.stream()
-                    .map(DtoAndEntetyMapper::artikelEntity2ArtikelDto)
+            List<ArtikelEntity> artikelEntityList = getArtikelDao().getAllArtikel();
+            List<ArtikelDto> artikelDtoList = artikelEntityList.stream()
+                    .map(ArtikelMapper::toDto)
                     .toList();
-            ctx.status(200).json(response);
+            ctx.status(200).json(artikelDtoList);
         } catch (Exception e) {
             logger.error("Fehler beim Abrufen der Artikel: {}", e.getMessage(), e);
 
@@ -94,7 +94,7 @@ public class ArtikelController {
 
             int artikelId = getArtikelDao().addNewArtikel(name, eingabe.preis, bild);
             ArtikelEntity artikelEntity = new ArtikelEntity(artikelId, name, eingabe.preis, bild);
-            ArtikelDto artikelDto = DtoAndEntetyMapper.artikelEntity2ArtikelDto(artikelEntity);
+            ArtikelDto artikelDto = ArtikelMapper.toDto(artikelEntity);
             logger.info("Artikel erfolgreich von '{}' erstellt: {}", email, artikelDto);
             ctx.status(201).json(new AddArtikelResponse(artikelDto));
         } catch (BadRequestResponse e) {

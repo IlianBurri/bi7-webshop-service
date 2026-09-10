@@ -2,7 +2,7 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
-import ch.suva.bi7.webshop.service.model.DtoAndEntetyMapper;
+import ch.suva.bi7.webshop.service.mapper.WarenkorbMapper;
 import ch.suva.bi7.webshop.service.model.WarenkorbDto;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
@@ -33,11 +33,11 @@ public class WarenkorbController {
                     return;
                 }
 
-                List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(email);
-                List<WarenkorbDto> response = items.stream()
-                        .map(DtoAndEntetyMapper::warenkorbEntity2Dto)
+                List<WarenkorbItemEntity> warenkorbItemEntityList = warenkorbDao.getWarenkorbByUser(email);
+                List<WarenkorbDto> warenkorbDtoList = warenkorbItemEntityList.stream()
+                        .map(WarenkorbMapper::toDto)
                         .collect(Collectors.toList());
-                ctx.status(200).json(response);
+                ctx.status(200).json(warenkorbDtoList);
             } catch (Exception e) {
                 logger.error("Fehler beim Abrufen des Warenkorbs: {}", e.getMessage(), e);
                 ctx.status(500).result("Fehler beim Abrufen des Warenkorbs.");

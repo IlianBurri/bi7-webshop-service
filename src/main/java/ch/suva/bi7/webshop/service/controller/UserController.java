@@ -3,6 +3,7 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.UserDao;
 import ch.suva.bi7.webshop.service.db.entity.UserEntity;
 import ch.suva.bi7.webshop.service.model.*;
+import ch.suva.bi7.webshop.service.mapper.UserMapper;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class UserController {
         String email = ctx.pathParam("email");
         Optional<UserEntity> user = getUserDao().getUserByEMail(email);
         if (user.isPresent()) {
-            ctx.json(DtoAndEntetyMapper.userEntity2Dto(user.get()));
+            ctx.json(UserMapper.toDto(user.get()));
         } else {
             ctx.status(404).result("Not Found: '" + email + "'\n");
         }

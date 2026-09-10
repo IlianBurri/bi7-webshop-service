@@ -94,7 +94,7 @@ class BestellungDaoImplTest {
         BestellungDaoImpl testee = createTestee(createDBConnectionMock(
                 createResultSetMock(List.of()), updates, selects, 7));
 
-        int bestellungId = testee.createBestellungWithItems(TEST_EMAIL, 3, gesamtpreis, items);
+        int bestellungId = testee.erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, gesamtpreis, items);
 
         assertEquals(7, bestellungId, "Der generierte Key der Bestellung muss zurückkommen");
         assertEquals(4, updates.size(), "1 INSERT bestellung + 2 INSERT bestellposition + 1 DELETE warenkorb");
@@ -228,7 +228,7 @@ class BestellungDaoImplTest {
         });
 
         DaoException ex = assertThrows(DaoException.class,
-                () -> testee.createBestellungWithItems(TEST_EMAIL, 3, new BigDecimal("10.00"),
+                () -> testee.erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, new BigDecimal("10.00"),
                         List.of(new WarenkorbItemEntity(1, TEST_EMAIL, 5, 1, "iPhone 15 Pro", new BigDecimal("10.00"), "bild"))),
                 "SQL-Fehler müssen als DaoException geworfen werden");
         assertNotNull(ex.getCause(), "Die ursprüngliche SQLException muss erhalten bleiben");

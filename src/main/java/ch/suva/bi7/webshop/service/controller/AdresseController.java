@@ -4,7 +4,7 @@ import ch.suva.bi7.webshop.service.dao.AdresseDao;
 import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 import ch.suva.bi7.webshop.service.model.AdresseDto;
-import ch.suva.bi7.webshop.service.model.DtoAndEntetyMapper;
+import ch.suva.bi7.webshop.service.mapper.AdresseMapper;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
@@ -35,11 +35,11 @@ public class AdresseController {
         this.getAdressen = ctx -> {
             try {
                 String email = ctx.pathParam("email");
-                List<AdresseEntity> adressen = adresseDao.findByUserEmail(email);
-                List<AdresseDto> response = adressen.stream()
-                        .map(DtoAndEntetyMapper::adresseEntity2Dto)
+                List<AdresseEntity> adresseEntityList = adresseDao.findByUserEmail(email);
+                List<AdresseDto> adresseDtoList = adresseEntityList.stream()
+                        .map(AdresseMapper::toDto)
                         .toList();
-                ctx.status(200).json(response);
+                ctx.status(200).json(adresseDtoList);
             } catch (Exception e) {
                 logger.error("Fehler beim Abrufen der Adressen: {}", e.getMessage(), e);
                 ctx.status(500).json(Map.of("error", "Fehler beim Abrufen der Adressen."));
@@ -53,12 +53,12 @@ public class AdresseController {
 
                 if (adresseDao.existsIdentical(adresse)) {
                     AdresseEntity bestehende = findeBestehendeIdentische(adresseDao, adresse);
-                    ctx.status(200).json(DtoAndEntetyMapper.adresseEntity2Dto(bestehende));
+                    ctx.status(200).json(AdresseMapper.toDto(bestehende));
                     return;
                 }
 
                 AdresseEntity gespeichert = adresseDao.insert(adresse);
-                ctx.status(201).json(DtoAndEntetyMapper.adresseEntity2Dto(gespeichert));
+                ctx.status(201).json(AdresseMapper.toDto(gespeichert));
             } catch (BadRequestResponse e) {
                 ctx.status(400).json(Map.of("error", "Ungültiger JSON-Request-Body."));
             } catch (IllegalArgumentException e) {
@@ -81,7 +81,7 @@ public class AdresseController {
                     return;
                 }
 
-                ctx.status(200).json(DtoAndEntetyMapper.adresseEntity2Dto(mitAdressId(adresse, adressId)));
+                ctx.status(200).json(AdresseMapper.toDto(mitAdressId(adresse, adressId)));
             } catch (NumberFormatException e) {
                 ctx.status(400).json(Map.of("error", "adressId muss eine Zahl sein."));
             } catch (BadRequestResponse e) {
