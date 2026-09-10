@@ -13,7 +13,7 @@ public class FakeAdresseDao implements AdresseDao {
     public boolean deleteErgebnis = true;
     public AdresseEntity gespeicherteAdresse;
     public Integer updateId;
-    public AdresseEntity updateAdresse;
+    public AdresseEntity aktualisiereAdresse;
     public Integer deleteId;
 
     public FakeAdresseDao(List<AdresseEntity> adressen) {
@@ -21,7 +21,7 @@ public class FakeAdresseDao implements AdresseDao {
     }
 
     @Override
-    public List<AdresseEntity> findByUserEmail(String email) {
+    public List<AdresseEntity> ladeAdressenNachBenutzerEmail(String email) {
         return adressen;
     }
 
@@ -33,20 +33,20 @@ public class FakeAdresseDao implements AdresseDao {
     }
 
     @Override
-    public boolean update(int adressId, AdresseEntity adresse) {
+    public boolean aktualisiere(int adressId, AdresseEntity adresse) {
         updateId = adressId;
-        updateAdresse = adresse;
+        aktualisiereAdresse = adresse;
         return updateErgebnis;
     }
 
     @Override
-    public boolean delete(int adressId) {
+    public boolean loesche(int adressId) {
         deleteId = adressId;
         return deleteErgebnis;
     }
 
     @Override
-    public boolean existsIdentical(AdresseEntity adresse) {
+    public boolean existiertIdentischeAdresse(AdresseEntity adresse) {
         return existsIdenticalErgebnis;
     }
 }

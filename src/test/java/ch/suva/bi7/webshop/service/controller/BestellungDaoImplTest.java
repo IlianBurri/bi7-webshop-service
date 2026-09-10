@@ -7,7 +7,7 @@ import ch.suva.bi7.webshop.service.mock.ResultSetMock;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import org.junit.jupiter.api.Test;
 
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -29,7 +29,7 @@ class BestellungDaoImplTest {
         List<SqlStatement> selects = new ArrayList<>();
         BestellungDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), selects));
 
-        testee.getBestellungenByUserEmail(TEST_EMAIL);
+        testee.getBestellungenNachBenutzerEmail(TEST_EMAIL);
 
         SqlStatement sql = selects.get(0);
         assertTrue(sql.sql().contains("WHERE userEmail = ?"),
@@ -49,7 +49,7 @@ class BestellungDaoImplTest {
         List<SqlStatement> selects = new ArrayList<>();
         BestellungDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), selects));
 
-        testee.getBestellungById(42);
+        testee.holeBestellungNachId(42);
 
         SqlStatement sql = selects.get(0);
         assertTrue(sql.sql().contains("WHERE bestellungId = ?"),
@@ -68,7 +68,7 @@ class BestellungDaoImplTest {
                 "bestelldatum", "2026-09-01 10:15:30"));
         BestellungDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(zeilen), new ArrayList<>(), new ArrayList<>()));
 
-        List<BestellungEntity> bestellungen = testee.getBestellungenByUserEmail(TEST_EMAIL);
+        List<BestellungEntity> bestellungen = testee.getBestellungenNachBenutzerEmail(TEST_EMAIL);
 
         assertEquals(1, bestellungen.size(), "Es sollte genau 1 Bestellung zurückgegeben werden");
         BestellungEntity bestellung = bestellungen.get(0);
@@ -86,9 +86,9 @@ class BestellungDaoImplTest {
     void bestellungErzeugenPersistiertGesamtpreisUndBestellpositionen() throws Exception {
         BigDecimal gesamtpreis = new BigDecimal("1199.00").multiply(BigDecimal.valueOf(2))
                 .add(new BigDecimal("899.90"));
-        List<WarenkorbItemEntity> items = List.of(
-                new WarenkorbItemEntity(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro", new BigDecimal("1199.00"), "bild"),
-                new WarenkorbItemEntity(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24", new BigDecimal("899.90"), "bild"));
+        List<WarenkorbEintragEntity> items = List.of(
+                new WarenkorbEintragEntity(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro", new BigDecimal("1199.00"), "bild"),
+                new WarenkorbEintragEntity(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24", new BigDecimal("899.90"), "bild"));
         List<SqlStatement> updates = new ArrayList<>();
         List<SqlStatement> selects = new ArrayList<>();
         BestellungDaoImpl testee = createTestee(createDBConnectionMock(
@@ -124,7 +124,7 @@ class BestellungDaoImplTest {
     void bestellungPerIdOhneTrefferLiefertEmpty() throws Exception {
         BestellungDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), new ArrayList<>()));
 
-        Optional<BestellungEntity> ergebnis = testee.getBestellungById(999);
+        Optional<BestellungEntity> ergebnis = testee.holeBestellungNachId(999);
 
         assertTrue(ergebnis.isEmpty(), "Ohne Treffer muss Optional.empty kommen");
     }
@@ -134,7 +134,7 @@ class BestellungDaoImplTest {
         BestellungDaoImpl testee = createTestee(createThrowingDBConnectionMock());
 
         DaoException ex = assertThrows(DaoException.class,
-                () -> testee.getBestellungenByUserEmail(TEST_EMAIL),
+                () -> testee.getBestellungenNachBenutzerEmail(TEST_EMAIL),
                 "SQL-Fehler müssen als DaoException (nicht als generisches Exception) nach oben propagieren");
         assertNotNull(ex.getCause(), "Die ursprüngliche SQLException muss als Cause erhalten bleiben");
     }
@@ -229,7 +229,7 @@ class BestellungDaoImplTest {
 
         DaoException ex = assertThrows(DaoException.class,
                 () -> testee.erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, new BigDecimal("10.00"),
-                        List.of(new WarenkorbItemEntity(1, TEST_EMAIL, 5, 1, "iPhone 15 Pro", new BigDecimal("10.00"), "bild"))),
+                        List.of(new WarenkorbEintragEntity(1, TEST_EMAIL, 5, 1, "iPhone 15 Pro", new BigDecimal("10.00"), "bild"))),
                 "SQL-Fehler müssen als DaoException geworfen werden");
         assertNotNull(ex.getCause(), "Die ursprüngliche SQLException muss erhalten bleiben");
         assertEquals(1, transaktion[0], "Die Transaktion muss begonnen werden");

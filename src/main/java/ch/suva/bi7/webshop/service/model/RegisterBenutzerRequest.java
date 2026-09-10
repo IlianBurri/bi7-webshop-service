@@ -2,12 +2,12 @@ package ch.suva.bi7.webshop.service.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class RegisterUserRequest {
+public class RegisterBenutzerRequest {
     public final String username;
     public final String email;
     public final String password;
 
-    public RegisterUserRequest(
+    public RegisterBenutzerRequest(
             @JsonProperty("username") String username,
             @JsonProperty("email") String email,
             @JsonProperty("password") String password) {

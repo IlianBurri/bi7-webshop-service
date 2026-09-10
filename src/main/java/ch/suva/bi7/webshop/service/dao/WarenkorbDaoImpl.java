@@ -1,7 +1,7 @@
 package ch.suva.bi7.webshop.service.dao;
 
 import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -21,8 +21,8 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
     }
 
     @Override
-    public List<WarenkorbItemEntity> getWarenkorbByUser(String email) throws DaoException {
-        List<WarenkorbItemEntity> warenkorbItemEntityList = new ArrayList<>();
+    public List<WarenkorbEintragEntity> getWarenkorbNachBenutzer(String email) throws DaoException {
+        List<WarenkorbEintragEntity> warenkorbEintragEntityList = new ArrayList<>();
 
         String sql = "SELECT w.warenkorbItemId, w.userEmail, w.artikelId, w.menge, " +
                 "a.name AS artikelName, a.preis AS artikelPreis, a.bild AS artikelBild " +
@@ -41,7 +41,7 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
                     BigDecimal artikelPreis = rs.getBigDecimal("artikelPreis");
                     String artikelBild = rs.getString("artikelBild");
 
-                    warenkorbItemEntityList.add(new WarenkorbItemEntity(
+                    warenkorbEintragEntityList.add(new WarenkorbEintragEntity(
                             warenkorbItemId, userEmail, artikelId, menge,
                             artikelName, artikelPreis, artikelBild
                     ));
@@ -50,11 +50,11 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
         } catch (SQLException e) {
             throw new DaoException("Fehler beim Abrufen des Warenkorbs", e);
         }
-        return warenkorbItemEntityList;
+        return warenkorbEintragEntityList;
     }
 
     @Override
-    public void addArtikelToWarenkorb(String email, int artikelId, int menge) throws DaoException {
+    public void fuegeArtikelZuWarenkorbHinzu(String email, int artikelId, int menge) throws DaoException {
         String sql = "INSERT INTO warenkorb_item (userEmail, artikelId, menge) VALUES (?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE menge = menge + VALUES(menge)";
         try {
@@ -65,7 +65,7 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
     }
 
     @Override
-    public boolean updateMenge(int warenkorbItemId, int menge) throws DaoException {
+    public boolean aktualisiereMenge(int warenkorbItemId, int menge) throws DaoException {
         String sql = "UPDATE warenkorb_item SET menge = ? WHERE warenkorbItemId = ?";
         try {
             return dbConnection.executeUpdate(sql, menge, warenkorbItemId) > 0;
@@ -75,7 +75,7 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
     }
 
     @Override
-    public boolean deleteWarenkorbItem(int warenkorbItemId) throws DaoException {
+    public boolean loescheWarenkorbEintrag(int warenkorbItemId) throws DaoException {
         String sql = "DELETE FROM warenkorb_item WHERE warenkorbItemId = ?";
         try {
             return dbConnection.executeUpdate(sql, warenkorbItemId) > 0;
@@ -85,7 +85,7 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
     }
 
     @Override
-    public boolean clearWarenkorbByUser(String email) throws DaoException {
+    public boolean leereWarenkorbNachBenutzer(String email) throws DaoException {
         String sql = "DELETE FROM warenkorb_item WHERE userEmail = ?";
         try {
             return dbConnection.executeUpdate(sql, email) > 0;

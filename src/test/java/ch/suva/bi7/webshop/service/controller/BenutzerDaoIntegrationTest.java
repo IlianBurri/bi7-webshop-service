@@ -1,11 +1,11 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.dao.UserDao;
-import ch.suva.bi7.webshop.service.dao.UserDaoImpl;
+import ch.suva.bi7.webshop.service.dao.BenutzerDao;
+import ch.suva.bi7.webshop.service.dao.BenutzerDaoImpl;
 import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
-import ch.suva.bi7.webshop.service.db.entity.UserEntity;
+import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -16,16 +16,16 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-class UserDaoIntegrationTest {
+class BenutzerDaoIntegrationTest {
 
-    private UserDao userDao;
+    private BenutzerDao benutzerDao;
     private DBConnection dbConnection;
 
     @BeforeEach
     void setUp() throws Exception {
         try {
             dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
-            userDao = new UserDaoImpl(dbConnection);
+            benutzerDao = new BenutzerDaoImpl(dbConnection);
         } catch (Exception e) {
             assumeTrue(false, "MariaDB not available: " + e.getMessage());
         }
@@ -58,32 +58,32 @@ class UserDaoIntegrationTest {
     }
 
     @Test
-    void addUser() throws Exception {
-        UserEntity testuser = new UserEntity("Bruce Wayne", "bruce.wayne@gotham.com", "bruce", false);
+    void speichereBenutzer() throws Exception {
+        BenutzerEntity testBenutzer = new BenutzerEntity("Bruce Wayne", "bruce.wayne@gotham.com", "bruce", false);
 
-        userDao.addUser(testuser);
-        Optional<UserEntity> foundUser = userDao.getUserByEMail("bruce.wayne@gotham.com");
+        benutzerDao.speichereBenutzer(testBenutzer);
+        Optional<BenutzerEntity> gefundenerBenutzer = benutzerDao.holeBenutzerNachEMail("bruce.wayne@gotham.com");
 
-        assertTrue(foundUser.isPresent(), "User wurde erfolgreich in der Datenbank registriert sein");
-        assertEquals("Bruce Wayne", foundUser.get().getUsername());
+        assertTrue(gefundenerBenutzer.isPresent(), "Benutzer wurde erfolgreich in der Datenbank registriert sein");
+        assertEquals("Bruce Wayne", gefundenerBenutzer.get().getUsername());
     }
 
     @Test
-    void getUserByEMail() throws Exception {
-        UserEntity testuser = new UserEntity("Peter Parker", "spidey@dailybugle.com", "webslinger", false);
-        userDao.addUser(testuser);
+    void holeBenutzerNachEMail() throws Exception {
+        BenutzerEntity testBenutzer = new BenutzerEntity("Peter Parker", "spidey@dailybugle.com", "webslinger", false);
+        benutzerDao.speichereBenutzer(testBenutzer);
 
-        Optional<UserEntity> foundUser = userDao.getUserByEMail("spidey@dailybugle.com");
-        assertTrue(foundUser.isPresent());
-        assertEquals("Peter Parker", foundUser.get().getUsername());
+        Optional<BenutzerEntity> gefundenerBenutzer = benutzerDao.holeBenutzerNachEMail("spidey@dailybugle.com");
+        assertTrue(gefundenerBenutzer.isPresent());
+        assertEquals("Peter Parker", gefundenerBenutzer.get().getUsername());
     }
 
     @Test
-    void getAllUsernames() throws Exception {
-        userDao.addUser(new UserEntity("Hawk Eye", "hawk.eye@arrow.com", "target", false));
-        userDao.addUser(new UserEntity("Black Widow", "black.widow@avengers.com", "spider", false));
+    void holeAlleBenutzernamen() throws Exception {
+        benutzerDao.speichereBenutzer(new BenutzerEntity("Hawk Eye", "hawk.eye@arrow.com", "target", false));
+        benutzerDao.speichereBenutzer(new BenutzerEntity("Black Widow", "black.widow@avengers.com", "spider", false));
 
-        List<String> usernames = userDao.getAllUsernames();
+        List<String> usernames = benutzerDao.holeAlleBenutzernamen();
 
         assertNotNull(usernames);
         assertTrue(usernames.contains("Hawk Eye"));

@@ -17,7 +17,7 @@ public class FehlerArtikelDao implements ArtikelDao {
     }
 
     @Override
-    public int addNewArtikel(String name, BigDecimal preis, String bild) throws Exception {
+    public int erstelleNeuenArtikel(String name, BigDecimal preis, String bild) throws Exception {
         callCount++;
         throw new Exception("Datenbank Fehler");
     }

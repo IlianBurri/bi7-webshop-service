@@ -1,10 +1,10 @@
 package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.ArtikelDao;
-import ch.suva.bi7.webshop.service.dao.UserDao;
+import ch.suva.bi7.webshop.service.dao.BenutzerDao;
 import ch.suva.bi7.webshop.service.model.AddArtikelRequest;
 import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
-import ch.suva.bi7.webshop.service.db.entity.UserEntity;
+import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
 import ch.suva.bi7.webshop.service.model.AddArtikelResponse;
 import ch.suva.bi7.webshop.service.model.ArtikelDto;
 import ch.suva.bi7.webshop.service.mapper.ArtikelMapper;
@@ -29,20 +29,20 @@ public class ArtikelController {
     private static final int MAX_BILD_LAENGE = 500;
 
     private static ArtikelDao artikelDao = null;
-    private static UserDao userDao = null;
+    private static BenutzerDao benutzerDao = null;
 
-    public ArtikelController(ArtikelDao artikelDao, UserDao userDao) {
+    public ArtikelController(ArtikelDao artikelDao, BenutzerDao benutzerDao) {
         if (artikelDao == null) {
             throw new IllegalArgumentException("artikelDao must not be null");
         }
-        if (userDao == null) {
-            throw new IllegalArgumentException("userDao must not be null");
+        if (benutzerDao == null) {
+            throw new IllegalArgumentException("benutzerDao must not be null");
         }
         this.artikelDao = artikelDao;
-        this.userDao = userDao;
+        this.benutzerDao = benutzerDao;
     }
 
-    private static ArtikelDao getArtikelDao() throws Exception {
+    private static ArtikelDao holeArtikelDao() throws Exception {
         return artikelDao;
     }
 
@@ -50,13 +50,13 @@ public class ArtikelController {
         artikelDao = artikelDaoMock;
     }
 
-    static void setUserDaoMock(UserDao userDaoMock) {
-        userDao = userDaoMock;
+    static void setBenutzerDaoMock(BenutzerDao benutzerDaoMock) {
+        benutzerDao = benutzerDaoMock;
     }
 
-    public static Handler fetchAllArtikel = ctx -> {
+    public static Handler ladeAlleArtikel = ctx -> {
         try {
-            List<ArtikelEntity> artikelEntityList = getArtikelDao().getAllArtikel();
+            List<ArtikelEntity> artikelEntityList = holeArtikelDao().getAllArtikel();
             List<ArtikelDto> artikelDtoList = artikelEntityList.stream()
                     .map(ArtikelMapper::toDto)
                     .toList();
@@ -68,18 +68,18 @@ public class ArtikelController {
         }
     };
 
-    public static Handler addNewArtikel = ctx -> {
+    public static Handler erstelleNeuenArtikel = ctx -> {
         String email = ctx.sessionAttribute("userEmail");
         logger.info("Benutzer '{}' ist Admin, erstelle Artikel...", email);
 
-        Optional<UserEntity> userOptional = userDao.getUserByEMail(email);
+        Optional<BenutzerEntity> benutzerOptional = benutzerDao.holeBenutzerNachEMail(email);
 
-        if (userOptional.isEmpty()) {
+        if (benutzerOptional.isEmpty()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(java.util.Map.of("error", "Nicht angemeldet: " + email));
             return;
         }
 
-        if (!userOptional.get().isAdmin()) {
+        if (!benutzerOptional.get().isAdmin()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(java.util.Map.of("error", "Nur Administratoren dürfen Artikel anlegen."));
             return;
         }
@@ -92,7 +92,7 @@ public class ArtikelController {
 
             validiere(name, eingabe.preis, bild);
 
-            int artikelId = getArtikelDao().addNewArtikel(name, eingabe.preis, bild);
+            int artikelId = holeArtikelDao().erstelleNeuenArtikel(name, eingabe.preis, bild);
             ArtikelEntity artikelEntity = new ArtikelEntity(artikelId, name, eingabe.preis, bild);
             ArtikelDto artikelDto = ArtikelMapper.toDto(artikelEntity);
             logger.info("Artikel erfolgreich von '{}' erstellt: {}", email, artikelDto);

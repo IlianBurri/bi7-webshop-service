@@ -8,11 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class LoginUserResponseTest {
+class LoginBenutzerResponseTest {
 
     @Test
-    void LoginUserResponseHappyCase() {
-        LoginUserResponse testee = new LoginUserResponse("SUCCESS", null, "Max", true);
+    void LoginBenutzerResponseHappyCase() {
+        LoginBenutzerResponse testee = new LoginBenutzerResponse("SUCCESS", null, "Max", true);
 
         assertEquals("SUCCESS", testee.status);
         assertNull(testee.error);
@@ -21,16 +21,16 @@ class LoginUserResponseTest {
     }
 
     @Test
-    void LoginUserResponseOhneIsAdminLiefertFalse() {
-        LoginUserResponse testee = new LoginUserResponse("SUCCESS", null, "Max", false);
+    void LoginBenutzerResponseOhneIsAdminLiefertFalse() {
+        LoginBenutzerResponse testee = new LoginBenutzerResponse("SUCCESS", null, "Max", false);
 
         assertFalse(testee.isAdmin);
     }
 
     @Test
-    void LoginUserResponseUnHappyCase() {
+    void LoginBenutzerResponseUnHappyCase() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            new LoginUserResponse(null, "FAILED", null, false);
+            new LoginBenutzerResponse(null, "FAILED", null, false);
         });
         assertEquals("status must not be null", exception.getMessage());
     }

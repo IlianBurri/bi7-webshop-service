@@ -8,5 +8,5 @@ import java.util.List;
 public interface ArtikelDao {
     List<ArtikelEntity> getAllArtikel() throws Exception;
 
-    int addNewArtikel(String name, BigDecimal preis, String bild) throws Exception;
+    int erstelleNeuenArtikel(String name, BigDecimal preis, String bild) throws Exception;
 }

@@ -2,11 +2,11 @@ package ch.suva.bi7.webshop.service.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class LoginUserRequest {
+public class LoginBenutzerRequest {
     public final String email;
     public final String password;
 
-    public LoginUserRequest(
+    public LoginBenutzerRequest(
             @JsonProperty("email") String email,
             @JsonProperty("password") String password) {
         if (email == null || password == null) {

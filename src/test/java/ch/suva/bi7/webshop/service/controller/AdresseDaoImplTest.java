@@ -48,7 +48,7 @@ class AdresseDaoImplTest {
         );
         AdresseDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(zeilen), new ArrayList<>(), 1));
 
-        List<AdresseEntity> adressen = testee.findByUserEmail(TEST_EMAIL);
+        List<AdresseEntity> adressen = testee.ladeAdressenNachBenutzerEmail(TEST_EMAIL);
 
         assertEquals(2, adressen.size(), "Es sollten genau 2 Adressen zurückgegeben werden");
         AdresseEntity erste = adressen.get(0);
@@ -66,7 +66,7 @@ class AdresseDaoImplTest {
     void adressenLesenOhneTrefferLiefertLeereListe() throws Exception {
         AdresseDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), 1));
 
-        assertTrue(testee.findByUserEmail(TEST_EMAIL).isEmpty(), "Ohne Treffer muss eine leere Liste kommen");
+        assertTrue(testee.ladeAdressenNachBenutzerEmail(TEST_EMAIL).isEmpty(), "Ohne Treffer muss eine leere Liste kommen");
     }
 
     @Test
@@ -100,7 +100,7 @@ class AdresseDaoImplTest {
         List<SqlStatement> updates = new ArrayList<>();
         AdresseDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), updates, 1));
 
-        assertTrue(testee.update(7, BEISPIEL_ADRESSE), "Bei Erfolg muss true zurückkommen");
+        assertTrue(testee.aktualisiere(7, BEISPIEL_ADRESSE), "Bei Erfolg muss true zurückkommen");
 
         SqlStatement update = updates.get(0);
         assertTrue(update.sql().startsWith("UPDATE adresse"), "Erwartet UPDATE, war: " + update.sql());
@@ -117,7 +117,7 @@ class AdresseDaoImplTest {
         List<SqlStatement> updates = new ArrayList<>();
         AdresseDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), updates, 1));
 
-        assertTrue(testee.delete(7), "Bei Erfolg muss true zurückkommen");
+        assertTrue(testee.loesche(7), "Bei Erfolg muss true zurückkommen");
 
         SqlStatement delete = updates.get(0);
         assertTrue(delete.sql().startsWith("DELETE FROM adresse"), "Erwartet DELETE, war: " + delete.sql());
@@ -131,7 +131,7 @@ class AdresseDaoImplTest {
         AdresseDaoImpl testee = createTestee(createDBConnectionMock(
                 createResultSetMock(List.of(Map.of("adressId", 5))), new ArrayList<>(), 1, selects));
 
-        assertTrue(testee.existsIdentical(BEISPIEL_ADRESSE), "Bei vorhandenem Treffer muss true kommen");
+        assertTrue(testee.existiertIdentischeAdresse(BEISPIEL_ADRESSE), "Bei vorhandenem Treffer muss true kommen");
 
         SqlStatement sql = selects.get(0);
         assertTrue(sql.sql().contains("FROM adresse"), "Erwartet SELECT auf adresse, war: " + sql.sql());
@@ -147,7 +147,7 @@ class AdresseDaoImplTest {
     void existsIdenticalLiefertFalseOhneTreffer() throws Exception {
         AdresseDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), 1));
 
-        assertFalse(testee.existsIdentical(BEISPIEL_ADRESSE), "Ohne Treffer muss false kommen");
+        assertFalse(testee.existiertIdentischeAdresse(BEISPIEL_ADRESSE), "Ohne Treffer muss false kommen");
     }
 
     @Test
@@ -156,7 +156,7 @@ class AdresseDaoImplTest {
         List<SqlStatement> selects = new ArrayList<>();
         AdresseDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), 1, selects));
 
-        testee.findByUserEmail(boeseEingabe);
+        testee.ladeAdressenNachBenutzerEmail(boeseEingabe);
 
         SqlStatement sql = selects.get(0);
         assertFalse(sql.sql().contains(boeseEingabe), "Der Eingabewert darf nicht im SQL-String landen, war: " + sql.sql());
@@ -168,8 +168,8 @@ class AdresseDaoImplTest {
     void aktualisierenUndLoeschenMeldenFehlendeZeilen() throws Exception {
         AdresseDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), 0));
 
-        assertFalse(testee.update(999, BEISPIEL_ADRESSE), "Wenn keine Zeile aktualisiert wird, muss false zurückkommen");
-        assertFalse(testee.delete(999), "Wenn keine Zeile gelöscht wird, muss false zurückkommen");
+        assertFalse(testee.aktualisiere(999, BEISPIEL_ADRESSE), "Wenn keine Zeile aktualisiert wird, muss false zurückkommen");
+        assertFalse(testee.loesche(999), "Wenn keine Zeile gelöscht wird, muss false zurückkommen");
     }
 
     @Test
@@ -177,7 +177,7 @@ class AdresseDaoImplTest {
         AdresseDaoImpl testee = createTestee(createThrowingDBConnectionMock());
 
         DaoException ex = assertThrows(DaoException.class,
-                () -> testee.findByUserEmail(TEST_EMAIL),
+                () -> testee.ladeAdressenNachBenutzerEmail(TEST_EMAIL),
                 "SQL-Fehler müssen als DaoException (nicht als generisches Exception) nach oben propagieren");
         assertNotNull(ex.getCause(), "Die ursprüngliche SQLException muss als Cause erhalten bleiben");
     }

@@ -1,9 +1,9 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.dao.UserDaoImpl;
+import ch.suva.bi7.webshop.service.dao.BenutzerDaoImpl;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.mock.ResultSetMock;
-import ch.suva.bi7.webshop.service.db.entity.UserEntity;
+import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
 import org.junit.jupiter.api.Test;
 
 import java.sql.ResultSet;
@@ -16,63 +16,63 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class UserDaoImplTest {
+class BenutzerDaoImplTest {
 
     @Test
-    void getUserByEMailLiefertBenutzer() throws SQLException {
+    void getBenutzerByEMailLiefertBenutzer() throws SQLException {
         // Arrange
-        ResultSet resultSet = createResultSetMock(List.of(user("testuser", "test", "test@somewhere.com")));
+        ResultSet resultSet = createResultSetMock(List.of(user("testBenutzer", "test", "test@somewhere.com")));
         DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
-        UserDaoImpl testee = createTestee(dbConnection);
+        BenutzerDaoImpl testee = createTestee(dbConnection);
 
         // Act
-        Optional<UserEntity> userOptional = testee.getUserByEMail("test@somewhere.com");
+        Optional<BenutzerEntity> benutzerOptional = testee.holeBenutzerNachEMail("test@somewhere.com");
 
         // Assert
-        assertTrue(userOptional.isPresent());
-        assertEquals("testuser", userOptional.get().getUsername());
-        assertEquals("test", userOptional.get().getPassword());
+        assertTrue(benutzerOptional.isPresent());
+        assertEquals("testBenutzer", benutzerOptional.get().getUsername());
+        assertEquals("test", benutzerOptional.get().getPassword());
     }
 
     @Test
-    void getUserByEMailLiefertAdminStatus() throws SQLException {
+    void getBenutzerByEMailLiefertAdminStatus() throws SQLException {
         ResultSet resultSet = createResultSetMock(List.of(user("admin", "admin", "admin@somewhere.com", true)));
         DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
-        UserDaoImpl testee = createTestee(dbConnection);
+        BenutzerDaoImpl testee = createTestee(dbConnection);
 
-        Optional<UserEntity> userOptional = testee.getUserByEMail("admin@somewhere.com");
+        Optional<BenutzerEntity> benutzerOptional = testee.holeBenutzerNachEMail("admin@somewhere.com");
 
-        assertTrue(userOptional.isPresent());
-        assertTrue(userOptional.get().isAdmin(), "Admin-Status muss aus der DB übernommen werden");
+        assertTrue(benutzerOptional.isPresent());
+        assertTrue(benutzerOptional.get().isAdmin(), "Admin-Status muss aus der DB übernommen werden");
     }
 
     @Test
-    void getUserByEMailOhneAdminFlagLiefertFalse() throws SQLException {
-        ResultSet resultSet = createResultSetMock(List.of(user("testuser", "test", "test@somewhere.com")));
+    void getBenutzerByEMailOhneAdminFlagLiefertFalse() throws SQLException {
+        ResultSet resultSet = createResultSetMock(List.of(user("testBenutzer", "test", "test@somewhere.com")));
         DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
-        UserDaoImpl testee = createTestee(dbConnection);
+        BenutzerDaoImpl testee = createTestee(dbConnection);
 
-        Optional<UserEntity> userOptional = testee.getUserByEMail("test@somewhere.com");
+        Optional<BenutzerEntity> benutzerOptional = testee.holeBenutzerNachEMail("test@somewhere.com");
 
-        assertTrue(userOptional.isPresent());
-        assertFalse(userOptional.get().isAdmin(), "Ohne Admin-Flag muss isAdmin false sein");
+        assertTrue(benutzerOptional.isPresent());
+        assertFalse(benutzerOptional.get().isAdmin(), "Ohne Admin-Flag muss isAdmin false sein");
     }
 
     @Test
     void getAllUsernamesLiefertAlleBenutzernamen() throws SQLException {
         ResultSet resultSet = createResultSetMock(List.of(
-                user("testuser", "test", "test@somewhere.com"),
+                user("testBenutzer", "test", "test@somewhere.com"),
                 user("testuser2", "test2", "test2@somewhere.com"),
                 user("testuser3", "test3", "test3@somewhere.com")));
         DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
 
-        UserDaoImpl testee = createTestee(dbConnection);
+        BenutzerDaoImpl testee = createTestee(dbConnection);
 
-        List<String> resultUsernames = testee.getAllUsernames();
+        List<String> ergebnisBenutzernamen = testee.holeAlleBenutzernamen();
 
         assertEquals(
-                List.of("testuser", "testuser2", "testuser3"),
-                resultUsernames,
+                List.of("testBenutzer", "testuser2", "testuser3"),
+                ergebnisBenutzernamen,
                 "Es sollten genau 3 Benutzernamen in korrekter Reihenfolge zurück gegeben werden");
     }
 
@@ -88,8 +88,8 @@ class UserDaoImplTest {
                 "isAdmin", isAdmin);
     }
 
-    private UserDaoImpl createTestee(DBConnection dbConnection) {
-        return new UserDaoImpl(dbConnection);
+    private BenutzerDaoImpl createTestee(DBConnection dbConnection) {
+        return new BenutzerDaoImpl(dbConnection);
     }
 
     private DBConnection createDBConnectionMock(ResultSet resultSet, int updateCount) {

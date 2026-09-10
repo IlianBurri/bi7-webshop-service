@@ -9,7 +9,7 @@ import java.util.List;
 public class FehlerAdresseDao implements AdresseDao {
 
     @Override
-    public List<AdresseEntity> findByUserEmail(String email) throws DaoException {
+    public List<AdresseEntity> ladeAdressenNachBenutzerEmail(String email) throws DaoException {
         throw new DaoException("Datenbank Fehler");
     }
 
@@ -19,17 +19,17 @@ public class FehlerAdresseDao implements AdresseDao {
     }
 
     @Override
-    public boolean update(int adressId, AdresseEntity adresse) throws DaoException {
+    public boolean aktualisiere(int adressId, AdresseEntity adresse) throws DaoException {
         throw new DaoException("Datenbank Fehler");
     }
 
     @Override
-    public boolean delete(int adressId) throws DaoException {
+    public boolean loesche(int adressId) throws DaoException {
         throw new DaoException("Datenbank Fehler");
     }
 
     @Override
-    public boolean existsIdentical(AdresseEntity adresse) throws DaoException {
+    public boolean existiertIdentischeAdresse(AdresseEntity adresse) throws DaoException {
         throw new DaoException("Datenbank Fehler");
     }
 }

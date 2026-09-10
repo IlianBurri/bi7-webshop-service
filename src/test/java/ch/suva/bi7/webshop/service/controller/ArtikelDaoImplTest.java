@@ -66,7 +66,7 @@ class ArtikelDaoImplTest {
         List<SqlStatement> updates = new ArrayList<>();
         ArtikelDaoImpl testee = new ArtikelDaoImpl(createAddMockDbConnection(updates, 42));
 
-        int artikelId = testee.addNewArtikel(
+        int artikelId = testee.erstelleNeuenArtikel(
                 "iPhone 16 Pro", new BigDecimal("1299.00"), "https://example.com/iphone16.jpg");
 
         assertEquals(42, artikelId, "Die generierte artikelId muss zurückgegeben werden");
@@ -109,7 +109,7 @@ class ArtikelDaoImplTest {
         });
 
         DaoException ex = assertThrows(DaoException.class,
-                () -> testee.addNewArtikel("iPhone 16 Pro", new BigDecimal("1299.00"), null),
+                () -> testee.erstelleNeuenArtikel("iPhone 16 Pro", new BigDecimal("1299.00"), null),
                 "SQL-Fehler müssen als DaoException nach oben propagieren");
         assertNotNull(ex.getCause(), "Die ursprüngliche SQLException muss als Cause erhalten bleiben");
     }

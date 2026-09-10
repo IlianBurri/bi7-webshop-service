@@ -2,7 +2,7 @@ package ch.suva.bi7.webshop.service.dao;
 
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ public class BestellungDaoImpl implements BestellungDao {
 
     @Override
     public int erstelleBestellungMitWarenkorbItems(String userEmail, int adressId, BigDecimal gesamtpreis,
-                                                   List<WarenkorbItemEntity> warenkorbItemEntityList) throws DaoException {
+                                                   List<WarenkorbEintragEntity> warenkorbEintragEntityList) throws DaoException {
         String insertBestellungSql = "INSERT INTO bestellung (userEmail, adressId, gesamtpreis, bestelldatum, status) " +
                 "VALUES (?, ?, ?, NOW(), 'BEZAHLT')";
         String insertBestellpositionSql =
@@ -39,13 +39,13 @@ public class BestellungDaoImpl implements BestellungDao {
             dbConnection.beginTransaction();
             int generatedBestellungId = dbConnection.executeUpdateReturningGeneratedKeys(insertBestellungSql, userEmail, adressId, gesamtpreis);
 
-            for (WarenkorbItemEntity warenkorbItemEntity : warenkorbItemEntityList) {
+            for (WarenkorbEintragEntity warenkorbEintragEntity : warenkorbEintragEntityList) {
                 dbConnection.executeUpdate(
                         insertBestellpositionSql,
                         generatedBestellungId,
-                        warenkorbItemEntity.getArtikelId(),
-                        warenkorbItemEntity.getMenge(),
-                        warenkorbItemEntity.getArtikelPreis()
+                        warenkorbEintragEntity.getArtikelId(),
+                        warenkorbEintragEntity.getMenge(),
+                        warenkorbEintragEntity.getArtikelPreis()
                 );
             }
 
@@ -54,7 +54,7 @@ public class BestellungDaoImpl implements BestellungDao {
             return generatedBestellungId;
         } catch (SQLException e) {
             rollbackQuietly();
-            throw new DaoException("Fehler beim Erstellen der Bestellung für User: " + userEmail, e);
+            throw new DaoException("Fehler beim Erstellen der Bestellung für Benutzer: " + userEmail, e);
         } catch (RuntimeException e) {
             rollbackQuietly();
             throw e;
@@ -70,11 +70,11 @@ public class BestellungDaoImpl implements BestellungDao {
     }
 
     @Override
-    public Optional<BestellungEntity> getBestellungById(int bestellungId) throws DaoException {
+    public Optional<BestellungEntity> holeBestellungNachId(int bestellungId) throws DaoException {
         String sql = "SELECT * FROM bestellung WHERE bestellungId = ?";
         try (ResultSet rs = dbConnection.execute(sql, bestellungId)) {
             if (rs != null && rs.next()) {
-                return Optional.of(mapResultSetToBestellung(rs));
+                return Optional.of(mappeResultSetZuBestellung(rs));
             }
         } catch (SQLException e) {
             throw new DaoException("Fehler beim Abrufen der Bestellung mit ID: " + bestellungId, e);
@@ -83,23 +83,23 @@ public class BestellungDaoImpl implements BestellungDao {
     }
 
     @Override
-    public List<BestellungEntity> getBestellungenByUserEmail(String userEmail) throws DaoException {
+    public List<BestellungEntity> getBestellungenNachBenutzerEmail(String userEmail) throws DaoException {
         List<BestellungEntity> bestellungen = new ArrayList<>();
         String sql = "SELECT * FROM bestellung WHERE userEmail = ? ORDER BY bestelldatum DESC";
 
         try (ResultSet rs = dbConnection.execute(sql, userEmail)) {
             if (rs != null) {
                 while (rs.next()) {
-                    bestellungen.add(mapResultSetToBestellung(rs));
+                    bestellungen.add(mappeResultSetZuBestellung(rs));
                 }
             }
         } catch (SQLException e) {
-            throw new DaoException("Fehler beim Abrufen der Bestellungen für User: " + userEmail, e);
+            throw new DaoException("Fehler beim Abrufen der Bestellungen für Benutzer: " + userEmail, e);
         }
         return bestellungen;
     }
 
-    private BestellungEntity mapResultSetToBestellung(ResultSet rs) throws SQLException {
+    private BestellungEntity mappeResultSetZuBestellung(ResultSet rs) throws SQLException {
         return new BestellungEntity(
                 rs.getInt("bestellungId"),
                 rs.getString("userEmail"),

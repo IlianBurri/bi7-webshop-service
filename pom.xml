@@ -29,7 +29,6 @@
 
   <dependencies>
 
-    <!-- JDBC Treiber für Maria-DB -->
     <dependency>
       <groupId>org.mariadb.jdbc</groupId>
       <artifactId>mariadb-java-client</artifactId>

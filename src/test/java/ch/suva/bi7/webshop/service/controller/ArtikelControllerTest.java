@@ -1,12 +1,12 @@
 package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.mock.ArtikelContextMock;
-import ch.suva.bi7.webshop.service.mock.EinfachesUserDaoMock;
+import ch.suva.bi7.webshop.service.mock.EinfachesBenutzerDaoMock;
 import ch.suva.bi7.webshop.service.mock.FakeArtikelDao;
 import ch.suva.bi7.webshop.service.mock.FehlerArtikelDao;
 import ch.suva.bi7.webshop.service.model.AddArtikelRequest;
 import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
-import ch.suva.bi7.webshop.service.db.entity.UserEntity;
+import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
 import ch.suva.bi7.webshop.service.model.AddArtikelResponse;
 import ch.suva.bi7.webshop.service.model.ArtikelDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,8 +25,8 @@ class ArtikelControllerTest {
     @BeforeEach
     void resetArtikelDaoMock() {
         ArtikelController.setArtikelDaoMock(new FakeArtikelDao(Collections.emptyList()));
-        ArtikelController.setUserDaoMock(new EinfachesUserDaoMock(Optional.of(
-                new UserEntity("Admin", "admin@example.com", "password", true))));
+        ArtikelController.setBenutzerDaoMock(new EinfachesBenutzerDaoMock(Optional.of(
+                new BenutzerEntity("Admin", "admin@example.com", "password", true))));
     }
 
 
@@ -39,7 +39,7 @@ class ArtikelControllerTest {
         ArtikelController.setArtikelDaoMock(dao);
 
         ArtikelContextMock ctx = new ArtikelContextMock();
-        ArtikelController.fetchAllArtikel.handle(ctx);
+        ArtikelController.ladeAlleArtikel.handle(ctx);
 
         assertEquals(200, ctx.gesetzterStatus);
         List<?> json = (List<?>) ctx.gesendetesJson;
@@ -64,7 +64,7 @@ class ArtikelControllerTest {
         ArtikelController.setArtikelDaoMock(dao);
 
         ArtikelContextMock ctx = new ArtikelContextMock();
-        ArtikelController.fetchAllArtikel.handle(ctx);
+        ArtikelController.ladeAlleArtikel.handle(ctx);
 
         assertEquals(200, ctx.gesetzterStatus);
         assertNotNull(ctx.gesendetesJson);
@@ -79,7 +79,7 @@ class ArtikelControllerTest {
         ArtikelController.setArtikelDaoMock(dao);
 
         ArtikelContextMock ctx = new ArtikelContextMock();
-        ArtikelController.fetchAllArtikel.handle(ctx);
+        ArtikelController.ladeAlleArtikel.handle(ctx);
 
         assertEquals(500, ctx.gesetzterStatus);
         assertEquals("Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
@@ -93,15 +93,15 @@ class ArtikelControllerTest {
         FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
         dao.generierterKey = 42;
         ArtikelController.setArtikelDaoMock(dao);
-        ArtikelController.setUserDaoMock(new EinfachesUserDaoMock(Optional.of(
-                new UserEntity("Admin", "admin@example.com", "password", true))));
+        ArtikelController.setBenutzerDaoMock(new EinfachesBenutzerDaoMock(Optional.of(
+                new BenutzerEntity("Admin", "admin@example.com", "password", true))));
 
         AddArtikelRequest request = new AddArtikelRequest(
                 "iPhone 16 Pro", new BigDecimal("1299.00"), "https://example.com/iphone16.jpg");
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(201, ctx.gesetzterStatus, "Bei Erfolg muss Status 201 kommen");
         assertEquals(1, dao.addArtikelCallCount, "Das DAO muss genau einmal aufgerufen werden");
@@ -124,7 +124,7 @@ class ArtikelControllerTest {
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(400, ctx.gesetzterStatus, "Name > 255 Zeichen muss abgelehnt werden");
         assertEquals(0, dao.addArtikelCallCount, "Bei ungültiger Eingabe darf das DAO nicht aufgerufen werden");
@@ -141,7 +141,7 @@ class ArtikelControllerTest {
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(400, ctx.gesetzterStatus, "Preis unter 0.01 muss abgelehnt werden");
         assertEquals(0, dao.addArtikelCallCount);
@@ -157,7 +157,7 @@ class ArtikelControllerTest {
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(400, ctx.gesetzterStatus, "Preis über 99999999.99 muss abgelehnt werden");
         assertEquals(0, dao.addArtikelCallCount);
@@ -173,7 +173,7 @@ class ArtikelControllerTest {
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(400, ctx.gesetzterStatus, "Bild > 500 Zeichen muss abgelehnt werden");
         assertEquals(0, dao.addArtikelCallCount);
@@ -183,15 +183,15 @@ class ArtikelControllerTest {
     void addArtikelMitLeeremNamenLiefert400() throws Exception {
         FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
         ArtikelController.setArtikelDaoMock(dao);
-        ArtikelController.setUserDaoMock(new EinfachesUserDaoMock(Optional.of(
-                new UserEntity("Admin", "admin@example.com", "password", true))));
+        ArtikelController.setBenutzerDaoMock(new EinfachesBenutzerDaoMock(Optional.of(
+                new BenutzerEntity("Admin", "admin@example.com", "password", true))));
 
         AddArtikelRequest request = new AddArtikelRequest(
                 "   ", new BigDecimal("10.00"), null);
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(400, ctx.gesetzterStatus, "Leerer Name muss abgelehnt werden");
         assertEquals(0, dao.addArtikelCallCount);
@@ -201,14 +201,14 @@ class ArtikelControllerTest {
     void addArtikelOhneAdminSessionLiefert401() throws Exception {
         FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
         ArtikelController.setArtikelDaoMock(dao);
-        ArtikelController.setUserDaoMock(new EinfachesUserDaoMock(Optional.of(
-                new UserEntity("Admin", "admin@example.com", "password", false))));
+        ArtikelController.setBenutzerDaoMock(new EinfachesBenutzerDaoMock(Optional.of(
+                new BenutzerEntity("Admin", "admin@example.com", "password", false))));
 
         AddArtikelRequest request = new AddArtikelRequest(
                 "iPhone 16 Pro", new BigDecimal("1299.00"), null);
         ArtikelContextMock ctx = new ArtikelContextMock(request);
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(401, ctx.gesetzterStatus, "Ohne Admin-Session muss 401 kommen");
         assertEquals(0, dao.addArtikelCallCount, "Ohne Admin darf das DAO nicht aufgerufen werden");
@@ -220,15 +220,15 @@ class ArtikelControllerTest {
     void addArtikelMitNichtAdminSessionLiefert401() throws Exception {
         FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
         ArtikelController.setArtikelDaoMock(dao);
-        ArtikelController.setUserDaoMock(new EinfachesUserDaoMock(Optional.of(
-                new UserEntity("Admin", "admin@example.com", "password", false))));
+        ArtikelController.setBenutzerDaoMock(new EinfachesBenutzerDaoMock(Optional.of(
+                new BenutzerEntity("Admin", "admin@example.com", "password", false))));
 
         AddArtikelRequest request = new AddArtikelRequest(
                 "iPhone 16 Pro", new BigDecimal("1299.00"), null);
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(401, ctx.gesetzterStatus, "Mit isAdmin=false muss 401 kommen");
         assertEquals(0, dao.addArtikelCallCount, "Nicht-Admins dürfen das DAO nicht aufrufen");
@@ -244,7 +244,7 @@ class ArtikelControllerTest {
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(500, ctx.gesetzterStatus);
         assertEquals("Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
@@ -260,10 +260,10 @@ class ArtikelControllerTest {
         ArtikelController.setArtikelDaoMock(dao);
 
         ArtikelContextMock ctx = new ArtikelContextMock();
-        ArtikelController.fetchAllArtikel.handle(ctx);
+        ArtikelController.ladeAlleArtikel.handle(ctx);
 
         assertEquals(200, ctx.gesetzterStatus);
-        assertEquals(1, dao.callCount, "fetchAllArtikel muss das DAO genau einmal verwenden");
+        assertEquals(1, dao.callCount, "ladeAlleArtikel muss das DAO genau einmal verwenden");
     }
 
     @Test
@@ -276,7 +276,7 @@ class ArtikelControllerTest {
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(201, ctx.gesetzterStatus, "Preis genau am Mindestpreis (0.01) muss akzeptiert werden");
         assertEquals(1, dao.addArtikelCallCount);
@@ -292,7 +292,7 @@ class ArtikelControllerTest {
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(201, ctx.gesetzterStatus, "Preis genau am Maximalpreis muss akzeptiert werden");
         assertEquals(1, dao.addArtikelCallCount);
@@ -302,15 +302,15 @@ class ArtikelControllerTest {
     void addArtikelMitNameGenauAnMaxLaengeWirdAkzeptiert() throws Exception {
         FakeArtikelDao dao = new FakeArtikelDao(Collections.emptyList());
         ArtikelController.setArtikelDaoMock(dao);
-        ArtikelController.setUserDaoMock(new EinfachesUserDaoMock(Optional.of(
-                new UserEntity("Admin", "admin@example.com", "password", true))));
+        ArtikelController.setBenutzerDaoMock(new EinfachesBenutzerDaoMock(Optional.of(
+                new BenutzerEntity("Admin", "admin@example.com", "password", true))));
 
         AddArtikelRequest request = new AddArtikelRequest(
                 "a".repeat(255), new BigDecimal("10.00"), null);
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(201, ctx.gesetzterStatus, "Name mit genau 255 Zeichen muss noch akzeptiert werden");
     }
@@ -325,7 +325,7 @@ class ArtikelControllerTest {
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(201, ctx.gesetzterStatus, "Bild mit genau 500 Zeichen muss noch akzeptiert werden");
     }
@@ -340,7 +340,7 @@ class ArtikelControllerTest {
         ArtikelContextMock ctx = new ArtikelContextMock(request);
         ctx.sessionAttribute("userEmail", "admin@example.com");
 
-        ArtikelController.addNewArtikel.handle(ctx);
+        ArtikelController.erstelleNeuenArtikel.handle(ctx);
 
         assertEquals(201, ctx.gesetzterStatus, "Bild ist laut validiere() optional (nur Länge wird geprüft, falls vorhanden)");
         assertEquals(1, dao.addArtikelCallCount);

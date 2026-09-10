@@ -24,7 +24,7 @@ public class FakeArtikelDao implements ArtikelDao {
     }
 
     @Override
-    public int addNewArtikel(String name, BigDecimal preis, String bild) {
+    public int erstelleNeuenArtikel(String name, BigDecimal preis, String bild) {
         addArtikelCallCount++;
         return generierterKey;
     }

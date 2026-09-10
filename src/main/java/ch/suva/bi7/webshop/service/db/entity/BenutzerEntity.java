@@ -1,12 +1,12 @@
 package ch.suva.bi7.webshop.service.db.entity;
 
-public class UserEntity {
+public class BenutzerEntity {
     private final String username;
     private final String email;
     private final String password;
     private final boolean isAdmin;
 
-    public UserEntity(String username,
+    public BenutzerEntity(String username,
                       String email,
                       String password,
                       boolean isAdmin) {

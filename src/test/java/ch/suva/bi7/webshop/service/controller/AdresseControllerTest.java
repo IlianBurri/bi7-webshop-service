@@ -27,7 +27,7 @@ class AdresseControllerTest {
         ctx.setPathParam("email", TEST_EMAIL);
         AdresseController controller = new AdresseController(new FakeAdresseDao(List.of(adresse)));
 
-        controller.getAdressen.handle(ctx);
+        controller.ladeAdressen.handle(ctx);
 
         assertEquals(200, ctx.gesetzterStatus);
         List<?> json = (List<?>) ctx.gesendetesJson;
@@ -40,7 +40,7 @@ class AdresseControllerTest {
         leererCtx.setPathParam("email", TEST_EMAIL);
         AdresseController leererController = new AdresseController(new FakeAdresseDao(Collections.emptyList()));
 
-        leererController.getAdressen.handle(leererCtx);
+        leererController.ladeAdressen.handle(leererCtx);
 
         assertEquals(200, leererCtx.gesetzterStatus);
         assertTrue(((List<?>) leererCtx.gesendetesJson).isEmpty(), "Ohne Adressen muss ein leeres JSON kommen");
@@ -54,7 +54,7 @@ class AdresseControllerTest {
         AdresseContextMock ctx = new AdresseContextMock(mitLeerzeichen);
         AdresseController controller = new AdresseController(dao);
 
-        controller.createAdresse.handle(ctx);
+        controller.erstelleAdresse.handle(ctx);
 
         assertEquals(201, ctx.gesetzterStatus);
         AdresseEntity gespeichert = dao.gespeicherteAdresse;
@@ -74,11 +74,11 @@ class AdresseControllerTest {
         updateCtx.setPathParam("adressId", "7");
         AdresseController controller = new AdresseController(dao);
 
-        controller.updateAdresse.handle(updateCtx);
+        controller.aktualisiereAdresse.handle(updateCtx);
 
         assertEquals(200, updateCtx.gesetzterStatus);
         assertEquals(7, dao.updateId);
-        assertEquals(TEST_EMAIL, dao.updateAdresse.getUserEmail());
+        assertEquals(TEST_EMAIL, dao.aktualisiereAdresse.getUserEmail());
     }
 
     @Test
@@ -88,7 +88,7 @@ class AdresseControllerTest {
         deleteCtx.setPathParam("adressId", "7");
         AdresseController controller = new AdresseController(dao);
 
-        controller.deleteAdresse.handle(deleteCtx);
+        controller.loescheAdresse.handle(deleteCtx);
 
         assertEquals(200, deleteCtx.gesetzterStatus);
         assertEquals(7, dao.deleteId);
@@ -102,7 +102,7 @@ class AdresseControllerTest {
         AdresseContextMock fehlerCtx = new AdresseContextMock(ohneEmail);
         AdresseController controller = new AdresseController(daoOhneEmail);
 
-        controller.createAdresse.handle(fehlerCtx);
+        controller.erstelleAdresse.handle(fehlerCtx);
 
         assertEquals(400, fehlerCtx.gesetzterStatus);
         assertNull(daoOhneEmail.gespeicherteAdresse, "DAO darf bei Validierungsfehler nicht aufgerufen werden");
@@ -115,7 +115,7 @@ class AdresseControllerTest {
         dbFehlerCtx.setPathParam("email", TEST_EMAIL);
         AdresseController controller = new AdresseController(new FehlerAdresseDao());
 
-        controller.getAdressen.handle(dbFehlerCtx);
+        controller.ladeAdressen.handle(dbFehlerCtx);
 
         assertEquals(500, dbFehlerCtx.gesetzterStatus);
         assertEquals("Fehler beim Abrufen der Adressen.", fehlermeldung(dbFehlerCtx),
@@ -131,7 +131,7 @@ class AdresseControllerTest {
                 "8000", "Zuerich", "Schweiz"));
         AdresseController controller = new AdresseController(dao);
 
-        controller.createAdresse.handle(ctx);
+        controller.erstelleAdresse.handle(ctx);
 
         assertEquals(200, ctx.gesetzterStatus, "Duplikat muss mit 200 statt 201 beantwortet werden");
         assertNull(dao.gespeicherteAdresse, "Bei bereits existierender Adresse darf kein INSERT ausgeführt werden");
@@ -147,7 +147,7 @@ class AdresseControllerTest {
         ctx.setPathParam("adressId", "7");
         AdresseController controller = new AdresseController(dao);
 
-        controller.updateAdresse.handle(ctx);
+        controller.aktualisiereAdresse.handle(ctx);
 
         assertEquals(404, ctx.gesetzterStatus);
         assertEquals("Adresse nicht gefunden", fehlermeldung(ctx));
@@ -161,7 +161,7 @@ class AdresseControllerTest {
         ctx.setPathParam("adressId", "7");
         AdresseController controller = new AdresseController(dao);
 
-        controller.deleteAdresse.handle(ctx);
+        controller.loescheAdresse.handle(ctx);
 
         assertEquals(404, ctx.gesetzterStatus);
         assertEquals("Adresse nicht gefunden", fehlermeldung(ctx));
@@ -173,7 +173,7 @@ class AdresseControllerTest {
         ctx.setPathParam("adressId", "abc");
         AdresseController controller = new AdresseController(new FakeAdresseDao(Collections.emptyList()));
 
-        controller.updateAdresse.handle(ctx);
+        controller.aktualisiereAdresse.handle(ctx);
 
         assertEquals(400, ctx.gesetzterStatus);
         assertEquals("adressId muss eine Zahl sein.", fehlermeldung(ctx));
@@ -185,7 +185,7 @@ class AdresseControllerTest {
         ctx.setPathParam("adressId", "abc");
         AdresseController controller = new AdresseController(new FakeAdresseDao(Collections.emptyList()));
 
-        controller.deleteAdresse.handle(ctx);
+        controller.loescheAdresse.handle(ctx);
 
         assertEquals(400, ctx.gesetzterStatus);
         assertEquals("adressId muss eine Zahl sein.", fehlermeldung(ctx));
@@ -197,7 +197,7 @@ class AdresseControllerTest {
         ctx.jsonFehler = true;
         AdresseController controller = new AdresseController(new FakeAdresseDao(Collections.emptyList()));
 
-        controller.createAdresse.handle(ctx);
+        controller.erstelleAdresse.handle(ctx);
 
         assertEquals(400, ctx.gesetzterStatus);
         assertEquals("Ungültiger JSON-Request-Body.", fehlermeldung(ctx));

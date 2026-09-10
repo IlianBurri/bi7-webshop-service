@@ -3,7 +3,7 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.BestellungDao;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.model.BestellungDto;
 import ch.suva.bi7.webshop.service.mapper.BestellungMapper;
 import io.javalin.http.Handler;
@@ -18,15 +18,15 @@ public class BestellungController {
 
     private static final Logger logger = LoggerFactory.getLogger(BestellungController.class);
 
-    public final Handler createBestellung;
-    public final Handler getBestellungenByUser;
+    public final Handler erstelleBestellung;
+    public final Handler ladeBestellungenNachBenutzer;
 
     public BestellungController(BestellungDao bestellungDao, WarenkorbDao warenkorbDao) {
         if (bestellungDao == null || warenkorbDao == null) {
             throw new IllegalArgumentException("DAOs dürfen nicht null sein");
         }
 
-        this.createBestellung = ctx -> {
+        this.erstelleBestellung = ctx -> {
             String sessionEmail = ctx.sessionAttribute("userEmail");
             if (sessionEmail == null) {
                 ctx.status(401).result("Nicht eingeloggt.");
@@ -34,22 +34,22 @@ public class BestellungController {
             }
 
             try {
-                Map<String, Object> body = ctx.bodyAsClass(Map.class);
-                int adressId = ((Number) body.get("adressId")).intValue();
+                Map<String, Object> anfrageDaten = ctx.bodyAsClass(Map.class);
+                int adressId = ((Number) anfrageDaten.get("adressId")).intValue();
 
-                List<WarenkorbItemEntity> warenkorbItemEntityList = warenkorbDao.getWarenkorbByUser(sessionEmail);
-                if (warenkorbItemEntityList.isEmpty()) {
+                List<WarenkorbEintragEntity> warenkorbEintragEntityList = warenkorbDao.getWarenkorbNachBenutzer(sessionEmail);
+                if (warenkorbEintragEntityList.isEmpty()) {
                     ctx.status(400).result("Warenkorb ist leer.");
                     return;
                 }
 
-                BigDecimal gesamtpreis = warenkorbItemEntityList.stream()
-                        .map(warenkorbItemEntity -> warenkorbItemEntity.getArtikelPreis()
-                                .multiply(BigDecimal.valueOf(warenkorbItemEntity.getMenge())))
+                BigDecimal gesamtpreis = warenkorbEintragEntityList.stream()
+                        .map(warenkorbEintragEntity -> warenkorbEintragEntity.getArtikelPreis()
+                                .multiply(BigDecimal.valueOf(warenkorbEintragEntity.getMenge())))
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                 int bestellungId = bestellungDao.erstelleBestellungMitWarenkorbItems(
-                        sessionEmail, adressId, gesamtpreis, warenkorbItemEntityList);
+                        sessionEmail, adressId, gesamtpreis, warenkorbEintragEntityList);
 
                 ctx.status(201).json(Map.of(
                         "bestellungId", bestellungId,
@@ -61,10 +61,10 @@ public class BestellungController {
             }
         };
 
-        this.getBestellungenByUser = ctx -> {
+        this.ladeBestellungenNachBenutzer = ctx -> {
             String email = ctx.pathParam("email");
             try {
-                List<BestellungEntity> bestellungEntityList = bestellungDao.getBestellungenByUserEmail(email);
+                List<BestellungEntity> bestellungEntityList = bestellungDao.getBestellungenNachBenutzerEmail(email);
                 List<BestellungDto> bestellungDtoList = bestellungEntityList.stream()
                         .map(BestellungMapper::toDto)
                         .toList();

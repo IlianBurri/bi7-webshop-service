@@ -8,7 +8,7 @@ import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,10 +60,10 @@ class BestellungDaoIntegrationTest {
     @Test
     void bestellungErzeugenSpeichertGesamtpreisPositionenUndLeertWarenkorb() throws Exception {
         int adressId = legeAdresseAn();
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 2);
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 2, 1);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 2);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 2, 1);
 
-        List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
+        List<WarenkorbEintragEntity> items = warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL);
         assertEquals(2, items.size());
         BigDecimal gesamtpreis = items.stream()
                 .map(item -> item.getArtikelPreis().multiply(BigDecimal.valueOf(item.getMenge())))
@@ -72,10 +72,10 @@ class BestellungDaoIntegrationTest {
         int bestellungId = bestellungDao.erstelleBestellungMitWarenkorbItems(TEST_EMAIL, adressId, gesamtpreis, items);
 
         assertTrue(bestellungId > 0, "Der generierte Bestell-Key muss zurückkommen");
-        assertTrue(warenkorbDao.getWarenkorbByUser(TEST_EMAIL).isEmpty(),
+        assertTrue(warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL).isEmpty(),
                 "Nach der Bestellung muss der Warenkorb geleert sein");
 
-        Optional<BestellungEntity> gespeichert = bestellungDao.getBestellungById(bestellungId);
+        Optional<BestellungEntity> gespeichert = bestellungDao.holeBestellungNachId(bestellungId);
         assertTrue(gespeichert.isPresent(), "Die Bestellung muss sich per ID lesen lassen");
         BestellungEntity bestellung = gespeichert.get();
         assertEquals(TEST_EMAIL, bestellung.getUserEmail());
@@ -90,10 +90,10 @@ class BestellungDaoIntegrationTest {
                 "Der Preis muss zum Bestellzeitpunkt festgehalten werden");
         assertEquals(anfangsPreisVonArtikel(2), einzelpreisVonPosition(bestellungId, 2));
 
-        List<BestellungEntity> proUser = bestellungDao.getBestellungenByUserEmail(TEST_EMAIL);
-        assertEquals(1, proUser.size(), "Die Bestellung muss über die User-Liste auffindbar sein");
-        assertEquals(bestellungId, proUser.get(0).getBestellungId());
-        assertEquals(gesamtpreis, proUser.get(0).getGesamtpreis());
+        List<BestellungEntity> proBenutzer = bestellungDao.getBestellungenNachBenutzerEmail(TEST_EMAIL);
+        assertEquals(1, proBenutzer.size(), "Die Bestellung muss über die Benutzer-Liste auffindbar sein");
+        assertEquals(bestellungId, proBenutzer.get(0).getBestellungId());
+        assertEquals(gesamtpreis, proBenutzer.get(0).getGesamtpreis());
     }
 
     private int legeAdresseAn() throws Exception {

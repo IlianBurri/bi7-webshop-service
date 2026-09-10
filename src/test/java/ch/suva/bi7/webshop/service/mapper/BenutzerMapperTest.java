@@ -1,20 +1,20 @@
 package ch.suva.bi7.webshop.service.mapper;
 
-import ch.suva.bi7.webshop.service.db.entity.UserEntity;
-import ch.suva.bi7.webshop.service.model.UserDto;
+import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
+import ch.suva.bi7.webshop.service.model.BenutzerDto;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class UserMapperTest {
+class BenutzerMapperTest {
 
     @Test
     void mapToDtoUebernimmtAlleWerteOhnePasswort() {
-        UserEntity entity = new UserEntity("anna", "anna@example.com", "geheim", true);
+        BenutzerEntity entity = new BenutzerEntity("anna", "anna@example.com", "geheim", true);
 
-        UserDto dto = UserMapper.toDto(entity);
+        BenutzerDto dto = BenutzerMapper.toDto(entity);
 
         assertEquals(entity.getUsername(), dto.getUsername());
         assertEquals(entity.getEmail(), dto.getEmail());
@@ -23,6 +23,6 @@ class UserMapperTest {
 
     @Test
     void mapToDtoLehntNullAb() {
-        assertThrows(IllegalArgumentException.class, () -> UserMapper.toDto(null));
+        assertThrows(IllegalArgumentException.class, () -> BenutzerMapper.toDto(null));
     }
 }

@@ -4,14 +4,14 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class RegisterUserRequestTest {
+class RegisterBenutzerRequestTest {
     @Test
     public void registerUserRequestHappyCase() {
         String expectedUsername = "testUser";
         String expectedEmail = "user@example.com";
         String expectedPassword = "securePassword123";
 
-        RegisterUserRequest testee = new RegisterUserRequest(expectedUsername, expectedEmail, expectedPassword);
+        RegisterBenutzerRequest testee = new RegisterBenutzerRequest(expectedUsername, expectedEmail, expectedPassword);
 
         assertEquals(expectedUsername, testee.username);
         assertEquals(expectedEmail, testee.email);
@@ -21,7 +21,7 @@ class RegisterUserRequestTest {
     @Test
     public void registerUserRequestUnHappyCaseUsernameNull() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            new RegisterUserRequest(null, "user@example.com", "securePassword123");
+            new RegisterBenutzerRequest(null, "user@example.com", "securePassword123");
         });
         assertEquals("username, email and password must not be null", exception.getMessage());
     }
@@ -29,7 +29,7 @@ class RegisterUserRequestTest {
     @Test
     public void registerUserRequestUnHappyCaseEmailNull() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            new RegisterUserRequest("testUser", null, "securePassword123");
+            new RegisterBenutzerRequest("testUser", null, "securePassword123");
         });
         assertEquals("username, email and password must not be null", exception.getMessage());
     }
@@ -37,7 +37,7 @@ class RegisterUserRequestTest {
     @Test
     public void registerUserRequestUnHappyCasePasswordNull() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            new RegisterUserRequest("testUser", "user@example.com", null);
+            new RegisterBenutzerRequest("testUser", "user@example.com", null);
         });
         assertEquals("username, email and password must not be null", exception.getMessage());
     }

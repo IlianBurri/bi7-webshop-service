@@ -2,11 +2,11 @@ package ch.suva.bi7.webshop.service.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class RegisterUserResponse {
+public class RegisterBenutzerResponse {
     public final String status;
     public final String error;
 
-    public RegisterUserResponse(
+    public RegisterBenutzerResponse(
             @JsonProperty("status") String status,
             @JsonProperty("error") String error) {
         if (status == null) {
@@ -18,7 +18,7 @@ public class RegisterUserResponse {
 
     @Override
     public String toString() {
-        return "RegisterUserResponse{" +
+        return "RegisterBenutzerResponse{" +
                 "status='" + status + '\'' +
                 ", error='" + error + '\'' +
                 '}';

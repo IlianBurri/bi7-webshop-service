@@ -2,13 +2,13 @@ package ch.suva.bi7.webshop.service.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class UserDto {
+public class BenutzerDto {
 
     private final String username;
     private final String email;
     private final boolean isAdmin;
 
-    public UserDto(
+    public BenutzerDto(
             @JsonProperty("username") String username,
             @JsonProperty("email") String email,
             @JsonProperty("isAdmin") boolean isAdmin) {

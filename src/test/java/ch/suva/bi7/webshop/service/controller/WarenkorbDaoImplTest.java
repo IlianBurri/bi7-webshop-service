@@ -3,7 +3,7 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDaoImpl;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.mock.ResultSetMock;
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -38,10 +38,10 @@ class WarenkorbDaoImplTest {
         );
         WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(zeilen), new ArrayList<>()));
 
-        List<WarenkorbItemEntity> items = testee.getWarenkorbByUser("test@somewhere.com");
+        List<WarenkorbEintragEntity> items = testee.getWarenkorbNachBenutzer("test@somewhere.com");
 
         assertEquals(2, items.size(), "Es sollten genau 2 Warenkorb-Items zurück gegeben werden");
-        WarenkorbItemEntity erster = items.get(0);
+        WarenkorbEintragEntity erster = items.get(0);
         assertEquals(1, erster.getWarenkorbItemId());
         assertEquals("test@somewhere.com", erster.getUserEmail());
         assertEquals(5, erster.getArtikelId());
@@ -51,7 +51,7 @@ class WarenkorbDaoImplTest {
         assertEquals("https://example.com/iphone.jpg", erster.getArtikelBild());
 
         WarenkorbDaoImpl leererTestee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>()));
-        assertTrue(leererTestee.getWarenkorbByUser("test@somewhere.com").isEmpty(), "Ohne Treffer muss eine leere Liste kommen");
+        assertTrue(leererTestee.getWarenkorbNachBenutzer("test@somewhere.com").isEmpty(), "Ohne Treffer muss eine leere Liste kommen");
     }
 
     @Test
@@ -60,7 +60,7 @@ class WarenkorbDaoImplTest {
         List<SqlStatement> selects = new ArrayList<>();
         WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), updates, selects));
 
-        testee.addArtikelToWarenkorb("test@somewhere.com", 5, 3);
+        testee.fuegeArtikelZuWarenkorbHinzu("test@somewhere.com", 5, 3);
 
         assertTrue(selects.isEmpty(), "Kein Check-SELECT mehr nötig – das Upsert ist atomar");
         assertEquals(1, updates.size(), "Es muss genau ein Statement ausgeführt werden");
@@ -70,7 +70,7 @@ class WarenkorbDaoImplTest {
         assertTrue(upsert.sql().contains("ON DUPLICATE KEY UPDATE menge = menge + VALUES(menge)"),
                 "Bei vorhandenem Item muss die Menge erhöht werden, war: " + upsert.sql());
         assertEquals(List.of("test@somewhere.com", 5, 3), upsert.params(),
-                "User, Artikel und Menge müssen als PreparedStatement-Parameter gebunden werden");
+                "Benutzer, Artikel und Menge müssen als PreparedStatement-Parameter gebunden werden");
     }
 
     @Test
@@ -78,7 +78,7 @@ class WarenkorbDaoImplTest {
         List<SqlStatement> selects = new ArrayList<>();
         WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), selects));
 
-        testee.getWarenkorbByUser("kunde@example.com");
+        testee.getWarenkorbNachBenutzer("kunde@example.com");
 
         SqlStatement sql = selects.get(0);
         assertTrue(sql.sql().contains("JOIN artikel"), "Preis/Name/Bild müssen per JOIN aus der artikel-Tabelle kommen, war: " + sql.sql());
@@ -92,8 +92,8 @@ class WarenkorbDaoImplTest {
         List<SqlStatement> updates = new ArrayList<>();
         WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), updates));
 
-        assertTrue(testee.updateMenge(42, 9), "Bei Erfolg muss true zurückkommen");
-        assertTrue(testee.deleteWarenkorbItem(42), "Bei Erfolg muss true zurückkommen");
+        assertTrue(testee.aktualisiereMenge(42, 9), "Bei Erfolg muss true zurückkommen");
+        assertTrue(testee.loescheWarenkorbEintrag(42), "Bei Erfolg muss true zurückkommen");
 
         assertEquals(2, updates.size());
         SqlStatement update = updates.get(0);
@@ -110,8 +110,8 @@ class WarenkorbDaoImplTest {
     void mengeAktualisierenUndLoeschenMeldenFehlendeZeilen() throws Exception {
         WarenkorbDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), 0));
 
-        assertFalse(testee.updateMenge(999, 3), "Wenn keine Zeile aktualisiert wird, muss false zurückkommen");
-        assertFalse(testee.deleteWarenkorbItem(999), "Wenn keine Zeile gelöscht wird, muss false zurückkommen");
+        assertFalse(testee.aktualisiereMenge(999, 3), "Wenn keine Zeile aktualisiert wird, muss false zurückkommen");
+        assertFalse(testee.loescheWarenkorbEintrag(999), "Wenn keine Zeile gelöscht wird, muss false zurückkommen");
     }
 
 

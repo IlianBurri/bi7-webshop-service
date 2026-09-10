@@ -5,7 +5,7 @@ import ch.suva.bi7.webshop.service.dao.WarenkorbDaoImpl;
 import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class WarenkorbDaoIntegrationTest {
 
     @Test
     void leererWarenkorbGibtLeereListe() throws Exception {
-        List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
+        List<WarenkorbEintragEntity> items = warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL);
 
         assertNotNull(items);
         assertTrue(items.isEmpty());
@@ -58,12 +58,12 @@ class WarenkorbDaoIntegrationTest {
 
     @Test
     void artikelHinzufuegenLegtItemMitJoindatenAn() throws Exception {
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 2);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 2);
 
-        List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
+        List<WarenkorbEintragEntity> items = warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL);
 
         assertEquals(1, items.size());
-        WarenkorbItemEntity item = items.get(0);
+        WarenkorbEintragEntity item = items.get(0);
         assertEquals(TEST_EMAIL, item.getUserEmail());
         assertEquals(1, item.getArtikelId());
         assertEquals(2, item.getMenge());
@@ -74,10 +74,10 @@ class WarenkorbDaoIntegrationTest {
 
     @Test
     void artikelDoppeltHinzufuegenErhoehtMenge() throws Exception {
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 2);
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 3);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 2);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 3);
 
-        List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
+        List<WarenkorbEintragEntity> items = warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL);
 
         assertEquals(1, items.size(), "Derselbe Artikel darf nur einmal im Warenkorb stehen");
         assertEquals(5, items.get(0).getMenge(), "2 + 3 muss 5 ergeben");
@@ -85,60 +85,60 @@ class WarenkorbDaoIntegrationTest {
 
     @Test
     void mehrereArtikelKommenInDenWarenkorb() throws Exception {
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 1);
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 2, 1);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 1);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 2, 1);
 
-        List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
+        List<WarenkorbEintragEntity> items = warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL);
 
         assertEquals(2, items.size());
     }
 
     @Test
     void mengeAktualisierenSetztMengeNeu() throws Exception {
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 2);
-        int itemId = warenkorbDao.getWarenkorbByUser(TEST_EMAIL).get(0).getWarenkorbItemId();
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 2);
+        int itemId = warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL).get(0).getWarenkorbItemId();
 
-        warenkorbDao.updateMenge(itemId, 7);
+        warenkorbDao.aktualisiereMenge(itemId, 7);
 
-        List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
+        List<WarenkorbEintragEntity> items = warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL);
         assertEquals(1, items.size());
         assertEquals(7, items.get(0).getMenge());
     }
 
     @Test
-    void warenkorbItemLoeschenEntferntItem() throws Exception {
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 1);
-        int itemId = warenkorbDao.getWarenkorbByUser(TEST_EMAIL).get(0).getWarenkorbItemId();
+    void warenkorbEintragLoeschenEntferntItem() throws Exception {
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 1);
+        int itemId = warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL).get(0).getWarenkorbItemId();
 
-        warenkorbDao.deleteWarenkorbItem(itemId);
+        warenkorbDao.loescheWarenkorbEintrag(itemId);
 
-        assertTrue(warenkorbDao.getWarenkorbByUser(TEST_EMAIL).isEmpty());
+        assertTrue(warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL).isEmpty());
     }
 
     @Test
-    void warenkorbBleibtLeerNachUserLoeschung() throws Exception {
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 1);
-        assertEquals(1, warenkorbDao.getWarenkorbByUser(TEST_EMAIL).size());
+    void warenkorbBleibtLeerNachBenutzerLoeschung() throws Exception {
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 1);
+        assertEquals(1, warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL).size());
 
         dbConnection.executeUpdate("DELETE FROM user WHERE email = '" + TEST_EMAIL + "'");
 
-        assertTrue(warenkorbDao.getWarenkorbByUser(TEST_EMAIL).isEmpty(),
+        assertTrue(warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL).isEmpty(),
                 "ON DELETE CASCADE muss die Warenkorb-Items mit löschen");
     }
 
     @Test
     void warenkorbUeberlebtLogoutUndNeuenLogin() throws Exception {
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 2);
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 3, 1);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 2);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 3, 1);
 
         DBConnection neueConnection = new DBConnectionImpl(
                 DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
         WarenkorbDao daoNachNeuemLogin = new WarenkorbDaoImpl(neueConnection);
 
-        List<WarenkorbItemEntity> items = daoNachNeuemLogin.getWarenkorbByUser(TEST_EMAIL);
+        List<WarenkorbEintragEntity> items = daoNachNeuemLogin.getWarenkorbNachBenutzer(TEST_EMAIL);
 
         assertEquals(2, items.size(), "Nach Abmelden darf nichts verloren gehen");
-        WarenkorbItemEntity erster = items.get(0);
+        WarenkorbEintragEntity erster = items.get(0);
         assertEquals(1, erster.getArtikelId());
         assertEquals(2, erster.getMenge());
         assertEquals("iPhone 15 Pro", erster.getArtikelName());
@@ -148,29 +148,29 @@ class WarenkorbDaoIntegrationTest {
     @Test
     void warenkorbIstProUserGetrennt() throws Exception {
         dbConnection.executeUpdate("INSERT IGNORE INTO user (username, email, password) " +
-                "VALUES ('Zweiter User', '" + TEST_EMAIL_ZWEITER_USER + "', 'test123')");
+                "VALUES ('Zweiter Benutzer', '" + TEST_EMAIL_ZWEITER_USER + "', 'test123')");
 
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 2);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 2);
 
-        assertTrue(warenkorbDao.getWarenkorbByUser(TEST_EMAIL_ZWEITER_USER).isEmpty(),
-                "Der andere User darf keine fremden Artikel sehen");
+        assertTrue(warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL_ZWEITER_USER).isEmpty(),
+                "Der andere Benutzer darf keine fremden Artikel sehen");
 
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL_ZWEITER_USER, 2, 1);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL_ZWEITER_USER, 2, 1);
 
-        List<WarenkorbItemEntity> userA = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
-        List<WarenkorbItemEntity> userB = warenkorbDao.getWarenkorbByUser(TEST_EMAIL_ZWEITER_USER);
+        List<WarenkorbEintragEntity> benutzerA = warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL);
+        List<WarenkorbEintragEntity> benutzerB = warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL_ZWEITER_USER);
 
-        assertEquals(1, userA.size());
-        assertEquals(1, userB.size());
-        assertEquals(1, userA.get(0).getArtikelId(), "User A behält nur seine eigenen Artikel");
-        assertEquals(2, userB.get(0).getArtikelId());
+        assertEquals(1, benutzerA.size());
+        assertEquals(1, benutzerB.size());
+        assertEquals(1, benutzerA.get(0).getArtikelId(), "Benutzer A behält nur seine eigenen Artikel");
+        assertEquals(2, benutzerB.get(0).getArtikelId());
     }
 
     @Test
     void sqlInjectionVersuchLiefertKeineFremdenDaten() throws Exception {
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 1);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 1);
 
-        List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser("' OR '1'='1");
+        List<WarenkorbEintragEntity> items = warenkorbDao.getWarenkorbNachBenutzer("' OR '1'='1");
 
         assertTrue(items.isEmpty(), "SQL-Injection darf keine fremden Warenkorb-Items liefern");
     }
@@ -178,26 +178,26 @@ class WarenkorbDaoIntegrationTest {
     @Test
     void artikelHinzufuegenMitUnbekanntemArtikelSchlaegtFehl() throws Exception {
         assertThrows(Exception.class,
-                () -> warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 999999, 1),
+                () -> warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 999999, 1),
                 "Fremdschlüssel auf artikel.artikelId muss verletzt werden");
 
-        assertTrue(warenkorbDao.getWarenkorbByUser(TEST_EMAIL).isEmpty(),
+        assertTrue(warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL).isEmpty(),
                 "Bei fehlgeschlagenem INSERT darf nichts im Warenkorb landen");
     }
 
     @Test
-    void artikelHinzufuegenMitUnbekanntemUserSchlaegtFehl() {
+    void artikelHinzufuegenMitUnbekanntemBenutzerSchlaegtFehl() {
         assertThrows(Exception.class,
-                () -> warenkorbDao.addArtikelToWarenkorb("gibts.nicht@example.com", 1, 1),
+                () -> warenkorbDao.fuegeArtikelZuWarenkorbHinzu("gibts.nicht@example.com", 1, 1),
                 "Fremdschlüssel auf user.email muss verletzt werden");
     }
 
     @Test
     void mengeErhoehenBehaeltPreisUndArtikelDaten() throws Exception {
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 1);
-        warenkorbDao.addArtikelToWarenkorb(TEST_EMAIL, 1, 4);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 1);
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(TEST_EMAIL, 1, 4);
 
-        List<WarenkorbItemEntity> items = warenkorbDao.getWarenkorbByUser(TEST_EMAIL);
+        List<WarenkorbEintragEntity> items = warenkorbDao.getWarenkorbNachBenutzer(TEST_EMAIL);
 
         assertEquals(1, items.size());
         assertEquals(5, items.get(0).getMenge(), "1 + 4 muss 5 ergeben");

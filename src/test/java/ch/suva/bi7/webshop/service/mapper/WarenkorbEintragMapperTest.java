@@ -1,7 +1,7 @@
 package ch.suva.bi7.webshop.service.mapper;
 
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
-import ch.suva.bi7.webshop.service.model.WarenkorbDto;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
+import ch.suva.bi7.webshop.service.model.WarenkorbEintragDto;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -9,15 +9,15 @@ import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class WarenkorbMapperTest {
+class WarenkorbEintragMapperTest {
 
     @Test
     void mapToDtoUebernimmtAlleWerte() {
-        WarenkorbItemEntity entity = new WarenkorbItemEntity(
+        WarenkorbEintragEntity entity = new WarenkorbEintragEntity(
                 5, "user@example.com", 7, 2, "Tastatur", new BigDecimal("49.90"), "bild.png"
         );
 
-        WarenkorbDto dto = WarenkorbMapper.toDto(entity);
+        WarenkorbEintragDto dto = WarenkorbEintragMapper.toDto(entity);
 
         assertEquals(entity.getWarenkorbItemId(), dto.getWarenkorbItemId());
         assertEquals(entity.getArtikelId(), dto.getArtikelId());
@@ -29,6 +29,6 @@ class WarenkorbMapperTest {
 
     @Test
     void mapToDtoLehntNullAb() {
-        assertThrows(IllegalArgumentException.class, () -> WarenkorbMapper.toDto(null));
+        assertThrows(IllegalArgumentException.class, () -> WarenkorbEintragMapper.toDto(null));
     }
 }

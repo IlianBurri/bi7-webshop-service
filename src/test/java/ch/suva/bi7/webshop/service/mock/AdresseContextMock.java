@@ -32,7 +32,7 @@ public class AdresseContextMock extends EinfacherContextMock {
     @Override
     public <T> T bodyAsClass(Class<T> clazz) {
         if (jsonFehler) {
-            throw new BadRequestResponse("Invalid body");
+            throw new BadRequestResponse("Invalid anfrageDaten");
         }
         return super.bodyAsClass(clazz);
     }

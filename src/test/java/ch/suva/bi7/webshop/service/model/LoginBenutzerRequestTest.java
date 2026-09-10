@@ -3,10 +3,10 @@ package ch.suva.bi7.webshop.service.model;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-class LoginUserRequestTest {
+class LoginBenutzerRequestTest {
     @Test
     void erzeugtObjektBeiGültigenDaten() {
-        LoginUserRequest request = new LoginUserRequest("test@example.com", "secret123");
+        LoginBenutzerRequest request = new LoginBenutzerRequest("test@example.com", "secret123");
 
         assertEquals("test@example.com", request.email);
         assertEquals("secret123", request.password);
@@ -15,21 +15,21 @@ class LoginUserRequestTest {
     @Test
     void wirftExceptionWennEmailNullIst() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new LoginUserRequest(null, "secret123");
+            new LoginBenutzerRequest(null, "secret123");
         });
     }
 
     @Test
     void wirftExceptionWennPasswortNullIst() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new LoginUserRequest("test@example.com", null);
+            new LoginBenutzerRequest("test@example.com", null);
         });
     }
 
     @Test
     void wirftExceptionWennBeideNullSind() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new LoginUserRequest(null, null);
+            new LoginBenutzerRequest(null, null);
         });
     }
 }

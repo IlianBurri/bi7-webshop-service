@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 
-public class WarenkorbDto {
+public class WarenkorbEintragDto {
 
     private final Integer warenkorbItemId;
     private final Integer artikelId;
@@ -13,7 +13,7 @@ public class WarenkorbDto {
     private final BigDecimal artikelPreis;
     private final String artikelBild;
 
-    public WarenkorbDto(
+    public WarenkorbEintragDto(
             @JsonProperty("warenkorbItemId") Integer warenkorbItemId,
             @JsonProperty("artikelId") Integer artikelId,
             @JsonProperty("menge") Integer menge,

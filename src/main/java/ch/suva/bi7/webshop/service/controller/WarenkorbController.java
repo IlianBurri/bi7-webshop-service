@@ -1,9 +1,9 @@
 package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
-import ch.suva.bi7.webshop.service.mapper.WarenkorbMapper;
-import ch.suva.bi7.webshop.service.model.WarenkorbDto;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
+import ch.suva.bi7.webshop.service.mapper.WarenkorbEintragMapper;
+import ch.suva.bi7.webshop.service.model.WarenkorbEintragDto;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,17 +15,17 @@ public class WarenkorbController {
 
     private static final Logger logger = LoggerFactory.getLogger(WarenkorbController.class);
 
-    public final Handler getWarenkorb;
-    public final Handler addToWarenkorb;
-    public final Handler updateMenge;
-    public final Handler deleteWarenkorbItem;
+    public final Handler ladeWarenkorb;
+    public final Handler fuegeArtikelZuWarenkorbHinzu;
+    public final Handler aktualisiereMenge;
+    public final Handler loescheWarenkorbEintrag;
 
     public WarenkorbController(WarenkorbDao warenkorbDao) {
         if (warenkorbDao == null) {
             throw new IllegalArgumentException("warenkorbDao must not be null");
         }
 
-        this.getWarenkorb = ctx -> {
+        this.ladeWarenkorb = ctx -> {
             try {
                 String email = ctx.pathParam("email");
                 if (email == null || email.trim().isEmpty()) {
@@ -33,18 +33,18 @@ public class WarenkorbController {
                     return;
                 }
 
-                List<WarenkorbItemEntity> warenkorbItemEntityList = warenkorbDao.getWarenkorbByUser(email);
-                List<WarenkorbDto> warenkorbDtoList = warenkorbItemEntityList.stream()
-                        .map(WarenkorbMapper::toDto)
+                List<WarenkorbEintragEntity> warenkorbEintragEntityList = warenkorbDao.getWarenkorbNachBenutzer(email);
+                List<WarenkorbEintragDto> warenkorbEintragDtoList = warenkorbEintragEntityList.stream()
+                        .map(WarenkorbEintragMapper::toDto)
                         .collect(Collectors.toList());
-                ctx.status(200).json(warenkorbDtoList);
+                ctx.status(200).json(warenkorbEintragDtoList);
             } catch (Exception e) {
                 logger.error("Fehler beim Abrufen des Warenkorbs: {}", e.getMessage(), e);
                 ctx.status(500).result("Fehler beim Abrufen des Warenkorbs.");
             }
         };
 
-        this.addToWarenkorb = ctx -> {
+        this.fuegeArtikelZuWarenkorbHinzu = ctx -> {
             try {
                 String email = ctx.queryParam("email");
                 String artikelIdStr = ctx.queryParam("artikelId");
@@ -74,7 +74,7 @@ public class WarenkorbController {
                     }
                 }
 
-                warenkorbDao.addArtikelToWarenkorb(email, artikelId, menge);
+                warenkorbDao.fuegeArtikelZuWarenkorbHinzu(email, artikelId, menge);
                 ctx.status(201).result("Artikel zum Warenkorb hinzugefügt.");
             } catch (NumberFormatException e) {
                 logger.error("Ungültige Eingabe: {}", e.getMessage());
@@ -85,7 +85,7 @@ public class WarenkorbController {
             }
         };
 
-        this.updateMenge = ctx -> {
+        this.aktualisiereMenge = ctx -> {
             try {
                 String idStr = ctx.pathParam("id");
                 int warenkorbItemId = Integer.parseInt(idStr);
@@ -106,7 +106,7 @@ public class WarenkorbController {
                     return;
                 }
 
-                if (!warenkorbDao.updateMenge(warenkorbItemId, menge)) {
+                if (!warenkorbDao.aktualisiereMenge(warenkorbItemId, menge)) {
                     ctx.status(404).result("Warenkorb-Item nicht gefunden.");
                     return;
                 }
@@ -121,7 +121,7 @@ public class WarenkorbController {
             }
         };
 
-        this.deleteWarenkorbItem = ctx -> {
+        this.loescheWarenkorbEintrag = ctx -> {
             try {
                 String idStr = ctx.pathParam("id");
                 int warenkorbItemId = Integer.parseInt(idStr);
@@ -129,7 +129,7 @@ public class WarenkorbController {
                     ctx.status(400).result("ID muss > 0 sein.");
                     return;
                 }
-                if (!warenkorbDao.deleteWarenkorbItem(warenkorbItemId)) {
+                if (!warenkorbDao.loescheWarenkorbEintrag(warenkorbItemId)) {
                     ctx.status(404).result("Warenkorb-Item nicht gefunden.");
                     return;
                 }

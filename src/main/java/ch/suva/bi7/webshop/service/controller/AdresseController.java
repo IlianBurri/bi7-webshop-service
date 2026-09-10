@@ -21,10 +21,10 @@ public class AdresseController {
 
     private final AdresseDao adresseDao;
 
-    public final Handler getAdressen;
-    public final Handler createAdresse;
-    public final Handler updateAdresse;
-    public final Handler deleteAdresse;
+    public final Handler ladeAdressen;
+    public final Handler erstelleAdresse;
+    public final Handler aktualisiereAdresse;
+    public final Handler loescheAdresse;
 
     public AdresseController(AdresseDao adresseDao) {
         if (adresseDao == null) {
@@ -32,10 +32,10 @@ public class AdresseController {
         }
         this.adresseDao = adresseDao;
 
-        this.getAdressen = ctx -> {
+        this.ladeAdressen = ctx -> {
             try {
                 String email = ctx.pathParam("email");
-                List<AdresseEntity> adresseEntityList = adresseDao.findByUserEmail(email);
+                List<AdresseEntity> adresseEntityList = adresseDao.ladeAdressenNachBenutzerEmail(email);
                 List<AdresseDto> adresseDtoList = adresseEntityList.stream()
                         .map(AdresseMapper::toDto)
                         .toList();
@@ -46,12 +46,12 @@ public class AdresseController {
             }
         };
 
-        this.createAdresse = ctx -> {
+        this.erstelleAdresse = ctx -> {
             try {
                 AdresseDto eingabe = ctx.bodyAsClass(AdresseDto.class);
                 AdresseEntity adresse = validiereUndNormalisiere(eingabe);
 
-                if (adresseDao.existsIdentical(adresse)) {
+                if (adresseDao.existiertIdentischeAdresse(adresse)) {
                     AdresseEntity bestehende = findeBestehendeIdentische(adresseDao, adresse);
                     ctx.status(200).json(AdresseMapper.toDto(bestehende));
                     return;
@@ -69,14 +69,14 @@ public class AdresseController {
             }
         };
 
-        this.updateAdresse = ctx -> {
+        this.aktualisiereAdresse = ctx -> {
             try {
                 int adressId = Integer.parseInt(ctx.pathParam("adressId"));
 
                 AdresseDto eingabe = ctx.bodyAsClass(AdresseDto.class);
                 AdresseEntity adresse = validiereUndNormalisiere(eingabe);
 
-                if (!adresseDao.update(adressId, adresse)) {
+                if (!adresseDao.aktualisiere(adressId, adresse)) {
                     ctx.status(404).json(Map.of("error", "Adresse nicht gefunden"));
                     return;
                 }
@@ -94,11 +94,11 @@ public class AdresseController {
             }
         };
 
-        this.deleteAdresse = ctx -> {
+        this.loescheAdresse = ctx -> {
             try {
                 int adressId = Integer.parseInt(ctx.pathParam("adressId"));
 
-                if (!adresseDao.delete(adressId)) {
+                if (!adresseDao.loesche(adressId)) {
                     ctx.status(404).json(Map.of("error", "Adresse nicht gefunden"));
                     return;
                 }
@@ -144,7 +144,7 @@ public class AdresseController {
     }
 
     private static AdresseEntity findeBestehendeIdentische(AdresseDao dao, AdresseEntity adresse) throws DaoException {
-        List<AdresseEntity> vorhandene = dao.findByUserEmail(adresse.getUserEmail());
+        List<AdresseEntity> vorhandene = dao.ladeAdressenNachBenutzerEmail(adresse.getUserEmail());
         for (AdresseEntity a : vorhandene) {
             if (istIdentisch(a, adresse)) {
                 return a;

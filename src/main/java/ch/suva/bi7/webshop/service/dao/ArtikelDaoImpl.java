@@ -42,7 +42,7 @@ public class ArtikelDaoImpl implements ArtikelDao {
     }
 
     @Override
-    public int addNewArtikel(String name, BigDecimal preis, String bild) throws DaoException {
+    public int erstelleNeuenArtikel(String name, BigDecimal preis, String bild) throws DaoException {
         String sql = "INSERT INTO artikel (name, preis, bild) VALUES (?, ?, ?)";
         try {
             return dbConnection.executeUpdateReturningGeneratedKeys(sql, name, preis, bild);

@@ -4,20 +4,20 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class RegisterUserResponseTest {
+class RegisterBenutzerResponseTest {
     @Test
-    void RegisterUserResponseHappyCase() {
+    void RegisterBenutzerResponseHappyCase() {
 
-        RegisterUserResponse testee = new RegisterUserResponse("SUCCESS", null);
+        RegisterBenutzerResponse testee = new RegisterBenutzerResponse("SUCCESS", null);
 
         assertEquals("SUCCESS",testee.status);
         assertNull(testee.error);
     }
 
     @Test
-    void registerUserResponseUnHappyCase() {
+    void registerBenutzerAntwortFehlerfall() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            new RegisterUserResponse(null, "FAILED");
+            new RegisterBenutzerResponse(null, "FAILED");
         });
         assertEquals("status must not be null", exception.getMessage());
     }

@@ -2,7 +2,7 @@ package ch.suva.bi7.webshop.service.mock;
 
 import ch.suva.bi7.webshop.service.dao.BestellungDao;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbItemEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -14,11 +14,11 @@ public class FakeBestellungDao implements BestellungDao {
     public String letzterUserEmail;
     public int letzteAdressId;
     public BigDecimal letzterGesamtpreis;
-    public List<WarenkorbItemEntity> letzteItems;
+    public List<WarenkorbEintragEntity> letzteItems;
 
     @Override
     public int erstelleBestellungMitWarenkorbItems(String userEmail, int adressId, BigDecimal gesamtpreis,
-                                                   List<WarenkorbItemEntity> items) {
+                                                   List<WarenkorbEintragEntity> items) {
         wurdeAufgerufen = true;
         letzterUserEmail = userEmail;
         letzteAdressId = adressId;
@@ -28,12 +28,12 @@ public class FakeBestellungDao implements BestellungDao {
     }
 
     @Override
-    public Optional<BestellungEntity> getBestellungById(int bestellungId) {
+    public Optional<BestellungEntity> holeBestellungNachId(int bestellungId) {
         return Optional.empty();
     }
 
     @Override
-    public List<BestellungEntity> getBestellungenByUserEmail(String userEmail) {
+    public List<BestellungEntity> getBestellungenNachBenutzerEmail(String userEmail) {
         return List.of();
     }
 }

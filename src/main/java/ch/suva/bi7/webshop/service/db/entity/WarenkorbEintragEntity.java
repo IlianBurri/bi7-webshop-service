@@ -2,7 +2,7 @@ package ch.suva.bi7.webshop.service.db.entity;
 
 import java.math.BigDecimal;
 
-public class WarenkorbItemEntity {
+public class WarenkorbEintragEntity {
     private final Integer warenkorbItemId;
     private final String userEmail;
     private final Integer artikelId;
@@ -12,7 +12,7 @@ public class WarenkorbItemEntity {
     private final String artikelBild;
 
 
-    public WarenkorbItemEntity(
+    public WarenkorbEintragEntity(
             Integer warenkorbItemId,
             String userEmail,
             Integer artikelId,

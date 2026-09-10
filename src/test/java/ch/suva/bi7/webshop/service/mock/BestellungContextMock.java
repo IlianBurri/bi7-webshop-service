@@ -6,8 +6,8 @@ public class BestellungContextMock extends EinfacherContextMock {
 
     public String gesendetesResult;
 
-    public BestellungContextMock(Object body) {
-        super(body);
+    public BestellungContextMock(Object anfrageDaten) {
+        super(anfrageDaten);
     }
 
     @Override

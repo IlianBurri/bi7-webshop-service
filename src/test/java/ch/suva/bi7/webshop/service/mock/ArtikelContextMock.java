@@ -10,8 +10,8 @@ public class ArtikelContextMock extends EinfacherContextMock {
         this(null);
     }
 
-    public ArtikelContextMock(Object body) {
-        super(body);
+    public ArtikelContextMock(Object anfrageDaten) {
+        super(anfrageDaten);
     }
 
     @Override

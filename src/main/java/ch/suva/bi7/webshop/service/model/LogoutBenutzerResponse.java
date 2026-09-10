@@ -2,11 +2,11 @@ package ch.suva.bi7.webshop.service.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class LogoutUserResponse {
+public class LogoutBenutzerResponse {
     public final String status;
     public final String info;
 
-    public LogoutUserResponse(
+    public LogoutBenutzerResponse(
             @JsonProperty("status") String status,
             @JsonProperty("info") String info) {
         if (status == null) {

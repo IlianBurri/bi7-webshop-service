@@ -23,7 +23,7 @@ public class AdresseDaoImpl implements AdresseDao {
     }
 
     @Override
-    public List<AdresseEntity> findByUserEmail(String email) throws DaoException {
+    public List<AdresseEntity> ladeAdressenNachBenutzerEmail(String email) throws DaoException {
         List<AdresseEntity> adressen = new ArrayList<>();
 
         String sql = "SELECT " + ALLE_SPALTEN +
@@ -57,7 +57,7 @@ public class AdresseDaoImpl implements AdresseDao {
     }
 
     @Override
-    public boolean update(int adressId, AdresseEntity adresse) throws DaoException {
+    public boolean aktualisiere(int adressId, AdresseEntity adresse) throws DaoException {
         String sql = "UPDATE adresse SET userEmail = ?, vorname = ?, nachname = ?, strasse = ?, " +
                 "plz = ?, ort = ?, land = ? WHERE adressId = ?";
         try {
@@ -70,7 +70,7 @@ public class AdresseDaoImpl implements AdresseDao {
     }
 
     @Override
-    public boolean delete(int adressId) throws DaoException {
+    public boolean loesche(int adressId) throws DaoException {
         String sql = "DELETE FROM adresse WHERE adressId = ?";
         try {
             return dbConnection.executeUpdate(sql, adressId) > 0;
@@ -80,7 +80,7 @@ public class AdresseDaoImpl implements AdresseDao {
     }
 
     @Override
-    public boolean existsIdentical(AdresseEntity adresse) throws DaoException {
+    public boolean existiertIdentischeAdresse(AdresseEntity adresse) throws DaoException {
         String sql = "SELECT adressId FROM adresse " +
                 "WHERE userEmail = ? AND vorname = ? AND nachname = ? AND strasse = ? " +
                 "AND plz = ? AND ort = ? AND land = ?";

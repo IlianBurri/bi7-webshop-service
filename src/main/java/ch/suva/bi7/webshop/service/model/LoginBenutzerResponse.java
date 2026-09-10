@@ -2,13 +2,13 @@ package ch.suva.bi7.webshop.service.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class LoginUserResponse {
+public class LoginBenutzerResponse {
     public final String status;
     public final String error;
     public final String username;
     public final boolean isAdmin;
 
-    public LoginUserResponse(
+    public LoginBenutzerResponse(
             @JsonProperty("status") String status,
             @JsonProperty("error") String error,
             @JsonProperty("username") String username,
@@ -24,7 +24,7 @@ public class LoginUserResponse {
 
     @Override
     public String toString() {
-        return "LoginUserResponse{" +
+        return "LoginBenutzerResponse{" +
                 "status='" + status + '\'' +
                 ", error='" + error + '\'' +
                 ", username='" + username + '\'' +
