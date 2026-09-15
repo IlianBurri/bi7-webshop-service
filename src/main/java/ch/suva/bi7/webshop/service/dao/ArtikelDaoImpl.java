@@ -1,52 +1,47 @@
 package ch.suva.bi7.webshop.service.dao;
 
-import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
 
 import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ArtikelDaoImpl implements ArtikelDao {
 
-    private final DBConnection dbConnection;
+    private final EntityManagerFactory entityManagerFactory;
 
-    public ArtikelDaoImpl(DBConnection dbConnection) {
-        if (dbConnection == null) {
-            throw new IllegalArgumentException("dbConnection must not be null");
+    public ArtikelDaoImpl(EntityManagerFactory entityManagerFactory) {
+        if (entityManagerFactory == null) {
+            throw new IllegalArgumentException("entityManagerFactory must not be null");
         }
-        this.dbConnection = dbConnection;
+        this.entityManagerFactory = entityManagerFactory;
     }
 
     @Override
     public List<ArtikelEntity> getAllArtikel() throws Exception {
-        List<ArtikelEntity> artikelListe = new ArrayList<>();
-
-        String sql = "SELECT artikelId, name, preis, bild FROM artikel";
-
-        try (ResultSet rs = dbConnection.execute(sql)) {
-            if (rs != null) {
-                while (rs.next()) {
-                    int id = rs.getInt("artikelId");
-                    String name = rs.getString("name");
-                    BigDecimal preis = rs.getBigDecimal("preis");
-                    String bild = rs.getString("bild");
-
-                    artikelListe.add(new ArtikelEntity(id, name, preis, bild));
-                }
-            }
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            return em.createQuery("SELECT a FROM ArtikelEntity a", ArtikelEntity.class).getResultList();
         }
-        return artikelListe;
     }
 
     @Override
-    public int erstelleNeuenArtikel(String name, BigDecimal preis, String bild) throws DaoException {
-        String sql = "INSERT INTO artikel (name, preis, bild) VALUES (?, ?, ?)";
-        try {
-            return dbConnection.executeUpdateReturningGeneratedKeys(sql, name, preis, bild);
-        } catch (SQLException e) {
+    public ArtikelEntity erstelleNeuenArtikel(String name, BigDecimal preis, String bild) throws DaoException {
+        EntityTransaction transaction = null;
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            transaction = em.getTransaction();
+            transaction.begin();
+
+            ArtikelEntity artikel = new ArtikelEntity(name, preis, bild);
+            em.persist(artikel);
+
+            transaction.commit();
+            return artikel;
+        } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
             throw new DaoException("Fehler beim Speichern des Artikels", e);
         }
     }

@@ -1,6 +1,7 @@
 package ch.suva.bi7.webshop.service.model;
 
 import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
+import ch.suva.bi7.webshop.service.helper.ArtikelEntityHelper;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -11,7 +12,7 @@ class ArtikelTest {
 
     @Test
     void gueltigerArtikelKannErfolgreichErstelltWerden() {
-        ArtikelEntity artikel = new ArtikelEntity(1, "  Laptop  ", new BigDecimal("999.95"), "  https://example.com/laptop.jpg  ");
+        ArtikelEntity artikel = ArtikelEntityHelper.createArtikelEntity(1, "  Laptop  ", new BigDecimal("999.95"), "  https://example.com/laptop.jpg  ");
 
         assertEquals(1, artikel.getArtikelId());
         assertEquals("Laptop", artikel.getName());
@@ -23,23 +24,23 @@ class ArtikelTest {
     void ungueltigeEingabenWerdenAbgelehnt() {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(null, "Laptop", new BigDecimal("10.00"), "bild.jpg")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(null, "Laptop", new BigDecimal("10.00"), "bild.jpg")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, null, new BigDecimal("10.00"), "bild.jpg")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, null, new BigDecimal("10.00"), "bild.jpg")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "   ", new BigDecimal("10.00"), "bild.jpg")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "   ", new BigDecimal("10.00"), "bild.jpg")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "Laptop", null, "bild.jpg")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", null, "bild.jpg")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "Laptop", BigDecimal.ZERO, "bild.jpg")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", BigDecimal.ZERO, "bild.jpg")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "Laptop", new BigDecimal("-0.01"), "bild.jpg")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("-0.01"), "bild.jpg")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "Laptop", new BigDecimal("0.009"), "bild.jpg")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("0.009"), "bild.jpg")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "Laptop", new BigDecimal("10.00"), "")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), "")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "Laptop", new BigDecimal("10.00"), "   "))
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), "   "))
         );
     }
 
@@ -47,9 +48,9 @@ class ArtikelTest {
     void erlaubteGrenzfaelleWerdenAkzeptiert() {
         assertAll(
                 () -> assertDoesNotThrow(() ->
-                        new ArtikelEntity(1, "Laptop", new BigDecimal("0.01"), "bild.jpg")),
+                        ArtikelEntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("0.01"), "bild.jpg")),
                 () -> assertDoesNotThrow(() ->
-                        new ArtikelEntity(1, "Laptop", new BigDecimal("10.00"), null))
+                        ArtikelEntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), null))
         );
     }
 
@@ -57,9 +58,9 @@ class ArtikelTest {
     void erstellenWirftIllegalArgumentExceptionWennNameNullOderLeerIst() {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, null, new BigDecimal("10.00"), "bild.jpg")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, null, new BigDecimal("10.00"), "bild.jpg")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "   ", new BigDecimal("10.00"), "bild.jpg"))
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "   ", new BigDecimal("10.00"), "bild.jpg"))
         );
     }
 
@@ -67,7 +68,7 @@ class ArtikelTest {
     void leererNameLiefertErwarteteFehlermeldung() {
         IllegalArgumentException ex =
                 assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "", new BigDecimal("10.00"), "bild.jpg"));
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "", new BigDecimal("10.00"), "bild.jpg"));
 
         assertEquals("Name darf nicht null/leer sein", ex.getMessage());
     }
@@ -75,7 +76,7 @@ class ArtikelTest {
     @Test
     void nameMitLeerzeichenWirdGetrimmt() {
         ArtikelEntity artikel =
-                new ArtikelEntity(1, "  Laptop  ", new BigDecimal("10.00"), "bild.jpg");
+                ArtikelEntityHelper.createArtikelEntity(1, "  Laptop  ", new BigDecimal("10.00"), "bild.jpg");
 
         assertEquals("Laptop", artikel.getName());
     }
@@ -84,33 +85,33 @@ class ArtikelTest {
     void erstellenWirftIllegalArgumentExceptionWennPreisNullOderNegativIst() {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "Laptop", null, "bild.jpg")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", null, "bild.jpg")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "Laptop", new BigDecimal("-0.01"), "bild.jpg")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("-0.01"), "bild.jpg")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "Laptop", BigDecimal.ZERO, "bild.jpg"))
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", BigDecimal.ZERO, "bild.jpg"))
         );
     }
 
     @Test
     void preisUnterMindestpreisWirdAbgelehnt() {
         assertThrows(IllegalArgumentException.class,
-                () -> new ArtikelEntity(1, "Laptop", new BigDecimal("0.0001"), "bild.jpg"));
+                () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("0.0001"), "bild.jpg"));
     }
 
     @Test
     void bildDarfNullSein() {
         assertDoesNotThrow(() ->
-                new ArtikelEntity(1, "Laptop", new BigDecimal("10.00"), null));
+                ArtikelEntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), null));
     }
 
     @Test
     void bildDarfNichtLeerSein() {
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "Laptop", new BigDecimal("10.00"), "")),
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), "")),
                 () -> assertThrows(IllegalArgumentException.class,
-                        () -> new ArtikelEntity(1, "Laptop", new BigDecimal("10.00"), "   "))
+                        () -> ArtikelEntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), "   "))
         );
     }
 }

@@ -3,6 +3,7 @@ package ch.suva.bi7.webshop.service.db;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Deprecated
 public interface DBConnection {
 
     default ResultSet execute(String sql) throws SQLException {

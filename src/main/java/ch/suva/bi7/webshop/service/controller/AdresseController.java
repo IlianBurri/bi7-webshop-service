@@ -19,8 +19,6 @@ public class AdresseController {
 
     private static final String STANDARD_LAND = "Schweiz";
 
-    private final AdresseDao adresseDao;
-
     public final Handler ladeAdressen;
     public final Handler erstelleAdresse;
     public final Handler aktualisiereAdresse;
@@ -30,7 +28,6 @@ public class AdresseController {
         if (adresseDao == null) {
             throw new IllegalArgumentException("adresseDao must not be null");
         }
-        this.adresseDao = adresseDao;
 
         this.ladeAdressen = ctx -> {
             try {

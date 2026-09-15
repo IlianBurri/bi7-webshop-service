@@ -5,13 +5,15 @@ import ch.suva.bi7.webshop.service.dao.*;
 import ch.suva.bi7.webshop.service.db.DBConfig;
 import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
+import ch.suva.bi7.webshop.service.db.JpaEntityManagerFactoryProvider;
 import ch.suva.bi7.webshop.service.db.LiquibaseMigrationRunner;
+import ch.suva.bi7.webshop.service.service.ArtikelService;
 import io.javalin.Javalin;
+import jakarta.persistence.EntityManagerFactory;
 
 public class Bi7WebshopService {
     public static void main(String[] args) {
         try {
-
             LiquibaseMigrationRunner.migrate(
                     DBConfig.getHost(),
                     DBConfig.getPort(),
@@ -21,12 +23,16 @@ public class Bi7WebshopService {
 
             DBConnection dbConnection = new DBConnectionImpl(
                     DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
+            EntityManagerFactory entityManagerFactory = JpaEntityManagerFactoryProvider.createEntityManagerFactory(
+                    DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
+            // Beim Shudown der Anwendung die EntityManagerFactory schließen, um Ressourcen freizugeben
+            Runtime.getRuntime().addShutdownHook(new Thread(entityManagerFactory::close));
 
             BenutzerDao benutzerDao = new BenutzerDaoImpl(dbConnection);
             WarenkorbDao warenkorbDao = new WarenkorbDaoImpl(dbConnection);
             AdresseController adresseController = new AdresseController(new AdresseDaoImpl(dbConnection));
             WarenkorbController warenkorbController = new WarenkorbController(new WarenkorbDaoImpl(dbConnection));
-            ArtikelController artikelController = new ArtikelController(new ArtikelDaoImpl(dbConnection), benutzerDao);
+            ArtikelController artikelController = new ArtikelController(new ArtikelService(entityManagerFactory), benutzerDao);
             BenutzerController benutzerController = new BenutzerController(benutzerDao);
 
             BestellungDao bestellungDao = new BestellungDaoImpl(dbConnection);

@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+@Deprecated
 public class DBConnectionImpl implements DBConnection {
 
     private static final Logger logger = LoggerFactory.getLogger(DBConnectionImpl.class);
