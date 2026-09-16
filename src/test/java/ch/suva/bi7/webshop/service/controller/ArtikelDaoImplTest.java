@@ -11,18 +11,23 @@ import jakarta.persistence.*;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class ArtikelDaoImplTest {
 
 
-    private ArtikelDao getRealArtikelDao() throws SQLException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        return new ArtikelDaoImpl(JpaEntityManagerFactoryProvider.createEntityManagerFactory(
-                DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword()));
+    private ArtikelDao getRealArtikelDao() {
+        try {
+            return new ArtikelDaoImpl(JpaEntityManagerFactoryProvider.createEntityManagerFactory(
+                    DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword()));
+        } catch (Exception e) {
+            assumeTrue(false, "MariaDB not available: " + e.getMessage());
+            return null;
+        }
     }
 
     @Test

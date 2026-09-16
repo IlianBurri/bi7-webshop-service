@@ -1,21 +1,20 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.dao.AdresseDao;
-import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 import ch.suva.bi7.webshop.service.model.AdresseDto;
-import ch.suva.bi7.webshop.service.mapper.AdresseMapper;
+import ch.suva.bi7.webshop.service.service.AdresseService;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class AdresseController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AdresseController.class);
+    private static final Logger logger =
+            LoggerFactory.getLogger(AdresseController.class);
 
     private static final String STANDARD_LAND = "Schweiz";
 
@@ -24,22 +23,21 @@ public class AdresseController {
     public final Handler aktualisiereAdresse;
     public final Handler loescheAdresse;
 
-    public AdresseController(AdresseDao adresseDao) {
-        if (adresseDao == null) {
-            throw new IllegalArgumentException("adresseDao must not be null");
+    public AdresseController(AdresseService adresseService) {
+        if (adresseService == null) {
+            throw new IllegalArgumentException(
+                    "adresseService must not be null");
         }
 
         this.ladeAdressen = ctx -> {
             try {
                 String email = ctx.pathParam("email");
-                List<AdresseEntity> adresseEntityList = adresseDao.ladeAdressenNachBenutzerEmail(email);
-                List<AdresseDto> adresseDtoList = adresseEntityList.stream()
-                        .map(AdresseMapper::toDto)
-                        .toList();
-                ctx.status(200).json(adresseDtoList);
+                ctx.status(200).json(adresseService.ladeAdressen(email));
             } catch (Exception e) {
-                logger.error("Fehler beim Abrufen der Adressen: {}", e.getMessage(), e);
-                ctx.status(500).json(Map.of("error", "Fehler beim Abrufen der Adressen."));
+                logger.error("Fehler beim Abrufen der Adressen: {}",
+                        e.getMessage(), e);
+                ctx.status(500).json(
+                        Map.of("error", "Fehler beim Abrufen der Adressen."));
             }
         };
 
@@ -48,64 +46,75 @@ public class AdresseController {
                 AdresseDto eingabe = ctx.bodyAsClass(AdresseDto.class);
                 AdresseEntity adresse = validiereUndNormalisiere(eingabe);
 
-                if (adresseDao.existiertIdentischeAdresse(adresse)) {
-                    AdresseEntity bestehende = findeBestehendeIdentische(adresseDao, adresse);
-                    ctx.status(200).json(AdresseMapper.toDto(bestehende));
+                Optional<AdresseDto> bestehende =
+                        adresseService.findeIdentischeAdresse(adresse);
+                if (bestehende.isPresent()) {
+                    ctx.status(200).json(bestehende.get());
                     return;
                 }
 
-                AdresseEntity gespeichert = adresseDao.insert(adresse);
-                ctx.status(201).json(AdresseMapper.toDto(gespeichert));
+                ctx.status(201).json(adresseService.erstelleAdresse(adresse));
             } catch (BadRequestResponse e) {
-                ctx.status(400).json(Map.of("error", "Ungültiger JSON-Request-Body."));
+                ctx.status(400).json(
+                        Map.of("error", "Ungültiger JSON-Request-Body."));
             } catch (IllegalArgumentException e) {
                 ctx.status(400).json(Map.of("error", e.getMessage()));
             } catch (Exception e) {
-                logger.error("Fehler beim Speichern der Adresse: {}", e.getMessage(), e);
-                ctx.status(500).json(Map.of("error", "Fehler beim Speichern der Adresse."));
+                logger.error("Fehler beim Speichern der Adresse: {}",
+                        e.getMessage(), e);
+                ctx.status(500).json(
+                        Map.of("error", "Fehler beim Speichern der Adresse."));
             }
         };
 
         this.aktualisiereAdresse = ctx -> {
             try {
                 int adressId = Integer.parseInt(ctx.pathParam("adressId"));
-
                 AdresseDto eingabe = ctx.bodyAsClass(AdresseDto.class);
                 AdresseEntity adresse = validiereUndNormalisiere(eingabe);
 
-                if (!adresseDao.aktualisiere(adressId, adresse)) {
-                    ctx.status(404).json(Map.of("error", "Adresse nicht gefunden"));
+                Optional<AdresseDto> aktualisiert =
+                        adresseService.aktualisiereAdresse(adressId, adresse);
+                if (aktualisiert.isEmpty()) {
+                    ctx.status(404).json(
+                            Map.of("error", "Adresse nicht gefunden"));
                     return;
                 }
 
-                ctx.status(200).json(AdresseMapper.toDto(mitAdressId(adresse, adressId)));
+                ctx.status(200).json(aktualisiert.get());
             } catch (NumberFormatException e) {
-                ctx.status(400).json(Map.of("error", "adressId muss eine Zahl sein."));
+                ctx.status(400).json(
+                        Map.of("error", "adressId muss eine Zahl sein."));
             } catch (BadRequestResponse e) {
-                ctx.status(400).json(Map.of("error", "Ungültiger JSON-Request-Body."));
+                ctx.status(400).json(
+                        Map.of("error", "Ungültiger JSON-Request-Body."));
             } catch (IllegalArgumentException e) {
                 ctx.status(400).json(Map.of("error", e.getMessage()));
             } catch (Exception e) {
-                logger.error("Fehler beim Aktualisieren der Adresse: {}", e.getMessage(), e);
-                ctx.status(500).json(Map.of("error", "Fehler beim Aktualisieren der Adresse."));
+                logger.error("Fehler beim Aktualisieren der Adresse: {}",
+                        e.getMessage(), e);
+                ctx.status(500).json(Map.of(
+                        "error", "Fehler beim Aktualisieren der Adresse."));
             }
         };
 
         this.loescheAdresse = ctx -> {
             try {
                 int adressId = Integer.parseInt(ctx.pathParam("adressId"));
-
-                if (!adresseDao.loesche(adressId)) {
-                    ctx.status(404).json(Map.of("error", "Adresse nicht gefunden"));
+                if (!adresseService.loescheAdresse(adressId)) {
+                    ctx.status(404).json(
+                            Map.of("error", "Adresse nicht gefunden"));
                     return;
                 }
-
                 ctx.status(200).result("Adresse gelöscht.");
             } catch (NumberFormatException e) {
-                ctx.status(400).json(Map.of("error", "adressId muss eine Zahl sein."));
+                ctx.status(400).json(
+                        Map.of("error", "adressId muss eine Zahl sein."));
             } catch (Exception e) {
-                logger.error("Fehler beim Löschen der Adresse: {}", e.getMessage(), e);
-                ctx.status(500).json(Map.of("error", "Fehler beim Löschen der Adresse."));
+                logger.error("Fehler beim Löschen der Adresse: {}",
+                        e.getMessage(), e);
+                ctx.status(500).json(
+                        Map.of("error", "Fehler beim Löschen der Adresse."));
             }
         };
     }
@@ -119,44 +128,20 @@ public class AdresseController {
         String ort = pflichtfeld(eingabe.getOrt(), "ort");
 
         String land = eingabe.getLand();
-        if (land == null || land.trim().isEmpty()) {
-            land = STANDARD_LAND;
-        } else {
-            land = land.trim();
-        }
+        land = land == null || land.trim().isEmpty()
+                ? STANDARD_LAND
+                : land.trim();
 
-        return new AdresseEntity(null, userEmail, vorname, nachname, strasse, plz, ort, land);
-    }
-
-    private static AdresseEntity mitAdressId(AdresseEntity adresse, int adressId) {
-        return new AdresseEntity(adressId, adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
-                adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand());
+        return new AdresseEntity(
+                null, userEmail, vorname, nachname, strasse, plz, ort, land);
     }
 
     private static String pflichtfeld(String wert, String feld) {
         if (wert == null || wert.trim().isEmpty()) {
-            throw new IllegalArgumentException("'" + feld + "' ist ein Pflichtfeld und darf nicht leer sein.");
+            throw new IllegalArgumentException(
+                    "'" + feld
+                            + "' ist ein Pflichtfeld und darf nicht leer sein.");
         }
         return wert.trim();
     }
-
-    private static AdresseEntity findeBestehendeIdentische(AdresseDao dao, AdresseEntity adresse) throws DaoException {
-        List<AdresseEntity> vorhandene = dao.ladeAdressenNachBenutzerEmail(adresse.getUserEmail());
-        for (AdresseEntity a : vorhandene) {
-            if (istIdentisch(a, adresse)) {
-                return a;
-            }
-        }
-        return adresse;
-    }
-
-    private static boolean istIdentisch(AdresseEntity a, AdresseEntity b) {
-        return a.getVorname().equals(b.getVorname())
-                && a.getNachname().equals(b.getNachname())
-                && a.getStrasse().equals(b.getStrasse())
-                && a.getPlz().equals(b.getPlz())
-                && a.getOrt().equals(b.getOrt())
-                && a.getLand().equals(b.getLand());
-    }
-
 }

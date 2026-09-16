@@ -1,10 +1,12 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.AdresseDao;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 import ch.suva.bi7.webshop.service.mock.AdresseContextMock;
 import ch.suva.bi7.webshop.service.mock.FakeAdresseDao;
 import ch.suva.bi7.webshop.service.mock.FehlerAdresseDao;
 import ch.suva.bi7.webshop.service.model.AdresseDto;
+import ch.suva.bi7.webshop.service.service.AdresseService;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -25,7 +27,7 @@ class AdresseControllerTest {
         AdresseEntity adresse = new AdresseEntity(1, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
         AdresseContextMock ctx = new AdresseContextMock();
         ctx.setPathParam("email", TEST_EMAIL);
-        AdresseController controller = new AdresseController(new FakeAdresseDao(List.of(adresse)));
+        AdresseController controller = controller(new FakeAdresseDao(List.of(adresse)));
 
         controller.ladeAdressen.handle(ctx);
 
@@ -38,7 +40,7 @@ class AdresseControllerTest {
 
         AdresseContextMock leererCtx = new AdresseContextMock();
         leererCtx.setPathParam("email", TEST_EMAIL);
-        AdresseController leererController = new AdresseController(new FakeAdresseDao(Collections.emptyList()));
+        AdresseController leererController = controller(new FakeAdresseDao(Collections.emptyList()));
 
         leererController.ladeAdressen.handle(leererCtx);
 
@@ -52,7 +54,7 @@ class AdresseControllerTest {
         AdresseDto mitLeerzeichen = new AdresseDto(null, "  " + TEST_EMAIL + "  ", "  Max  ", " Muster ",
                 " Musterstrasse 1 ", " 8000 ", " Zuerich ", "  ");
         AdresseContextMock ctx = new AdresseContextMock(mitLeerzeichen);
-        AdresseController controller = new AdresseController(dao);
+        AdresseController controller = controller(dao);
 
         controller.erstelleAdresse.handle(ctx);
 
@@ -72,7 +74,7 @@ class AdresseControllerTest {
                 null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1",
                 "8000", "Zuerich", "Schweiz"));
         updateCtx.setPathParam("adressId", "7");
-        AdresseController controller = new AdresseController(dao);
+        AdresseController controller = controller(dao);
 
         controller.aktualisiereAdresse.handle(updateCtx);
 
@@ -86,7 +88,7 @@ class AdresseControllerTest {
         FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
         AdresseContextMock deleteCtx = new AdresseContextMock();
         deleteCtx.setPathParam("adressId", "7");
-        AdresseController controller = new AdresseController(dao);
+        AdresseController controller = controller(dao);
 
         controller.loescheAdresse.handle(deleteCtx);
 
@@ -100,7 +102,7 @@ class AdresseControllerTest {
         AdresseDto ohneEmail = new AdresseDto(null, null, "Max", "Muster", "Musterstrasse 1",
                 "8000", "Zuerich", "Schweiz");
         AdresseContextMock fehlerCtx = new AdresseContextMock(ohneEmail);
-        AdresseController controller = new AdresseController(daoOhneEmail);
+        AdresseController controller = controller(daoOhneEmail);
 
         controller.erstelleAdresse.handle(fehlerCtx);
 
@@ -113,7 +115,7 @@ class AdresseControllerTest {
     void adressenAbrufenBeiDatenbankFehlerLiefert500MitFehlermeldung() throws Exception {
         AdresseContextMock dbFehlerCtx = new AdresseContextMock();
         dbFehlerCtx.setPathParam("email", TEST_EMAIL);
-        AdresseController controller = new AdresseController(new FehlerAdresseDao());
+        AdresseController controller = controller(new FehlerAdresseDao());
 
         controller.ladeAdressen.handle(dbFehlerCtx);
 
@@ -129,7 +131,7 @@ class AdresseControllerTest {
         AdresseContextMock ctx = new AdresseContextMock(new AdresseDto(
                 null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1",
                 "8000", "Zuerich", "Schweiz"));
-        AdresseController controller = new AdresseController(dao);
+        AdresseController controller = controller(dao);
 
         controller.erstelleAdresse.handle(ctx);
 
@@ -145,7 +147,7 @@ class AdresseControllerTest {
                 null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1",
                 "8000", "Zuerich", "Schweiz"));
         ctx.setPathParam("adressId", "7");
-        AdresseController controller = new AdresseController(dao);
+        AdresseController controller = controller(dao);
 
         controller.aktualisiereAdresse.handle(ctx);
 
@@ -159,7 +161,7 @@ class AdresseControllerTest {
         dao.deleteErgebnis = false;
         AdresseContextMock ctx = new AdresseContextMock();
         ctx.setPathParam("adressId", "7");
-        AdresseController controller = new AdresseController(dao);
+        AdresseController controller = controller(dao);
 
         controller.loescheAdresse.handle(ctx);
 
@@ -171,7 +173,7 @@ class AdresseControllerTest {
     void adresseAktualisierenMitUngueltigerAdressIdLiefert400() throws Exception {
         AdresseContextMock ctx = new AdresseContextMock(BEISPIEL_ADRESSE);
         ctx.setPathParam("adressId", "abc");
-        AdresseController controller = new AdresseController(new FakeAdresseDao(Collections.emptyList()));
+        AdresseController controller = controller(new FakeAdresseDao(Collections.emptyList()));
 
         controller.aktualisiereAdresse.handle(ctx);
 
@@ -183,7 +185,7 @@ class AdresseControllerTest {
     void adresseLoeschenMitUngueltigerAdressIdLiefert400() throws Exception {
         AdresseContextMock ctx = new AdresseContextMock();
         ctx.setPathParam("adressId", "abc");
-        AdresseController controller = new AdresseController(new FakeAdresseDao(Collections.emptyList()));
+        AdresseController controller = controller(new FakeAdresseDao(Collections.emptyList()));
 
         controller.loescheAdresse.handle(ctx);
 
@@ -195,7 +197,7 @@ class AdresseControllerTest {
     void adresseAnlegenMitUngueltigemJsonBodyLiefert400() throws Exception {
         AdresseContextMock ctx = new AdresseContextMock();
         ctx.jsonFehler = true;
-        AdresseController controller = new AdresseController(new FakeAdresseDao(Collections.emptyList()));
+        AdresseController controller = controller(new FakeAdresseDao(Collections.emptyList()));
 
         controller.erstelleAdresse.handle(ctx);
 
@@ -208,5 +210,9 @@ class AdresseControllerTest {
         Map<String, Object> fehler = (Map<String, Object>) ctx.gesendetesJson;
         assertNotNull(fehler, "Es muss ein JSON-Fehlerobjekt gesendet werden");
         return (String) fehler.get("error");
+    }
+
+    private static AdresseController controller(AdresseDao dao) {
+        return new AdresseController(new AdresseService(dao));
     }
 }

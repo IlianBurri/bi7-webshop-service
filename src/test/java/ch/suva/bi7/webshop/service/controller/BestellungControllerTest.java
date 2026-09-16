@@ -5,6 +5,7 @@ import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.mock.BestellungContextMock;
 import ch.suva.bi7.webshop.service.mock.CheckoutWarenkorbDao;
 import ch.suva.bi7.webshop.service.mock.FakeBestellungDao;
+import ch.suva.bi7.webshop.service.service.BestellungService;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -27,7 +28,7 @@ class BestellungControllerTest {
         BestellungContextMock ctx = new BestellungContextMock(Map.of("adressId", 3));
         ctx.sessionAttribute("userEmail", TEST_EMAIL);
 
-        new BestellungController(bestellungDao, warenkorbDao).erstelleBestellung.handle(ctx);
+        new BestellungController(new BestellungService(bestellungDao, warenkorbDao)).erstelleBestellung.handle(ctx);
 
         assertEquals(201, ctx.gesetzterStatus);
         assertEquals(new BigDecimal("3297.90"), bestellungDao.letzterGesamtpreis,
@@ -49,7 +50,7 @@ class BestellungControllerTest {
         CheckoutWarenkorbDao warenkorbDao = new CheckoutWarenkorbDao(List.of());
         BestellungContextMock ctx = new BestellungContextMock(Map.of("adressId", 3));
 
-        new BestellungController(bestellungDao, warenkorbDao).erstelleBestellung.handle(ctx);
+        new BestellungController(new BestellungService(bestellungDao, warenkorbDao)).erstelleBestellung.handle(ctx);
 
         assertEquals(401, ctx.gesetzterStatus);
         assertEquals("Nicht eingeloggt.", ctx.gesendetesResult);
@@ -63,7 +64,7 @@ class BestellungControllerTest {
         BestellungContextMock ctx = new BestellungContextMock(Map.of("adressId", 3));
         ctx.sessionAttribute("userEmail", TEST_EMAIL);
 
-        new BestellungController(bestellungDao, warenkorbDao).erstelleBestellung.handle(ctx);
+        new BestellungController(new BestellungService(bestellungDao, warenkorbDao)).erstelleBestellung.handle(ctx);
 
         assertEquals(400, ctx.gesetzterStatus);
         assertEquals("Warenkorb ist leer.", ctx.gesendetesResult);

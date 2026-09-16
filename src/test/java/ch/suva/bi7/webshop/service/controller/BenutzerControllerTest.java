@@ -8,6 +8,7 @@ import ch.suva.bi7.webshop.service.model.RegisterBenutzerRequest;
 import ch.suva.bi7.webshop.service.model.RegisterBenutzerResponse;
 import ch.suva.bi7.webshop.service.model.BenutzerDto;
 import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
+import ch.suva.bi7.webshop.service.service.BenutzerService;
 import org.junit.jupiter.api.Test;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,8 +23,8 @@ class BenutzerControllerTest {
         EinfachesBenutzerDaoMock daoMock = new EinfachesBenutzerDaoMock(Optional.empty());
         EinfacherContextMock ctxMock = new EinfacherContextMock(request);
 
-        BenutzerController.setBenutzerDaoMock(daoMock);
-        BenutzerController.register.handle(ctxMock);
+        BenutzerController controller = new BenutzerController(new BenutzerService(daoMock));
+        controller.register.handle(ctxMock);
 
         assertNotNull(daoMock.gespeicherterBenutzer);
         assertEquals("Peter Parker", daoMock.gespeicherterBenutzer.getUsername());
@@ -40,8 +41,8 @@ class BenutzerControllerTest {
         EinfachesBenutzerDaoMock daoMock = new EinfachesBenutzerDaoMock(Optional.of(admin));
         EinfacherContextMock ctxMock = new EinfacherContextMock(request);
 
-        BenutzerController.setBenutzerDaoMock(daoMock);
-        BenutzerController.login.handle(ctxMock);
+        BenutzerController controller = new BenutzerController(new BenutzerService(daoMock));
+        controller.login.handle(ctxMock);
 
         assertEquals(201, ctxMock.gesetzterStatus);
         assertEquals("bruce.wayne@gotham.com", ctxMock.sessionAttribute("userEmail"));
@@ -57,8 +58,8 @@ class BenutzerControllerTest {
         EinfachesBenutzerDaoMock daoMock = new EinfachesBenutzerDaoMock(Optional.of(normal));
         EinfacherContextMock ctxMock = new EinfacherContextMock(request);
 
-        BenutzerController.setBenutzerDaoMock(daoMock);
-        BenutzerController.login.handle(ctxMock);
+        BenutzerController controller = new BenutzerController(new BenutzerService(daoMock));
+        controller.login.handle(ctxMock);
 
         assertEquals(201, ctxMock.gesetzterStatus);
 
@@ -78,9 +79,8 @@ class BenutzerControllerTest {
         EinfachesBenutzerDaoMock daoMock = new EinfachesBenutzerDaoMock(Optional.of(batman));
         EinfacherContextMock ctxMock = new EinfacherContextMock(request);
 
-        BenutzerController.setBenutzerDaoMock(daoMock);
-
-        BenutzerController.register.handle(ctxMock);
+        BenutzerController controller = new BenutzerController(new BenutzerService(daoMock));
+        controller.register.handle(ctxMock);
 
         assertNull(daoMock.gespeicherterBenutzer);
         assertEquals(409, ctxMock.gesetzterStatus);

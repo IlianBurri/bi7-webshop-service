@@ -8,6 +8,10 @@ import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.db.JpaEntityManagerFactoryProvider;
 import ch.suva.bi7.webshop.service.db.LiquibaseMigrationRunner;
 import ch.suva.bi7.webshop.service.service.ArtikelService;
+import ch.suva.bi7.webshop.service.service.BenutzerService;
+import ch.suva.bi7.webshop.service.service.BestellungService;
+import ch.suva.bi7.webshop.service.service.WarenkorbService;
+import ch.suva.bi7.webshop.service.service.AdresseService;
 import io.javalin.Javalin;
 import jakarta.persistence.EntityManagerFactory;
 
@@ -30,13 +34,16 @@ public class Bi7WebshopService {
 
             BenutzerDao benutzerDao = new BenutzerDaoImpl(dbConnection);
             WarenkorbDao warenkorbDao = new WarenkorbDaoImpl(dbConnection);
-            AdresseController adresseController = new AdresseController(new AdresseDaoImpl(dbConnection));
-            WarenkorbController warenkorbController = new WarenkorbController(new WarenkorbDaoImpl(dbConnection));
+            AdresseController adresseController = new AdresseController(
+                    new AdresseService(new AdresseDaoImpl(dbConnection)));
+            WarenkorbController warenkorbController = new WarenkorbController(
+                    new WarenkorbService(new WarenkorbDaoImpl(dbConnection)));
             ArtikelController artikelController = new ArtikelController(new ArtikelService(entityManagerFactory), benutzerDao);
-            BenutzerController benutzerController = new BenutzerController(benutzerDao);
+            BenutzerController benutzerController = new BenutzerController(new BenutzerService(benutzerDao));
 
             BestellungDao bestellungDao = new BestellungDaoImpl(dbConnection);
-            BestellungController bestellungController = new BestellungController(bestellungDao, warenkorbDao);
+            BestellungController bestellungController = new BestellungController(
+                    new BestellungService(bestellungDao, warenkorbDao));
 
             var app = Javalin.create(config -> {
                 config.bundledPlugins.enableCors(cors -> {

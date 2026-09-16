@@ -7,6 +7,10 @@
     <persistence-unit name="webshop-hibernate" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <class>ch.suva.bi7.webshop.service.db.entity.ArtikelEntity</class>
+        <class>ch.suva.bi7.webshop.service.db.entity.BenutzerEntity</class>
+        <class>ch.suva.bi7.webshop.service.db.entity.AdresseEntity</class>
+        <class>ch.suva.bi7.webshop.service.db.entity.BestellungEntity</class>
+        <class>ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
 
         <properties>

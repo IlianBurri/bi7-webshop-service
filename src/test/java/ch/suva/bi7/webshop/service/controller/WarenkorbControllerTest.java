@@ -2,6 +2,8 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.mock.FakeWarenkorbDao;
+import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
+import ch.suva.bi7.webshop.service.service.WarenkorbService;
 import ch.suva.bi7.webshop.service.mock.FehlerWarenkorbDao;
 import ch.suva.bi7.webshop.service.mock.WarenkorbContextMock;
 import org.junit.jupiter.api.Test;
@@ -21,7 +23,7 @@ class WarenkorbControllerTest {
                 "iPhone 15 Pro", new BigDecimal("1199.00"), null);
         WarenkorbContextMock ctx = new WarenkorbContextMock();
         ctx.setPathParam("email", "test@example.com");
-        WarenkorbController controller = new WarenkorbController(new FakeWarenkorbDao(List.of(item)));
+        WarenkorbController controller = controller(new FakeWarenkorbDao(List.of(item)));
 
         controller.ladeWarenkorb.handle(ctx);
 
@@ -31,7 +33,7 @@ class WarenkorbControllerTest {
 
         WarenkorbContextMock leererCtx = new WarenkorbContextMock();
         leererCtx.setPathParam("email", "test@example.com");
-        WarenkorbController leererController = new WarenkorbController(new FakeWarenkorbDao(Collections.emptyList()));
+        WarenkorbController leererController = controller(new FakeWarenkorbDao(Collections.emptyList()));
 
         leererController.ladeWarenkorb.handle(leererCtx);
 
@@ -46,7 +48,7 @@ class WarenkorbControllerTest {
         addCtx.setQueryParam("email", "test@example.com");
         addCtx.setQueryParam("artikelId", "5");
         addCtx.setQueryParam("menge", "3");
-        WarenkorbController controller = new WarenkorbController(dao);
+        WarenkorbController controller = controller(dao);
 
         controller.fuegeArtikelZuWarenkorbHinzu.handle(addCtx);
 
@@ -68,7 +70,7 @@ class WarenkorbControllerTest {
 
     @Test
     void addToWarenkorbMitUngueltigenParameternLiefert400() throws Exception {
-        WarenkorbController controller = new WarenkorbController(new FakeWarenkorbDao(Collections.emptyList()));
+        WarenkorbController controller = controller(new FakeWarenkorbDao(Collections.emptyList()));
 
         WarenkorbContextMock fehlendeArtikelId = new WarenkorbContextMock();
         fehlendeArtikelId.setQueryParam("email", "test@example.com");
@@ -105,7 +107,7 @@ class WarenkorbControllerTest {
 
     @Test
     void updateMengeMitUngueltigenParameternLiefert400() throws Exception {
-        WarenkorbController controller = new WarenkorbController(new FakeWarenkorbDao(Collections.emptyList()));
+        WarenkorbController controller = controller(new FakeWarenkorbDao(Collections.emptyList()));
 
         WarenkorbContextMock mengeFehlt = new WarenkorbContextMock();
         mengeFehlt.setPathParam("id", "7");
@@ -135,7 +137,7 @@ class WarenkorbControllerTest {
     void deleteWarenkorbEintragMitUngueltigerIdLiefert400() throws Exception {
         WarenkorbContextMock ctx = new WarenkorbContextMock();
         ctx.setPathParam("id", "abc");
-        WarenkorbController controller = new WarenkorbController(new FakeWarenkorbDao(Collections.emptyList()));
+        WarenkorbController controller = controller(new FakeWarenkorbDao(Collections.emptyList()));
 
         controller.loescheWarenkorbEintrag.handle(ctx);
 
@@ -149,7 +151,7 @@ class WarenkorbControllerTest {
         WarenkorbContextMock ctx = new WarenkorbContextMock();
         ctx.setPathParam("id", "999");
         ctx.setQueryParam("menge", "3");
-        WarenkorbController controller = new WarenkorbController(dao);
+        WarenkorbController controller = controller(dao);
 
         controller.aktualisiereMenge.handle(ctx);
 
@@ -163,7 +165,7 @@ class WarenkorbControllerTest {
         dao.deleteErgebnis = false;
         WarenkorbContextMock ctx = new WarenkorbContextMock();
         ctx.setPathParam("id", "999");
-        WarenkorbController controller = new WarenkorbController(dao);
+        WarenkorbController controller = controller(dao);
 
         controller.loescheWarenkorbEintrag.handle(ctx);
 
@@ -176,7 +178,7 @@ class WarenkorbControllerTest {
         FakeWarenkorbDao dao = new FakeWarenkorbDao(Collections.emptyList());
         WarenkorbContextMock deleteCtx = new WarenkorbContextMock();
         deleteCtx.setPathParam("id", "7");
-        WarenkorbController controller = new WarenkorbController(dao);
+        WarenkorbController controller = controller(dao);
 
         controller.loescheWarenkorbEintrag.handle(deleteCtx);
 
@@ -186,7 +188,7 @@ class WarenkorbControllerTest {
         FakeWarenkorbDao daoOhneEmail = new FakeWarenkorbDao(Collections.emptyList());
         WarenkorbContextMock fehlerCtx = new WarenkorbContextMock();
         fehlerCtx.setQueryParam("artikelId", "5");
-        WarenkorbController fehlerController = new WarenkorbController(daoOhneEmail);
+        WarenkorbController fehlerController = controller(daoOhneEmail);
 
         fehlerController.fuegeArtikelZuWarenkorbHinzu.handle(fehlerCtx);
 
@@ -195,12 +197,15 @@ class WarenkorbControllerTest {
 
         WarenkorbContextMock dbFehlerCtx = new WarenkorbContextMock();
         dbFehlerCtx.setPathParam("email", "test@example.com");
-        WarenkorbController dbFehlerController = new WarenkorbController(new FehlerWarenkorbDao());
+        WarenkorbController dbFehlerController = controller(new FehlerWarenkorbDao());
 
         dbFehlerController.ladeWarenkorb.handle(dbFehlerCtx);
 
         assertEquals(500, dbFehlerCtx.gesetzterStatus);
         assertEquals("Fehler beim Abrufen des Warenkorbs.", dbFehlerCtx.gesendetesResult,
                 "Der API-Vertrag muss eine konkrete Fehlermeldung liefern");
+    }
+    private static WarenkorbController controller(WarenkorbDao dao) {
+        return new WarenkorbController(new WarenkorbService(dao));
     }
 }

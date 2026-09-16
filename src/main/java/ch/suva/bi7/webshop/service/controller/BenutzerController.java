@@ -1,60 +1,47 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.dao.BenutzerDao;
 import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
 import ch.suva.bi7.webshop.service.model.*;
-import ch.suva.bi7.webshop.service.mapper.BenutzerMapper;
+import ch.suva.bi7.webshop.service.service.BenutzerService;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Optional;
 
 public class BenutzerController {
 
     private static final Logger logger = LoggerFactory.getLogger(BenutzerController.class);
 
-    private static BenutzerDao benutzerDao = null;
+    private BenutzerService benutzerService;
 
-    public BenutzerController(BenutzerDao benutzerDao) {
-        if (benutzerDao == null) {
-            throw new IllegalArgumentException("benutzerDao must not be null");
+    public BenutzerController(BenutzerService benutzerService) {
+        if (benutzerService == null) {
+            throw new IllegalArgumentException("benutzerService must not be null");
         }
-        this.benutzerDao = benutzerDao;
+        this.benutzerService = benutzerService;
     }
 
-    private static BenutzerDao getBenutzerDao() throws Exception {
-        return benutzerDao;
-    }
-
-    static void setBenutzerDaoMock(BenutzerDao benutzerDaoMock) {
-        benutzerDao = benutzerDaoMock;
-    }
-
-    public static Handler fetchAlleBenutzernamen = ctx -> {
-        List<String> alleBenutzer = getBenutzerDao().holeAlleBenutzernamen();
-        ctx.json(alleBenutzer);
+    public Handler fetchAlleBenutzernamen = ctx -> {
+        ctx.json(benutzerService.holeAlleBenutzernamen());
     };
 
-    public static Handler fetchByEMail = ctx -> {
+    public Handler fetchByEMail = ctx -> {
         String email = ctx.pathParam("email");
-        Optional<BenutzerEntity> benutzer = getBenutzerDao().holeBenutzerNachEMail(email);
+        Optional<BenutzerDto> benutzer = benutzerService.holeBenutzerNachEMail(email);
         if (benutzer.isPresent()) {
-            ctx.json(BenutzerMapper.toDto(benutzer.get()));
+            ctx.json(benutzer.get());
         } else {
             ctx.status(404).result("Not Found: '" + email + "'\n");
         }
     };
 
-    public static Handler register = ctx -> {
+    public Handler register = ctx -> {
         try {
             RegisterBenutzerRequest registrierungsAnfrage = ctx.bodyAsClass(RegisterBenutzerRequest.class);
             logger.info("Register: username={}, email={}", registrierungsAnfrage.username, registrierungsAnfrage.email);
 
-            BenutzerDao benutzerDao = getBenutzerDao();
-
-            if (benutzerDao.holeBenutzerNachEMail(registrierungsAnfrage.email).isPresent()) {
+            if (benutzerService.holeBenutzerNachEMail(registrierungsAnfrage.email).isPresent()) {
                 RegisterBenutzerResponse antwort = new RegisterBenutzerResponse("error", "User already exists");
                 logger.info("Register abgelehnt: {}", antwort);
                 ctx.status(409).json(antwort);
@@ -67,7 +54,7 @@ public class BenutzerController {
                     registrierungsAnfrage.password,
                     false
             );
-            benutzerDao.speichereBenutzer(neuerBenutzer);
+            benutzerService.speichereBenutzer(neuerBenutzer);
 
             RegisterBenutzerResponse antwort = new RegisterBenutzerResponse("ok", null);
             logger.info("Register erfolgreich: {}", antwort);
@@ -79,22 +66,20 @@ public class BenutzerController {
         }
     };
 
-    public static Handler login = ctx -> {
+    public Handler login = ctx -> {
         try {
             LoginBenutzerRequest loginAnfrage = ctx.bodyAsClass(LoginBenutzerRequest.class);
             logger.info("Login: {}", loginAnfrage.email);
 
             String email = ctx.sessionAttribute("userEmail");
-            BenutzerDao benutzerDao = getBenutzerDao();
-
             if (email != null) {
                 if (loginAnfrage.email.equals(email)) {
-                    Optional<BenutzerEntity> benutzerOptional = benutzerDao.holeBenutzerNachEMail(email);
-                    String echterBenutzername = benutzerOptional.map(benutzer -> benutzer.getUsername()).orElse(email);
+                    Optional<BenutzerDto> benutzerOptional = benutzerService.holeBenutzerNachEMail(email);
+                    String echterBenutzername = benutzerOptional.map(BenutzerDto::getUsername).orElse(email);
 
                     LoginBenutzerResponse antwort = new LoginBenutzerResponse(
                             "info", "Du bist bereits als " + echterBenutzername + " eingeloggt.", echterBenutzername,
-                            benutzerOptional.map(benutzer -> benutzer.isAdmin()).orElse(false)
+                            benutzerOptional.map(BenutzerDto::isAdmin).orElse(false)
                     );
                     logger.info("Bereits eingeloggt: {}", antwort);
                     ctx.status(200).json(antwort);
@@ -110,7 +95,8 @@ public class BenutzerController {
                 }
             }
 
-            Optional<BenutzerEntity> benutzerOptional = benutzerDao.holeBenutzerNachEMail(loginAnfrage.email);
+            Optional<BenutzerEntity> benutzerOptional =
+                    benutzerService.holeBenutzerEntityNachEMail(loginAnfrage.email);
             if (benutzerOptional.isEmpty()) {
                 LoginBenutzerResponse antwort = new LoginBenutzerResponse("error", "User does not exist: " + loginAnfrage.email, null, false);
                 logger.info("Login abgelehnt: {}", antwort);
@@ -144,7 +130,7 @@ public class BenutzerController {
         }
     };
 
-    public static Handler logout = ctx -> {
+    public Handler logout = ctx -> {
         String email = ctx.sessionAttribute("userEmail");
         LogoutBenutzerResponse antwort;
         if (email == null) {
