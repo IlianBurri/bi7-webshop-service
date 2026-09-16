@@ -24,4 +24,21 @@ public final class AdresseMapper {
                 entity.getLand()
         );
     }
+
+    public static AdresseEntity toEntity(AdresseDto dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("AdresseDto darf nicht null sein");
+        }
+
+        return new AdresseEntity(
+                dto.getAdressId(),
+                dto.getUserEmail(),
+                dto.getVorname(),
+                dto.getNachname(),
+                dto.getStrasse(),
+                dto.getPlz(),
+                dto.getOrt(),
+                dto.getLand()
+        );
+    }
 }

@@ -7,6 +7,7 @@ import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
 import ch.suva.bi7.webshop.service.model.AddArtikelResponse;
 import ch.suva.bi7.webshop.service.model.ArtikelDto;
 import ch.suva.bi7.webshop.service.service.ArtikelService;
+import ch.suva.bi7.webshop.service.service.BenutzerService;
 import ch.suva.bi7.webshop.service.service.FakeArtikelService;
 import org.junit.jupiter.api.Test;
 
@@ -340,7 +341,7 @@ class ArtikelControllerTest {
             benutzerDao = new EinfachesBenutzerDaoMock(Optional.of(
                     new BenutzerEntity("Admin", "admin@example.com", "password", true)));
         }
-        return new ArtikelController(artikelService, benutzerDao);
+        return new ArtikelController(artikelService, new BenutzerService(benutzerDao));
     }
 
     private FakeArtikelService getFakeArtikelServiceOneArtikel() {

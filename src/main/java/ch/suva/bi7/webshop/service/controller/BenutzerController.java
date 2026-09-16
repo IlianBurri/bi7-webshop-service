@@ -1,6 +1,5 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
 import ch.suva.bi7.webshop.service.model.*;
 import ch.suva.bi7.webshop.service.service.BenutzerService;
 import io.javalin.http.Handler;
@@ -11,7 +10,7 @@ import java.util.Optional;
 
 public class BenutzerController {
 
-    private static final Logger logger = LoggerFactory.getLogger(BenutzerController.class);
+    private final Logger logger = LoggerFactory.getLogger(BenutzerController.class);
 
     private BenutzerService benutzerService;
 
@@ -48,13 +47,11 @@ public class BenutzerController {
                 return;
             }
 
-            BenutzerEntity neuerBenutzer = new BenutzerEntity(
+            benutzerService.registriereBenutzer(
                     registrierungsAnfrage.username,
                     registrierungsAnfrage.email,
-                    registrierungsAnfrage.password,
-                    false
+                    registrierungsAnfrage.password
             );
-            benutzerService.speichereBenutzer(neuerBenutzer);
 
             RegisterBenutzerResponse antwort = new RegisterBenutzerResponse("ok", null);
             logger.info("Register erfolgreich: {}", antwort);
@@ -95,8 +92,8 @@ public class BenutzerController {
                 }
             }
 
-            Optional<BenutzerEntity> benutzerOptional =
-                    benutzerService.holeBenutzerEntityNachEMail(loginAnfrage.email);
+            Optional<BenutzerDto> benutzerOptional =
+                    benutzerService.holeBenutzerNachEMail(loginAnfrage.email);
             if (benutzerOptional.isEmpty()) {
                 LoginBenutzerResponse antwort = new LoginBenutzerResponse("error", "User does not exist: " + loginAnfrage.email, null, false);
                 logger.info("Login abgelehnt: {}", antwort);
@@ -104,14 +101,14 @@ public class BenutzerController {
                 return;
             }
 
-            BenutzerEntity benutzer = benutzerOptional.get();
-            if (!benutzer.getPassword().equals(loginAnfrage.password)) {
+            if (!benutzerService.istPasswortKorrekt(loginAnfrage.email, loginAnfrage.password)) {
                 LoginBenutzerResponse antwort = new LoginBenutzerResponse("error", "Wrong password for user: " + loginAnfrage.email, null, false);
                 logger.info("Login abgelehnt (falsches Passwort): {}", antwort);
                 ctx.status(409).json(antwort);
                 return;
             }
 
+            BenutzerDto benutzer = benutzerOptional.get();
             ctx.sessionAttribute("userEmail", benutzer.getEmail());
 
             LoginBenutzerResponse antwort = new LoginBenutzerResponse("ok", null, benutzer.getUsername(), benutzer.isAdmin());

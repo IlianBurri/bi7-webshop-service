@@ -35,12 +35,13 @@ public class Bi7WebshopService {
             BenutzerDao benutzerDao = new BenutzerDaoImpl(dbConnection);
             WarenkorbDao warenkorbDao = new WarenkorbDaoImpl(dbConnection);
             ArtikelDao artikelDao = new ArtikelDaoImpl(entityManagerFactory);
+            BenutzerService benutzerService = new BenutzerService(benutzerDao);
             AdresseController adresseController = new AdresseController(
                     new AdresseService(new AdresseDaoImpl(dbConnection)));
             WarenkorbController warenkorbController = new WarenkorbController(
-                    new WarenkorbService(new WarenkorbDaoImpl(dbConnection)));
-            ArtikelController artikelController = new ArtikelController(new ArtikelService(artikelDao), benutzerDao);
-            BenutzerController benutzerController = new BenutzerController(new BenutzerService(benutzerDao));
+                    new WarenkorbService(warenkorbDao));
+            ArtikelController artikelController = new ArtikelController(new ArtikelService(artikelDao), benutzerService);
+            BenutzerController benutzerController = new BenutzerController(benutzerService);
 
             BestellungDao bestellungDao = new BestellungDaoImpl(dbConnection);
             BestellungController bestellungController = new BestellungController(

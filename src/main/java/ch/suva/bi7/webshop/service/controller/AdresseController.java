@@ -1,6 +1,5 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 import ch.suva.bi7.webshop.service.model.AdresseDto;
 import ch.suva.bi7.webshop.service.service.AdresseService;
 import io.javalin.http.BadRequestResponse;
@@ -13,10 +12,12 @@ import java.util.Optional;
 
 public class AdresseController {
 
-    private static final Logger logger =
+    private final Logger logger =
             LoggerFactory.getLogger(AdresseController.class);
 
-    private static final String STANDARD_LAND = "Schweiz";
+    private final String standardLand = "Schweiz";
+
+    private final AdresseService adresseService;
 
     public final Handler ladeAdressen;
     public final Handler erstelleAdresse;
@@ -28,6 +29,7 @@ public class AdresseController {
             throw new IllegalArgumentException(
                     "adresseService must not be null");
         }
+        this.adresseService = adresseService;
 
         this.ladeAdressen = ctx -> {
             try {
@@ -44,7 +46,7 @@ public class AdresseController {
         this.erstelleAdresse = ctx -> {
             try {
                 AdresseDto eingabe = ctx.bodyAsClass(AdresseDto.class);
-                AdresseEntity adresse = validiereUndNormalisiere(eingabe);
+                AdresseDto adresse = validiereUndNormalisiere(eingabe);
 
                 Optional<AdresseDto> bestehende =
                         adresseService.findeIdentischeAdresse(adresse);
@@ -71,7 +73,7 @@ public class AdresseController {
             try {
                 int adressId = Integer.parseInt(ctx.pathParam("adressId"));
                 AdresseDto eingabe = ctx.bodyAsClass(AdresseDto.class);
-                AdresseEntity adresse = validiereUndNormalisiere(eingabe);
+                AdresseDto adresse = validiereUndNormalisiere(eingabe);
 
                 Optional<AdresseDto> aktualisiert =
                         adresseService.aktualisiereAdresse(adressId, adresse);
@@ -119,7 +121,12 @@ public class AdresseController {
         };
     }
 
-    private static AdresseEntity validiereUndNormalisiere(AdresseDto eingabe) {
+    AdresseDto validiereUndNormalisiere(AdresseDto eingabe) {
+        if (eingabe == null) {
+            throw new IllegalArgumentException(
+                    "Der Request-Body darf nicht leer sein.");
+        }
+
         String userEmail = pflichtfeld(eingabe.getUserEmail(), "userEmail");
         String vorname = pflichtfeld(eingabe.getVorname(), "vorname");
         String nachname = pflichtfeld(eingabe.getNachname(), "nachname");
@@ -129,14 +136,14 @@ public class AdresseController {
 
         String land = eingabe.getLand();
         land = land == null || land.trim().isEmpty()
-                ? STANDARD_LAND
+                ? standardLand
                 : land.trim();
 
-        return new AdresseEntity(
+        return new AdresseDto(
                 null, userEmail, vorname, nachname, strasse, plz, ort, land);
     }
 
-    private static String pflichtfeld(String wert, String feld) {
+    private String pflichtfeld(String wert, String feld) {
         if (wert == null || wert.trim().isEmpty()) {
             throw new IllegalArgumentException(
                     "'" + feld

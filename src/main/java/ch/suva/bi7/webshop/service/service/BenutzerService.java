@@ -28,11 +28,15 @@ public class BenutzerService {
                 .map(BenutzerMapper::toDto);
     }
 
-    public Optional<BenutzerEntity> holeBenutzerEntityNachEMail(String email) throws Exception {
-        return benutzerDao.holeBenutzerNachEMail(email);
+    public BenutzerDto registriereBenutzer(String username, String email, String password) throws Exception {
+        BenutzerEntity neuerBenutzer = new BenutzerEntity(username, email, password, false);
+        benutzerDao.speichereBenutzer(neuerBenutzer);
+        return BenutzerMapper.toDto(neuerBenutzer);
     }
 
-    public void speichereBenutzer(BenutzerEntity benutzer) throws Exception {
-        benutzerDao.speichereBenutzer(benutzer);
+    public boolean istPasswortKorrekt(String email, String password) throws Exception {
+        return benutzerDao.holeBenutzerNachEMail(email)
+                .map(benutzer -> benutzer.getPassword().equals(password))
+                .orElse(false);
     }
 }

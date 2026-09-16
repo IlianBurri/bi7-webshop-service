@@ -28,11 +28,9 @@ public class AdresseService {
     }
 
     public Optional<AdresseDto> findeIdentischeAdresse(
-            AdresseEntity adresse
+            AdresseDto adresseDto
     ) throws DaoException {
-        if (adresse == null) {
-            throw new IllegalArgumentException("adresse must not be null");
-        }
+        AdresseEntity adresse = toEntity(adresseDto);
         if (!adresseDao.existiertIdentischeAdresse(adresse)) {
             return Optional.empty();
         }
@@ -48,21 +46,16 @@ public class AdresseService {
                 : Optional.of(AdresseMapper.toDto(adresse));
     }
 
-    public AdresseDto erstelleAdresse(AdresseEntity adresse)
+    public AdresseDto erstelleAdresse(AdresseDto adresseDto)
             throws DaoException {
-        if (adresse == null) {
-            throw new IllegalArgumentException("adresse must not be null");
-        }
-        return AdresseMapper.toDto(adresseDao.insert(adresse));
+        return AdresseMapper.toDto(adresseDao.insert(toEntity(adresseDto)));
     }
 
     public Optional<AdresseDto> aktualisiereAdresse(
             int adressId,
-            AdresseEntity adresse
+            AdresseDto adresseDto
     ) throws DaoException {
-        if (adresse == null) {
-            throw new IllegalArgumentException("adresse must not be null");
-        }
+        AdresseEntity adresse = toEntity(adresseDto);
         if (!adresseDao.aktualisiere(adressId, adresse)) {
             return Optional.empty();
         }
@@ -82,6 +75,13 @@ public class AdresseService {
 
     public boolean loescheAdresse(int adressId) throws DaoException {
         return adresseDao.loesche(adressId);
+    }
+
+    private AdresseEntity toEntity(AdresseDto adresseDto) {
+        if (adresseDto == null) {
+            throw new IllegalArgumentException("adresse must not be null");
+        }
+        return AdresseMapper.toEntity(adresseDto);
     }
 
     private boolean istIdentisch(AdresseEntity a, AdresseEntity b) {

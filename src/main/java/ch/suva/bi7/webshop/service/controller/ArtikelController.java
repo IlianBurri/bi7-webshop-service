@@ -1,11 +1,11 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.dao.BenutzerDao;
 import ch.suva.bi7.webshop.service.model.AddArtikelRequest;
-import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
 import ch.suva.bi7.webshop.service.model.AddArtikelResponse;
 import ch.suva.bi7.webshop.service.model.ArtikelDto;
+import ch.suva.bi7.webshop.service.model.BenutzerDto;
 import ch.suva.bi7.webshop.service.service.ArtikelService;
+import ch.suva.bi7.webshop.service.service.BenutzerService;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import io.javalin.http.HttpStatus;
@@ -18,34 +18,30 @@ import java.util.Optional;
 
 public class ArtikelController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ArtikelController.class);
+    private final Logger logger = LoggerFactory.getLogger(ArtikelController.class);
 
-    private static final BigDecimal MINDESTPREIS = new BigDecimal("0.01");
-    private static final BigDecimal MAXIMALPREIS = new BigDecimal("99999999.99");
-    private static final int MAX_NAME_LAENGE = 255;
-    private static final int MAX_BILD_LAENGE = 500;
+    private final BigDecimal mindestpreis = new BigDecimal("0.01");
+    private final BigDecimal maximalpreis = new BigDecimal("99999999.99");
+    private final int maxNameLaenge = 255;
+    private final int maxBildLaenge = 500;
 
     private ArtikelService artikelService;
-    private static BenutzerDao benutzerDao = null;
+    private BenutzerService benutzerService;
 
-    public ArtikelController(ArtikelService artikelService, BenutzerDao benutzerDao) {
+    public ArtikelController(ArtikelService artikelService, BenutzerService benutzerService) {
         if (artikelService == null) {
             throw new IllegalArgumentException("artikelService must not be null");
         }
-        if (benutzerDao == null) {
-            throw new IllegalArgumentException("benutzerDao must not be null");
+        if (benutzerService == null) {
+            throw new IllegalArgumentException("benutzerService must not be null");
         }
         this.artikelService = artikelService;
-        this.benutzerDao = benutzerDao;
-    }
-
-    private ArtikelService getArtikelService() throws Exception {
-        return artikelService;
+        this.benutzerService = benutzerService;
     }
 
     public Handler ladeAlleArtikel = ctx -> {
         try {
-            ctx.status(200).json(getArtikelService().getAllArtikel());
+            ctx.status(200).json(artikelService.getAllArtikel());
         } catch (Exception e) {
             logger.error("Fehler beim Abrufen der Artikel: {}", e.getMessage(), e);
 
@@ -57,15 +53,15 @@ public class ArtikelController {
         String email = ctx.sessionAttribute("userEmail");
         logger.info("Benutzer '{}' ist Admin, erstelle Artikel...", email);
 
-        Optional<BenutzerEntity> benutzerOptional = benutzerDao.holeBenutzerNachEMail(email);
+        Optional<BenutzerDto> benutzerOptional = benutzerService.holeBenutzerNachEMail(email);
 
         if (benutzerOptional.isEmpty()) {
-            ctx.status(HttpStatus.UNAUTHORIZED).json(java.util.Map.of("error", "Nicht angemeldet: " + email));
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Nicht angemeldet: " + email));
             return;
         }
 
         if (!benutzerOptional.get().isAdmin()) {
-            ctx.status(HttpStatus.UNAUTHORIZED).json(java.util.Map.of("error", "Nur Administratoren dürfen Artikel anlegen."));
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Nur Administratoren dürfen Artikel anlegen."));
             return;
         }
 
@@ -77,7 +73,7 @@ public class ArtikelController {
 
             validiere(name, eingabe.preis, bild);
 
-            ArtikelDto artikelDto = getArtikelService().erstelleNeuenArtikel(name, eingabe.preis, bild);
+            ArtikelDto artikelDto = artikelService.erstelleNeuenArtikel(name, eingabe.preis, bild);
             logger.info("Artikel erfolgreich von '{}' erstellt: {}", email, artikelDto);
             ctx.status(201).json(new AddArtikelResponse(artikelDto));
         } catch (BadRequestResponse e) {
@@ -91,22 +87,22 @@ public class ArtikelController {
         }
     };
 
-      static void validiere(String name, BigDecimal preis, String bild) {
+    void validiere(String name, BigDecimal preis, String bild) {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("'name' ist ein Pflichtfeld und darf nicht leer sein.");
         }
-        if (name.length() > MAX_NAME_LAENGE) {
-            throw new IllegalArgumentException("'name' darf höchstens " + MAX_NAME_LAENGE + " Zeichen lang sein.");
+        if (name.length() > maxNameLaenge) {
+            throw new IllegalArgumentException("'name' darf höchstens " + maxNameLaenge + " Zeichen lang sein.");
         }
         if (preis == null) {
             throw new IllegalArgumentException("'preis' ist ein Pflichtfeld.");
         }
-        if (preis.compareTo(MINDESTPREIS) < 0 || preis.compareTo(MAXIMALPREIS) > 0) {
+        if (preis.compareTo(mindestpreis) < 0 || preis.compareTo(maximalpreis) > 0) {
             throw new IllegalArgumentException(
-                    "'preis' muss zwischen " + MINDESTPREIS + " und " + MAXIMALPREIS + " liegen.");
+                    "'preis' muss zwischen " + mindestpreis + " und " + maximalpreis + " liegen.");
         }
-        if (bild != null && bild.length() > MAX_BILD_LAENGE) {
-            throw new IllegalArgumentException("'bild' darf höchstens " + MAX_BILD_LAENGE + " Zeichen lang sein.");
+        if (bild != null && bild.length() > maxBildLaenge) {
+            throw new IllegalArgumentException("'bild' darf höchstens " + maxBildLaenge + " Zeichen lang sein.");
         }
     }
 }

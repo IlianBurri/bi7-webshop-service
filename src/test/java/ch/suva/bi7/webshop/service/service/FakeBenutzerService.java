@@ -14,7 +14,7 @@ public class FakeBenutzerService extends BenutzerService {
 
     private final List<BenutzerEntity> benutzerList;
     public int callCount;
-    public int speichereBenutzerCallCount;
+    public int registriereBenutzerCallCount;
     public BenutzerEntity gespeicherterBenutzer;
     private final boolean throwException;
 
@@ -61,30 +61,35 @@ public class FakeBenutzerService extends BenutzerService {
         if (throwException) {
             throw new Exception("Datenbank Fehler");
         }
-        return benutzerList.stream()
-                .filter(b -> b.getEmail().equalsIgnoreCase(email))
-                .findFirst()
-                .map(BenutzerMapper::toDto);
+        return findeBenutzer(email).map(BenutzerMapper::toDto);
     }
 
     @Override
-    public Optional<BenutzerEntity> holeBenutzerEntityNachEMail(String email) throws Exception {
+    public BenutzerDto registriereBenutzer(String username, String email, String password) throws Exception {
+        registriereBenutzerCallCount++;
+        if (throwException) {
+            throw new Exception("Datenbank Fehler");
+        }
+        BenutzerEntity neuerBenutzer = new BenutzerEntity(username, email, password, false);
+        this.gespeicherterBenutzer = neuerBenutzer;
+        this.benutzerList.add(neuerBenutzer);
+        return BenutzerMapper.toDto(neuerBenutzer);
+    }
+
+    @Override
+    public boolean istPasswortKorrekt(String email, String password) throws Exception {
         callCount++;
         if (throwException) {
             throw new Exception("Datenbank Fehler");
         }
+        return findeBenutzer(email)
+                .map(benutzer -> benutzer.getPassword().equals(password))
+                .orElse(false);
+    }
+
+    private Optional<BenutzerEntity> findeBenutzer(String email) {
         return benutzerList.stream()
                 .filter(b -> b.getEmail().equalsIgnoreCase(email))
                 .findFirst();
-    }
-
-    @Override
-    public void speichereBenutzer(BenutzerEntity benutzer) throws Exception {
-        speichereBenutzerCallCount++;
-        if (throwException) {
-            throw new Exception("Datenbank Fehler");
-        }
-        this.gespeicherterBenutzer = benutzer;
-        this.benutzerList.add(benutzer);
     }
 }

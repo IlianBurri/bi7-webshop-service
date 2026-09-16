@@ -1,7 +1,6 @@
 package ch.suva.bi7.webshop.service.service;
 
 import ch.suva.bi7.webshop.service.dao.DaoException;
-import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 import ch.suva.bi7.webshop.service.model.AdresseDto;
 import ch.suva.bi7.webshop.service.mock.FakeAdresseDao;
 
@@ -40,7 +39,7 @@ public class FakeAdresseService extends AdresseService {
     }
 
     @Override
-    public AdresseDto erstelleAdresse(AdresseEntity adresse)
+    public AdresseDto erstelleAdresse(AdresseDto adresse)
             throws DaoException {
         addAdressCallCount++;
         if (throwException) {
@@ -54,7 +53,7 @@ public class FakeAdresseService extends AdresseService {
 
     @Override
     public Optional<AdresseDto> findeIdentischeAdresse(
-            AdresseEntity adresse
+            AdresseDto adresse
     ) throws DaoException {
         if (throwException) {
             throw new DaoException("Datenbank Fehler");
@@ -67,7 +66,7 @@ public class FakeAdresseService extends AdresseService {
     @Override
     public Optional<AdresseDto> aktualisiereAdresse(
             int adressId,
-            AdresseEntity adresse
+            AdresseDto adresse
     ) throws DaoException {
         if (throwException) {
             throw new DaoException("Datenbank Fehler");
