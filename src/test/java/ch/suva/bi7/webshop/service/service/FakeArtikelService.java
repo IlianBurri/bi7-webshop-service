@@ -1,6 +1,6 @@
 package ch.suva.bi7.webshop.service.service;
 
-import ch.suva.bi7.webshop.service.mock.EntityManagerFactoryMock;
+import ch.suva.bi7.webshop.service.mock.FakeArtikelDao;
 import ch.suva.bi7.webshop.service.model.ArtikelDto;
 
 import java.math.BigDecimal;
@@ -19,7 +19,7 @@ public class FakeArtikelService extends ArtikelService {
     }
 
     public FakeArtikelService(List<ArtikelDto> artikel, boolean throwException) {
-        super(new EntityManagerFactoryMock(null));
+        super(new FakeArtikelDao());
         this.artikel = artikel;
         this.throwException = throwException;
     }

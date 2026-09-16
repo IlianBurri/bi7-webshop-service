@@ -1,11 +1,9 @@
 package ch.suva.bi7.webshop.service.service;
 
 import ch.suva.bi7.webshop.service.dao.ArtikelDao;
-import ch.suva.bi7.webshop.service.dao.ArtikelDaoImpl;
 import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.mapper.ArtikelMapper;
 import ch.suva.bi7.webshop.service.model.ArtikelDto;
-import jakarta.persistence.EntityManagerFactory;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -14,11 +12,11 @@ public class ArtikelService {
 
     private ArtikelDao artikelDao = null;
 
-    public ArtikelService(EntityManagerFactory entityManagerFactory) {
-        if (entityManagerFactory == null) {
+    public ArtikelService(ArtikelDao artikelDao) {
+        if (artikelDao == null) {
             throw new IllegalArgumentException("entityManagerFactory must not be null");
         }
-        this.artikelDao = new ArtikelDaoImpl(entityManagerFactory);
+        this.artikelDao = artikelDao;
     }
 
     public List<ArtikelDto> getAllArtikel() throws Exception {
