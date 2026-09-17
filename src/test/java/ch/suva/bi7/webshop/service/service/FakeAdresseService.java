@@ -2,7 +2,7 @@ package ch.suva.bi7.webshop.service.service;
 
 import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.model.AdresseDto;
-import ch.suva.bi7.webshop.service.mock.FakeAdresseDao;
+import ch.suva.bi7.webshop.service.mock.AdresseDaoMock;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +23,7 @@ public class FakeAdresseService extends AdresseService {
             List<AdresseDto> adressen,
             boolean throwException
     ) {
-        super(new FakeAdresseDao(Collections.emptyList()));
+        super(new AdresseDaoMock(Collections.emptyList()));
         this.adressen = adressen;
         this.throwException = throwException;
     }

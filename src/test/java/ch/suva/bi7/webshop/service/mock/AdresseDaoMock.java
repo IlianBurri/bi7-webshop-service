@@ -5,7 +5,7 @@ import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 
 import java.util.List;
 
-public class FakeAdresseDao implements AdresseDao {
+public class AdresseDaoMock implements AdresseDao {
 
     private final List<AdresseEntity> adressen;
     public boolean existsIdenticalErgebnis;
@@ -16,7 +16,7 @@ public class FakeAdresseDao implements AdresseDao {
     public AdresseEntity aktualisiereAdresse;
     public Integer deleteId;
 
-    public FakeAdresseDao(List<AdresseEntity> adressen) {
+    public AdresseDaoMock(List<AdresseEntity> adressen) {
         this.adressen = adressen;
     }
 

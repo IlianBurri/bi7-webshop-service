@@ -1,7 +1,7 @@
 package ch.suva.bi7.webshop.service.service;
 
 import ch.suva.bi7.webshop.service.dao.DaoException;
-import ch.suva.bi7.webshop.service.mock.FakeWarenkorbDao;
+import ch.suva.bi7.webshop.service.mock.WarenkorbDaoMock;
 import ch.suva.bi7.webshop.service.model.WarenkorbEintragDto;
 
 import java.util.Collections;
@@ -38,7 +38,7 @@ public class FakeWarenkorbService extends WarenkorbService {
             List<WarenkorbEintragDto> eintraege,
             boolean throwException
     ) {
-        super(new FakeWarenkorbDao(Collections.emptyList()));
+        super(new WarenkorbDaoMock(Collections.emptyList()));
         this.eintraege = eintraege;
         this.throwException = throwException;
     }

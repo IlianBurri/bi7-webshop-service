@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDaoImpl;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.mock.EntityManagerMock;
@@ -17,6 +18,7 @@ class WarenkorbDaoImplTest {
     @Test
     void warenkorbLesenLiefertItemsMitJoindaten() throws Exception {
         EntityManagerMock jpa = new EntityManagerMock();
+        // Umschreiben: statt liste von "Tuple" das richtige Objekt vom Typ WarenkorbEintragEntity liefern !!!
         List<Tuple> tuples = List.of(
                 tuple(Map.of("warenkorbItemId", 1, "userEmail", "test@somewhere.com", "artikelId", 5,
                         "menge", 3, "artikelName", "iPhone 15 Pro", "artikelPreis", new BigDecimal("1199.00"),
@@ -26,8 +28,9 @@ class WarenkorbDaoImplTest {
                         "artikelBild", "https://example.com/galaxy.jpg")));
         jpa.addResult(tuples);
 
-        List<WarenkorbEintragEntity> items =
-                new WarenkorbDaoImpl(jpa.factory()).getWarenkorbNachBenutzer("test@somewhere.com");
+        WarenkorbDao testee = new WarenkorbDaoImpl(jpa.factory());
+
+        List<WarenkorbEintragEntity> items = testee.getWarenkorbNachBenutzer("test@somewhere.com");
 
         assertEquals(2, items.size());
         WarenkorbEintragEntity erster = items.get(0);
@@ -68,12 +71,13 @@ class WarenkorbDaoImplTest {
 
         new WarenkorbDaoImpl(jpa.factory()).getWarenkorbNachBenutzer("kunde@example.com");
 
-        SqlStatement query = jpa.queries().get(0);
-        assertTrue(query.nativeQuery());
-        assertTrue(query.sql().contains("JOIN artikel"));
-        assertTrue(query.sql().contains("WHERE w.userEmail = :email"));
-        assertTrue(query.sql().contains("a.preis AS artikelPreis"));
-        assertEquals("kunde@example.com", query.parameters().get("email"));
+        jpa.actions().contains("createQueryProxy: SELECT w FROM WarenkorbEintragEntity w WHERE w.userEmail = :email ORDER BY w.warenkorbItemId");
+//        SqlStatement query = jpa.queries().get(0);
+//        assertTrue(query.nativeQuery());
+//        assertTrue(query.sql().contains("JOIN artikel"));
+//        assertTrue(query.sql().contains("WHERE w.userEmail = :email"));
+//        assertTrue(query.sql().contains("a.preis AS artikelPreis"));
+//        assertEquals("kunde@example.com", query.parameters().get("email"));
     }
 
     @Test

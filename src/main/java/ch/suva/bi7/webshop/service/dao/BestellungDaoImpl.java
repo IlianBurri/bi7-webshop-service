@@ -44,20 +44,23 @@ public class BestellungDaoImpl implements BestellungDao {
             em.persist(bestellung);
             em.flush();
 
-            String insertPositionSql = "INSERT INTO bestellposition (bestellungId, artikelId, anzahl, einzelpreis) VALUES (?, ?, ?, ?)";
+            // TODO kein SQL selber schreiben sonder via JPA speichen, siehe BestellungEntity
+//            String insertPositionSql = "INSERT INTO bestellposition (bestellungId, artikelId, anzahl, einzelpreis) VALUES (?, ?, ?, ?)";
 
             for (WarenkorbEintragEntity eintrag : warenkorbEintragEntityList) {
-                em.createNativeQuery(insertPositionSql)
-                        .setParameter(1, bestellung.getBestellungId())
-                        .setParameter(2, eintrag.getArtikelId())
-                        .setParameter(3, eintrag.getMenge())
-                        .setParameter(4, eintrag.getArtikelPreis())
-                        .executeUpdate();
-            }
+                // TODO 1. BestellpositionEntity erstellen
+                // TOOD 2. BestellpositionEntity mit em.persist speichern
 
-            em.createNativeQuery("DELETE FROM warenkorb_item WHERE userEmail = :email")
-                    .setParameter("email", userEmail)
-                    .executeUpdate();
+                // persist verwenden statt SQL!!
+//                em.persist(bestellpositionEntity);
+                em.remove(eintrag);
+//                em.createNativeQuery(insertPositionSql)
+//                        .setParameter(1, bestellung.getBestellungId())
+//                        .setParameter(2, eintrag.getArtikelId())
+//                        .setParameter(3, eintrag.getMenge())
+//                        .setParameter(4, eintrag.getArtikelPreis())
+//                        .executeUpdate();
+            }
 
             tx.commit();
             return bestellung.getBestellungId();

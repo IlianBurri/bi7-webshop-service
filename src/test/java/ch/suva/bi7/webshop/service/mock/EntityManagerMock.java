@@ -26,6 +26,7 @@ public class EntityManagerMock implements EntityManager {
     private boolean simulatePersistError = false;
     private final Deque<Object> results = new ArrayDeque<>();
     private final Deque<Integer> updateCounts = new ArrayDeque<>();
+    @Deprecated // statt dessen etwas anderes verwenden, z.B. "actions"
     private final List<SqlStatement> queries = new ArrayList<>();
     private RuntimeException queryException;
     private RuntimeException updateException;
@@ -48,6 +49,9 @@ public class EntityManagerMock implements EntityManager {
     public void persist(Object entity) {
         if (simulatePersistError) {
             throw new RuntimeException("Simulierter Persist-Fehler");
+        }
+        if (updateException != null) {
+            throw updateException;
         }
         if (generierterKey > 0) {
             try {
@@ -321,6 +325,8 @@ public class EntityManagerMock implements EntityManager {
 
     private Query createQueryProxy(String queryString, boolean nativeQuery) {
         Map<Object, Object> parameters = new LinkedHashMap<>();
+        actions.add("createQueryProxy: " + queryString);
+        // TODO: queries löschen!!!!
         queries.add(new SqlStatement(queryString, parameters, nativeQuery));
         final Query[] holder = new Query[1];
         holder[0] = (Query) Proxy.newProxyInstance(Query.class.getClassLoader(),

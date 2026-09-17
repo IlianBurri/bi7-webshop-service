@@ -1,16 +1,45 @@
 package ch.suva.bi7.webshop.service.db.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
 import java.math.BigDecimal;
 
+@Entity
+@Table(name = "warenkorb_item")
 public class WarenkorbEintragEntity {
-    private final Integer warenkorbItemId;
-    private final String userEmail;
-    private final Integer artikelId;
-    private final Integer menge;
-    private final String artikelName;
-    private final BigDecimal artikelPreis;
-    private final String artikelBild;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "warenkorbItemId", nullable = false)
+    private Integer warenkorbItemId;
 
+    @Column(name = "userEmail", nullable = false, length = 150)
+    private String userEmail;
+
+    @Column(name = "artikelId", nullable = false)
+    private Integer artikelId;
+
+    @Column(name = "menge", nullable = false)
+    private Integer menge;
+
+    @Transient
+    private String artikelName;
+
+    @Transient
+    private BigDecimal artikelPreis;
+
+    @Transient
+    private String artikelBild;
+
+
+    protected WarenkorbEintragEntity() {
+        // Required by JPA
+    }
 
     public WarenkorbEintragEntity(
             Integer warenkorbItemId,

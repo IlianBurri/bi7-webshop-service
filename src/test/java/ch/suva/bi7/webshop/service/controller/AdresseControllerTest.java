@@ -3,7 +3,7 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.AdresseDao;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 import ch.suva.bi7.webshop.service.mock.AdresseContextMock;
-import ch.suva.bi7.webshop.service.mock.FakeAdresseDao;
+import ch.suva.bi7.webshop.service.mock.AdresseDaoMock;
 import ch.suva.bi7.webshop.service.mock.FehlerAdresseDao;
 import ch.suva.bi7.webshop.service.model.AdresseDto;
 import ch.suva.bi7.webshop.service.service.AdresseService;
@@ -27,7 +27,7 @@ class AdresseControllerTest {
         AdresseEntity adresse = new AdresseEntity(1, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
         AdresseContextMock ctx = new AdresseContextMock();
         ctx.setPathParam("email", TEST_EMAIL);
-        AdresseController controller = controller(new FakeAdresseDao(List.of(adresse)));
+        AdresseController controller = controller(new AdresseDaoMock(List.of(adresse)));
 
         controller.ladeAdressen.handle(ctx);
 
@@ -40,7 +40,7 @@ class AdresseControllerTest {
 
         AdresseContextMock leererCtx = new AdresseContextMock();
         leererCtx.setPathParam("email", TEST_EMAIL);
-        AdresseController leererController = controller(new FakeAdresseDao(Collections.emptyList()));
+        AdresseController leererController = controller(new AdresseDaoMock(Collections.emptyList()));
 
         leererController.ladeAdressen.handle(leererCtx);
 
@@ -50,7 +50,7 @@ class AdresseControllerTest {
 
     @Test
     void adresseAnlegenTrimmtFelderUndSetztDefaultLand() throws Exception {
-        FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
+        AdresseDaoMock dao = new AdresseDaoMock(Collections.emptyList());
         AdresseDto mitLeerzeichen = new AdresseDto(null, "  " + TEST_EMAIL + "  ", "  Max  ", " Muster ",
                 " Musterstrasse 1 ", " 8000 ", " Zuerich ", "  ");
         AdresseContextMock ctx = new AdresseContextMock(mitLeerzeichen);
@@ -69,7 +69,7 @@ class AdresseControllerTest {
 
     @Test
     void adresseAktualisierenGibtErfolgreichZurueck() throws Exception {
-        FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
+        AdresseDaoMock dao = new AdresseDaoMock(Collections.emptyList());
         AdresseContextMock updateCtx = new AdresseContextMock(new AdresseDto(
                 null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1",
                 "8000", "Zuerich", "Schweiz"));
@@ -85,7 +85,7 @@ class AdresseControllerTest {
 
     @Test
     void adresseLoeschenLoeschtAdresse() throws Exception {
-        FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
+        AdresseDaoMock dao = new AdresseDaoMock(Collections.emptyList());
         AdresseContextMock deleteCtx = new AdresseContextMock();
         deleteCtx.setPathParam("adressId", "7");
         AdresseController controller = controller(dao);
@@ -98,7 +98,7 @@ class AdresseControllerTest {
 
     @Test
     void adresseAnlegenMitFehlendemPflichtfeldLiefert400() throws Exception {
-        FakeAdresseDao daoOhneEmail = new FakeAdresseDao(Collections.emptyList());
+        AdresseDaoMock daoOhneEmail = new AdresseDaoMock(Collections.emptyList());
         AdresseDto ohneEmail = new AdresseDto(null, null, "Max", "Muster", "Musterstrasse 1",
                 "8000", "Zuerich", "Schweiz");
         AdresseContextMock fehlerCtx = new AdresseContextMock(ohneEmail);
@@ -126,7 +126,7 @@ class AdresseControllerTest {
 
     @Test
     void adresseAnlegenBeiIdentischerAdresseLiefert200UndInsertiertNicht() throws Exception {
-        FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
+        AdresseDaoMock dao = new AdresseDaoMock(Collections.emptyList());
         dao.existsIdenticalErgebnis = true;
         AdresseContextMock ctx = new AdresseContextMock(new AdresseDto(
                 null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1",
@@ -141,7 +141,7 @@ class AdresseControllerTest {
 
     @Test
     void adresseAktualisierenBeiFehlendemDatensatzLiefert404() throws Exception {
-        FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
+        AdresseDaoMock dao = new AdresseDaoMock(Collections.emptyList());
         dao.updateErgebnis = false;
         AdresseContextMock ctx = new AdresseContextMock(new AdresseDto(
                 null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1",
@@ -157,7 +157,7 @@ class AdresseControllerTest {
 
     @Test
     void adresseLoeschenBeiFehlendemDatensatzLiefert404() throws Exception {
-        FakeAdresseDao dao = new FakeAdresseDao(Collections.emptyList());
+        AdresseDaoMock dao = new AdresseDaoMock(Collections.emptyList());
         dao.deleteErgebnis = false;
         AdresseContextMock ctx = new AdresseContextMock();
         ctx.setPathParam("adressId", "7");
@@ -173,7 +173,7 @@ class AdresseControllerTest {
     void adresseAktualisierenMitUngueltigerAdressIdLiefert400() throws Exception {
         AdresseContextMock ctx = new AdresseContextMock(BEISPIEL_ADRESSE);
         ctx.setPathParam("adressId", "abc");
-        AdresseController controller = controller(new FakeAdresseDao(Collections.emptyList()));
+        AdresseController controller = controller(new AdresseDaoMock(Collections.emptyList()));
 
         controller.aktualisiereAdresse.handle(ctx);
 
@@ -185,7 +185,7 @@ class AdresseControllerTest {
     void adresseLoeschenMitUngueltigerAdressIdLiefert400() throws Exception {
         AdresseContextMock ctx = new AdresseContextMock();
         ctx.setPathParam("adressId", "abc");
-        AdresseController controller = controller(new FakeAdresseDao(Collections.emptyList()));
+        AdresseController controller = controller(new AdresseDaoMock(Collections.emptyList()));
 
         controller.loescheAdresse.handle(ctx);
 
@@ -197,7 +197,7 @@ class AdresseControllerTest {
     void adresseAnlegenMitUngueltigemJsonBodyLiefert400() throws Exception {
         AdresseContextMock ctx = new AdresseContextMock();
         ctx.jsonFehler = true;
-        AdresseController controller = controller(new FakeAdresseDao(Collections.emptyList()));
+        AdresseController controller = controller(new AdresseDaoMock(Collections.emptyList()));
 
         controller.erstelleAdresse.handle(ctx);
 
