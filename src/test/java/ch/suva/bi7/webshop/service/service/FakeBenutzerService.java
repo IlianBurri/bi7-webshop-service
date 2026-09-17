@@ -47,12 +47,12 @@ public class FakeBenutzerService extends BenutzerService {
     }
 
     @Override
-    public List<String> holeAlleBenutzernamen() throws Exception {
+    public List<BenutzerDto> holeAlleBenutzernamen() throws Exception {
         callCount++;
         if (throwException) {
             throw new Exception("Datenbank Fehler");
         }
-        return benutzerList.stream().map(BenutzerEntity::getUsername).toList();
+        return benutzerList.stream().map(BenutzerMapper::toDto).toList();
     }
 
     @Override

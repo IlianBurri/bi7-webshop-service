@@ -3,15 +3,15 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.BenutzerDao;
 import ch.suva.bi7.webshop.service.dao.BenutzerDaoImpl;
 import ch.suva.bi7.webshop.service.db.DBConfig;
-import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
+import ch.suva.bi7.webshop.service.db.JpaEntityManagerFactoryProvider;
 import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -19,13 +19,15 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class BenutzerDaoIntegrationTest {
 
     private BenutzerDao benutzerDao;
-    private DBConnection dbConnection;
+    private EntityManagerFactory entityManagerFactory;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         try {
-            dbConnection = new DBConnectionImpl(DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
-            benutzerDao = new BenutzerDaoImpl(dbConnection);
+            entityManagerFactory = JpaEntityManagerFactoryProvider.createEntityManagerFactory(
+                    DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(),
+                    DBConfig.getUser(), DBConfig.getPassword());
+            benutzerDao = new BenutzerDaoImpl(entityManagerFactory);
         } catch (Exception e) {
             assumeTrue(false, "MariaDB not available: " + e.getMessage());
         }
@@ -33,60 +35,41 @@ class BenutzerDaoIntegrationTest {
 
     @AfterEach
     void tearDown() {
-        if (dbConnection == null) {
+        if (entityManagerFactory == null) {
             return;
         }
-        try {
-            System.out.println("Aktuelle Benutzer in der user Tabelle");
-            System.out.println("---------------------------------------");
-            java.sql.ResultSet rs = dbConnection.execute("SELECT username, email FROM user");
-            if (rs != null) {
-                while (rs.next()) {
-                    System.out.println("username: " + rs.getString("username") + " | E-Mail: " + rs.getString("email"));
-                }
-            }
-
-            dbConnection.execute("DELETE FROM user WHERE email IN " +
-                    "(" + "'bruce.wayne@gotham.com', " +
-                    "'spidey@dailybugle.com', " +
-                    "'hawk.eye@arrow.com', " +
-                    "'black.widow@avengers.com')");
-
-        } catch (Exception e) {
-            System.out.println("Fehler beim Anzeigen/Aufräumen: " + e.getMessage());
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            em.getTransaction().begin();
+            em.createNativeQuery("DELETE FROM user WHERE email IN (:emails)")
+                    .setParameter("emails", List.of(
+                            "bruce.wayne@gotham.com", "spidey@dailybugle.com",
+                            "hawk.eye@arrow.com", "black.widow@avengers.com"))
+                    .executeUpdate();
+            em.getTransaction().commit();
+        } finally {
+            entityManagerFactory.close();
         }
     }
 
     @Test
     void speichereBenutzer() throws Exception {
         BenutzerEntity testBenutzer = new BenutzerEntity("Bruce Wayne", "bruce.wayne@gotham.com", "bruce", false);
-
         benutzerDao.speichereBenutzer(testBenutzer);
-        Optional<BenutzerEntity> gefundenerBenutzer = benutzerDao.holeBenutzerNachEMail("bruce.wayne@gotham.com");
 
-        assertTrue(gefundenerBenutzer.isPresent(), "Benutzer wurde erfolgreich in der Datenbank registriert sein");
-        assertEquals("Bruce Wayne", gefundenerBenutzer.get().getUsername());
+        BenutzerEntity gefunden = benutzerDao.holeBenutzerNachEMail("bruce.wayne@gotham.com").orElseThrow();
+        assertEquals("Bruce Wayne", gefunden.getUsername());
     }
 
     @Test
-    void holeBenutzerNachEMail() throws Exception {
-        BenutzerEntity testBenutzer = new BenutzerEntity("Peter Parker", "spidey@dailybugle.com", "webslinger", false);
-        benutzerDao.speichereBenutzer(testBenutzer);
-
-        Optional<BenutzerEntity> gefundenerBenutzer = benutzerDao.holeBenutzerNachEMail("spidey@dailybugle.com");
-        assertTrue(gefundenerBenutzer.isPresent());
-        assertEquals("Peter Parker", gefundenerBenutzer.get().getUsername());
-    }
-
-    @Test
-    void holeAlleBenutzernamen() throws Exception {
+    void holeAlleBenutzer() throws Exception {
         benutzerDao.speichereBenutzer(new BenutzerEntity("Hawk Eye", "hawk.eye@arrow.com", "target", false));
         benutzerDao.speichereBenutzer(new BenutzerEntity("Black Widow", "black.widow@avengers.com", "spider", false));
 
-        List<String> usernames = benutzerDao.holeAlleBenutzernamen();
+        List<BenutzerEntity> benutzer = benutzerDao.holeAlleBenutzernamen();
 
-        assertNotNull(usernames);
-        assertTrue(usernames.contains("Hawk Eye"));
-        assertTrue(usernames.contains("Black Widow"));
+        assertTrue(benutzer.size() >= 2);
+
+        assertTrue(benutzer.stream().anyMatch(user -> "Hawk Eye".equals(user.getUsername())));
+        assertTrue(benutzer.stream().anyMatch(user -> "Black Widow".equals(user.getUsername())));
     }
 }

@@ -1,113 +1,137 @@
 package ch.suva.bi7.webshop.service.dao;
 
-import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class AdresseDaoImpl implements AdresseDao {
 
-    private static final String ALLE_SPALTEN =
-            "adressId, userEmail, vorname, nachname, strasse, plz, ort, land";
+    private final EntityManagerFactory entityManagerFactory;
 
-    private final DBConnection dbConnection;
-
-    public AdresseDaoImpl(DBConnection dbConnection) {
-        if (dbConnection == null) {
-            throw new IllegalArgumentException("dbConnection must not be null");
+    public AdresseDaoImpl(EntityManagerFactory entityManagerFactory) {
+        if (entityManagerFactory == null) {
+            throw new IllegalArgumentException("entityManagerFactory must not be null");
         }
-        this.dbConnection = dbConnection;
+        this.entityManagerFactory = entityManagerFactory;
     }
 
     @Override
     public List<AdresseEntity> ladeAdressenNachBenutzerEmail(String email) throws DaoException {
-        List<AdresseEntity> adressen = new ArrayList<>();
-
-        String sql = "SELECT " + ALLE_SPALTEN +
-                     " FROM adresse WHERE userEmail = ? ORDER BY createdAt DESC";
-
-        try (ResultSet rs = dbConnection.execute(sql, email)) {
-            if (rs != null) {
-                while (rs.next()) {
-                    adressen.add(mapAdresse(rs));
-                }
-            }
-        } catch (SQLException e) {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            return em.createQuery(
+                            "SELECT a FROM AdresseEntity a WHERE a.userEmail = :email ORDER BY a.adressId DESC",
+                            AdresseEntity.class)
+                    .setParameter("email", email)
+                    .getResultList();
+        } catch (Exception e) {
             throw new DaoException("Fehler beim Abrufen der Adressen", e);
         }
-        return adressen;
     }
 
     @Override
     public AdresseEntity insert(AdresseEntity adresse) throws DaoException {
-        String insertSql = "INSERT INTO adresse (userEmail, vorname, nachname, strasse, plz, ort, land) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
-        int adressId;
+        EntityManager em = entityManagerFactory.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
         try {
-            adressId = dbConnection.executeUpdateReturningGeneratedKeys(insertSql,
-                    adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
-                    adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand());
-        } catch (SQLException e) {
+            tx.begin();
+            em.persist(adresse);
+            tx.commit();
+            return adresse;
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
             throw new DaoException("Fehler beim Speichern der Adresse", e);
+        } finally {
+            em.close();
         }
-        return mitAdressId(adresse, adressId);
     }
 
     @Override
     public boolean aktualisiere(int adressId, AdresseEntity adresse) throws DaoException {
-        String sql = "UPDATE adresse SET userEmail = ?, vorname = ?, nachname = ?, strasse = ?, " +
-                "plz = ?, ort = ?, land = ? WHERE adressId = ?";
+        EntityManager em = entityManagerFactory.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
         try {
-            return dbConnection.executeUpdate(sql,
-                    adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
-                    adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand(), adressId) > 0;
-        } catch (SQLException e) {
+            tx.begin();
+
+            int updatedRows = em.createQuery(
+                            "UPDATE AdresseEntity a SET " +
+                                    "a.userEmail = :email, " +
+                                    "a.vorname = :vorname, " +
+                                    "a.nachname = :nachname, " +
+                                    "a.strasse = :strasse, " +
+                                    "a.plz = :plz, " +
+                                    "a.ort = :ort, " +
+                                    "a.land = :land " +
+                                    "WHERE a.adressId = :id")
+                    .setParameter("email", adresse.getUserEmail())
+                    .setParameter("vorname", adresse.getVorname())
+                    .setParameter("nachname", adresse.getNachname())
+                    .setParameter("strasse", adresse.getStrasse())
+                    .setParameter("plz", adresse.getPlz())
+                    .setParameter("ort", adresse.getOrt())
+                    .setParameter("land", adresse.getLand())
+                    .setParameter("id", adressId)
+                    .executeUpdate();
+
+            tx.commit();
+            return updatedRows > 0;
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
             throw new DaoException("Fehler beim Aktualisieren der Adresse", e);
+        } finally {
+            em.close();
         }
     }
 
     @Override
     public boolean loesche(int adressId) throws DaoException {
-        String sql = "DELETE FROM adresse WHERE adressId = ?";
+        EntityManager em = entityManagerFactory.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
         try {
-            return dbConnection.executeUpdate(sql, adressId) > 0;
-        } catch (SQLException e) {
+            tx.begin();
+            AdresseEntity adresse = em.find(AdresseEntity.class, adressId);
+            if (adresse != null) {
+                em.remove(adresse);
+                tx.commit();
+                return true;
+            }
+            tx.commit();
+            return false;
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                tx.rollback();
+            }
             throw new DaoException("Fehler beim Löschen der Adresse", e);
+        } finally {
+            em.close();
         }
     }
 
     @Override
     public boolean existiertIdentischeAdresse(AdresseEntity adresse) throws DaoException {
-        String sql = "SELECT adressId FROM adresse " +
-                "WHERE userEmail = ? AND vorname = ? AND nachname = ? AND strasse = ? " +
-                "AND plz = ? AND ort = ? AND land = ?";
-        try (ResultSet rs = dbConnection.execute(sql,
-                adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
-                adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand())) {
-            return rs != null && rs.next();
-        } catch (SQLException e) {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            Long count = em.createQuery(
+                            "SELECT COUNT(a) FROM AdresseEntity a WHERE a.userEmail = :email " +
+                                    "AND a.vorname = :vorname AND a.nachname = :nachname AND a.strasse = :strasse " +
+                                    "AND a.plz = :plz AND a.ort = :ort AND a.land = :land", Long.class)
+                    .setParameter("email", adresse.getUserEmail())
+                    .setParameter("vorname", adresse.getVorname())
+                    .setParameter("nachname", adresse.getNachname())
+                    .setParameter("strasse", adresse.getStrasse())
+                    .setParameter("plz", adresse.getPlz())
+                    .setParameter("ort", adresse.getOrt())
+                    .setParameter("land", adresse.getLand())
+                    .getSingleResult();
+
+            return count > 0;
+        } catch (Exception e) {
             throw new DaoException("Fehler beim Prüfen auf identische Adresse", e);
         }
-    }
-
-    private AdresseEntity mitAdressId(AdresseEntity adresse, int adressId) {
-        return new AdresseEntity(adressId, adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
-                adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand());
-    }
-
-    private AdresseEntity mapAdresse(ResultSet rs) throws SQLException {
-        return new AdresseEntity(
-                rs.getInt("adressId"),
-                rs.getString("userEmail"),
-                rs.getString("vorname"),
-                rs.getString("nachname"),
-                rs.getString("strasse"),
-                rs.getString("plz"),
-                rs.getString("ort"),
-                rs.getString("land")
-        );
     }
 }

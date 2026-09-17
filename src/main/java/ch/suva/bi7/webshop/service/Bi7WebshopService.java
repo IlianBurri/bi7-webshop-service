@@ -3,15 +3,9 @@ package ch.suva.bi7.webshop.service;
 import ch.suva.bi7.webshop.service.controller.*;
 import ch.suva.bi7.webshop.service.dao.*;
 import ch.suva.bi7.webshop.service.db.DBConfig;
-import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.db.DBConnectionImpl;
 import ch.suva.bi7.webshop.service.db.JpaEntityManagerFactoryProvider;
 import ch.suva.bi7.webshop.service.db.LiquibaseMigrationRunner;
-import ch.suva.bi7.webshop.service.service.ArtikelService;
-import ch.suva.bi7.webshop.service.service.BenutzerService;
-import ch.suva.bi7.webshop.service.service.BestellungService;
-import ch.suva.bi7.webshop.service.service.WarenkorbService;
-import ch.suva.bi7.webshop.service.service.AdresseService;
+import ch.suva.bi7.webshop.service.service.*;
 import io.javalin.Javalin;
 import jakarta.persistence.EntityManagerFactory;
 
@@ -25,25 +19,23 @@ public class Bi7WebshopService {
                     DBConfig.getUser(),
                     DBConfig.getPassword());
 
-            DBConnection dbConnection = new DBConnectionImpl(
-                    DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
             EntityManagerFactory entityManagerFactory = JpaEntityManagerFactoryProvider.createEntityManagerFactory(
                     DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
             // Beim Shudown der Anwendung die EntityManagerFactory schließen, um Ressourcen freizugeben
             Runtime.getRuntime().addShutdownHook(new Thread(entityManagerFactory::close));
 
-            BenutzerDao benutzerDao = new BenutzerDaoImpl(dbConnection);
-            WarenkorbDao warenkorbDao = new WarenkorbDaoImpl(dbConnection);
+            BenutzerDao benutzerDao = new BenutzerDaoImpl(entityManagerFactory);
+            WarenkorbDao warenkorbDao = new WarenkorbDaoImpl(entityManagerFactory);
             ArtikelDao artikelDao = new ArtikelDaoImpl(entityManagerFactory);
             BenutzerService benutzerService = new BenutzerService(benutzerDao);
             AdresseController adresseController = new AdresseController(
-                    new AdresseService(new AdresseDaoImpl(dbConnection)));
+                    new AdresseService(new AdresseDaoImpl(entityManagerFactory)));
             WarenkorbController warenkorbController = new WarenkorbController(
                     new WarenkorbService(warenkorbDao));
             ArtikelController artikelController = new ArtikelController(new ArtikelService(artikelDao), benutzerService);
             BenutzerController benutzerController = new BenutzerController(benutzerService);
 
-            BestellungDao bestellungDao = new BestellungDaoImpl(dbConnection);
+            BestellungDao bestellungDao = new BestellungDaoImpl(entityManagerFactory);
             BestellungController bestellungController = new BestellungController(
                     new BestellungService(bestellungDao, warenkorbDao));
 

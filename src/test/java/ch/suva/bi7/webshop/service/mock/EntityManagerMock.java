@@ -11,6 +11,12 @@ import jakarta.persistence.metamodel.Metamodel;
 
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedHashMap;
+import java.lang.reflect.Proxy;
+import ch.suva.bi7.webshop.service.controller.SqlStatement;
 
 public class EntityManagerMock implements EntityManager {
 
@@ -18,6 +24,18 @@ public class EntityManagerMock implements EntityManager {
     private List<String> actions;
     private int generierterKey;
     private boolean simulatePersistError = false;
+    private final Deque<Object> results = new ArrayDeque<>();
+    private final Deque<Integer> updateCounts = new ArrayDeque<>();
+    private final List<SqlStatement> queries = new ArrayList<>();
+    private RuntimeException queryException;
+    private RuntimeException updateException;
+    private final Map<FindKey, Object> findResults = new java.util.HashMap<>();
+
+    public EntityManagerMock() {
+        List<String> sharedActions = new ArrayList<>();
+        this.entityTransaction = new EntityTransactionMock(sharedActions);
+        this.actions = sharedActions;
+    }
 
     public EntityManagerMock(EntityTransaction entityTransaction, List<String> actions, int generierterKey, boolean simulatePersistError) {
         this.entityTransaction = entityTransaction;
@@ -31,10 +49,19 @@ public class EntityManagerMock implements EntityManager {
         if (simulatePersistError) {
             throw new RuntimeException("Simulierter Persist-Fehler");
         }
-        if (entity instanceof ArtikelEntity artikel) {
-            ArtikelEntityHelper.setArtikelId(artikel, generierterKey);
-            actions.add("EntityManager.persist for Id: " + artikel.getArtikelId());
+        if (generierterKey > 0) {
+            try {
+                String idName = entity instanceof ArtikelEntity ? "artikelId" : "bestellungId";
+                java.lang.reflect.Field id = entity.getClass().getDeclaredField(idName);
+                id.setAccessible(true);
+                id.set(entity, generierterKey);
+            } catch (ReflectiveOperationException ignored) {
+                if (entity instanceof ArtikelEntity artikel) {
+                    ArtikelEntityHelper.setArtikelId(artikel, generierterKey);
+                }
+            }
         }
+        actions.add("EntityManager.persist");
     }
 
     @Override
@@ -49,7 +76,7 @@ public class EntityManagerMock implements EntityManager {
 
     @Override
     public <T> T find(Class<T> entityClass, Object primaryKey) {
-        return null;
+        return (T) findResults.get(new FindKey(entityClass, primaryKey));
     }
 
     @Override
@@ -74,7 +101,7 @@ public class EntityManagerMock implements EntityManager {
 
     @Override
     public void flush() {
-
+        actions.add("EntityManager.flush");
     }
 
     @Override
@@ -149,7 +176,7 @@ public class EntityManagerMock implements EntityManager {
 
     @Override
     public Query createQuery(String qlString) {
-        return null;
+        return createQueryProxy(qlString, false);
     }
 
     @Override
@@ -169,7 +196,7 @@ public class EntityManagerMock implements EntityManager {
 
     @Override
     public <T> TypedQuery<T> createQuery(String qlString, Class<T> resultClass) {
-        return null;
+        return (TypedQuery<T>) createQueryProxy(qlString, false);
     }
 
     @Override
@@ -184,12 +211,12 @@ public class EntityManagerMock implements EntityManager {
 
     @Override
     public Query createNativeQuery(String sqlString) {
-        return null;
+        return createQueryProxy(sqlString, true);
     }
 
     @Override
     public Query createNativeQuery(String sqlString, Class resultClass) {
-        return null;
+        return createQueryProxy(sqlString, true);
     }
 
     @Override
@@ -239,7 +266,7 @@ public class EntityManagerMock implements EntityManager {
 
     @Override
     public void close() {
-
+        actions.add("EntityManager.close");
     }
 
     @Override
@@ -250,6 +277,87 @@ public class EntityManagerMock implements EntityManager {
     @Override
     public EntityTransaction getTransaction() {
         return entityTransaction;
+    }
+
+    public EntityManagerFactory factory() {
+        return new EntityManagerFactoryMock(this);
+    }
+
+    public void addResult(Object result) {
+        results.add(result);
+    }
+
+    public void addUpdateCount(int updateCount) {
+        updateCounts.add(updateCount);
+    }
+
+    public void generatedKey(int key) {
+        generierterKey = key;
+    }
+
+    public void persistError(boolean value) {
+        simulatePersistError = value;
+    }
+
+    public void queryException(RuntimeException exception) {
+        queryException = exception;
+    }
+
+    public void updateException(RuntimeException exception) {
+        updateException = exception;
+    }
+
+    public List<SqlStatement> queries() {
+        return queries;
+    }
+
+    public List<String> actions() {
+        return actions;
+    }
+
+    public void find(Class<?> type, Object id, Object result) {
+        findResults.put(new FindKey(type, id), result);
+    }
+
+    private Query createQueryProxy(String queryString, boolean nativeQuery) {
+        Map<Object, Object> parameters = new LinkedHashMap<>();
+        queries.add(new SqlStatement(queryString, parameters, nativeQuery));
+        final Query[] holder = new Query[1];
+        holder[0] = (Query) Proxy.newProxyInstance(Query.class.getClassLoader(),
+                new Class<?>[]{Query.class, TypedQuery.class}, (object, method, args) -> {
+                    switch (method.getName()) {
+                        case "setParameter" -> {
+                            parameters.put(args[0], args[1]);
+                            return holder[0];
+                        }
+                        case "getResultList" -> {
+                            if (queryException != null) throw queryException;
+                            return results.isEmpty() ? List.of() : results.removeFirst();
+                        }
+                        case "getSingleResult" -> {
+                            if (queryException != null) throw queryException;
+                            Object result = results.isEmpty() ? null : results.removeFirst();
+                            if (result instanceof RuntimeException exception) throw exception;
+                            return result;
+                        }
+                        case "executeUpdate" -> {
+                            if (updateException != null) throw updateException;
+                            return updateCounts.isEmpty() ? 1 : updateCounts.removeFirst();
+                        }
+                        case "unwrap" -> { return null; }
+                        case "isWrapperFor" -> { return false; }
+                        default -> {
+                            if (method.getReturnType() == boolean.class) return false;
+                            if (method.getReturnType() == int.class) return 0;
+                            if (method.getReturnType() == long.class) return 0L;
+                            return null;
+                        }
+                    }
+                });
+        return holder[0];
+    }
+
+    private record FindKey(Class<?> type, Object id) {
     }
 
     @Override

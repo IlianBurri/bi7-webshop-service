@@ -102,4 +102,12 @@ public class BestellungEntity {
     public Timestamp getBestelltAm() {
         return bestelltAm;
     }
+
+    public BestellungEntity(String userEmail,
+                            Integer adressId,
+                            BigDecimal gesamtpreis,
+                            String status,
+                            Timestamp bestelltAm) {
+        this(null, userEmail, adressId, gesamtpreis, status, bestelltAm);
+    }
 }

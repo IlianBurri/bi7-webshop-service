@@ -19,8 +19,11 @@ public class BenutzerService {
         this.benutzerDao = benutzerDao;
     }
 
-    public List<String> holeAlleBenutzernamen() throws Exception {
-        return benutzerDao.holeAlleBenutzernamen();
+    public List<BenutzerDto> holeAlleBenutzernamen() throws Exception {
+        List<BenutzerEntity> benutzerEntityList = benutzerDao.holeAlleBenutzernamen();
+        return benutzerEntityList.stream()
+                .map(BenutzerMapper::toDto)
+                .toList();
     }
 
     public Optional<BenutzerDto> holeBenutzerNachEMail(String email) throws Exception {
@@ -33,7 +36,6 @@ public class BenutzerService {
         benutzerDao.speichereBenutzer(neuerBenutzer);
         return BenutzerMapper.toDto(neuerBenutzer);
     }
-
     public boolean istPasswortKorrekt(String email, String password) throws Exception {
         return benutzerDao.holeBenutzerNachEMail(email)
                 .map(benutzer -> benutzer.getPassword().equals(password))

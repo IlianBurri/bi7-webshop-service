@@ -1,55 +1,70 @@
 package ch.suva.bi7.webshop.service.dao;
 
-import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.NoResultException;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class BenutzerDaoImpl implements BenutzerDao {
 
-    private final DBConnection dbConnection;
+    private final EntityManagerFactory entityManagerFactory;
 
-    public BenutzerDaoImpl(DBConnection dbConnection) {
-        if (dbConnection == null) {
-            throw new IllegalArgumentException("dbConnection must not be null");
+    public BenutzerDaoImpl(EntityManagerFactory entityManagerFactory) {
+        if (entityManagerFactory == null) {
+            throw new IllegalArgumentException("entityManagerFactory must not be null");
         }
-        this.dbConnection = dbConnection;
+        this.entityManagerFactory = entityManagerFactory;
     }
 
     @Override
-    public Optional<BenutzerEntity> holeBenutzerNachEMail(String email) throws SQLException {
+    public Optional<BenutzerEntity> holeBenutzerNachEMail(String email) {
         if (email == null || email.isBlank()) {
             return Optional.empty();
         }
-        ResultSet queryResult = dbConnection.execute("SELECT * FROM user WHERE UPPER(email) = UPPER(?)", email);
-        if (queryResult.next()) {
-            String username = queryResult.getString("username");
-            String password = queryResult.getString("password");
-            boolean isAdmin = queryResult.getBoolean("isAdmin");
-            BenutzerEntity benutzer = new BenutzerEntity(username, email, password, isAdmin);
+
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            BenutzerEntity benutzer = em.createQuery(
+                            "SELECT b FROM BenutzerEntity b WHERE b.email = :email", BenutzerEntity.class)
+                    .setParameter("email", email)
+                    .getSingleResult();
+
             return Optional.of(benutzer);
+        } catch (NoResultException e) {
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     @Override
-    public List<String> holeAlleBenutzernamen() throws SQLException {
-        ResultSet queryResult = dbConnection.execute("SELECT * FROM user");
-
-        List<String> result = new ArrayList<>();
-        while (queryResult.next()) {
-            result.add(queryResult.getString("username"));
+    public List<BenutzerEntity> holeAlleBenutzernamen() {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            return em.createQuery("SELECT b FROM BenutzerEntity b", BenutzerEntity.class).getResultList();
         }
-        return result;
     }
 
     @Override
-    public void speichereBenutzer(BenutzerEntity neuerBenutzer) throws Exception {
-        String query = "INSERT INTO user (username, email, password) VALUES (?, ?, ?)";
-        dbConnection.execute(query, neuerBenutzer.getUsername(), neuerBenutzer.getEmail(), neuerBenutzer.getPassword());
+    public void speichereBenutzer(BenutzerEntity neuerBenutzer) throws DaoException {
+        if (neuerBenutzer == null) {
+            throw new IllegalArgumentException("neuerBenutzer must not be null");
+        }
+
+        EntityManager em = entityManagerFactory.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
+
+        try {
+            tx.begin();
+            em.persist(neuerBenutzer);
+            tx.commit();
+        } catch (Exception e) {
+            if (tx != null && tx.isActive()) {
+                tx.rollback();
+            }
+            throw new DaoException("Fehler beim Speichern des Benutzers: " + e.getMessage(), e);
+        } finally {
+            em.close();
+        }
     }
 }

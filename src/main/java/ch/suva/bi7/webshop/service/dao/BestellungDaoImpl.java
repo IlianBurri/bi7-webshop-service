@@ -1,15 +1,14 @@
 package ch.suva.bi7.webshop.service.dao;
 
-import ch.suva.bi7.webshop.service.db.DBConnection;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,96 +16,86 @@ public class BestellungDaoImpl implements BestellungDao {
 
     private static final Logger logger = LoggerFactory.getLogger(BestellungDaoImpl.class);
 
-    private final DBConnection dbConnection;
+    private final EntityManagerFactory entityManagerFactory;
 
-    public BestellungDaoImpl(DBConnection dbConnection) {
-        if (dbConnection == null) {
-            throw new IllegalArgumentException("dbConnection darf nicht null sein");
+    public BestellungDaoImpl(EntityManagerFactory entityManagerFactory) {
+        if (entityManagerFactory == null) {
+            throw new IllegalArgumentException("entityManagerFactory must not be null");
         }
-        this.dbConnection = dbConnection;
+        this.entityManagerFactory = entityManagerFactory;
     }
 
     @Override
     public int erstelleBestellungMitWarenkorbItems(String userEmail, int adressId, BigDecimal gesamtpreis,
                                                    List<WarenkorbEintragEntity> warenkorbEintragEntityList) throws DaoException {
-        String insertBestellungSql = "INSERT INTO bestellung (userEmail, adressId, gesamtpreis, bestelldatum, status) " +
-                "VALUES (?, ?, ?, NOW(), 'BEZAHLT')";
-        String insertBestellpositionSql =
-                "INSERT INTO bestellposition (bestellungId, artikelId, anzahl, einzelpreis) VALUES (?, ?, ?, ?)";
-        String deleteWarenkorbSql = "DELETE FROM warenkorb_item WHERE userEmail = ?";
+        EntityManager em = entityManagerFactory.createEntityManager();
+        EntityTransaction tx = em.getTransaction();
 
         try {
-            dbConnection.beginTransaction();
-            int generatedBestellungId = dbConnection.executeUpdateReturningGeneratedKeys(insertBestellungSql, userEmail, adressId, gesamtpreis);
+            tx.begin();
 
-            for (WarenkorbEintragEntity warenkorbEintragEntity : warenkorbEintragEntityList) {
-                dbConnection.executeUpdate(
-                        insertBestellpositionSql,
-                        generatedBestellungId,
-                        warenkorbEintragEntity.getArtikelId(),
-                        warenkorbEintragEntity.getMenge(),
-                        warenkorbEintragEntity.getArtikelPreis()
-                );
+            BestellungEntity bestellung = new BestellungEntity(
+                    userEmail,
+                    adressId,
+                    gesamtpreis,
+                    "OFFEN",
+                    new java.sql.Timestamp(System.currentTimeMillis())
+            );
+            em.persist(bestellung);
+            em.flush();
+
+            String insertPositionSql = "INSERT INTO bestellposition (bestellungId, artikelId, anzahl, einzelpreis) VALUES (?, ?, ?, ?)";
+
+            for (WarenkorbEintragEntity eintrag : warenkorbEintragEntityList) {
+                em.createNativeQuery(insertPositionSql)
+                        .setParameter(1, bestellung.getBestellungId())
+                        .setParameter(2, eintrag.getArtikelId())
+                        .setParameter(3, eintrag.getMenge())
+                        .setParameter(4, eintrag.getArtikelPreis())
+                        .executeUpdate();
             }
 
-            dbConnection.executeUpdate(deleteWarenkorbSql, userEmail);
-            dbConnection.commit();
-            return generatedBestellungId;
-        } catch (SQLException e) {
-            rollbackQuietly();
-            throw new DaoException("Fehler beim Erstellen der Bestellung für Benutzer: " + userEmail, e);
-        } catch (RuntimeException e) {
-            rollbackQuietly();
-            throw e;
-        }
-    }
+            em.createNativeQuery("DELETE FROM warenkorb_item WHERE userEmail = :email")
+                    .setParameter("email", userEmail)
+                    .executeUpdate();
 
-    private void rollbackQuietly() {
-        try {
-            dbConnection.rollback();
-        } catch (SQLException rb) {
-            logger.warn("Rollback nach fehlgeschlagener Bestellung fehlgeschlagen", rb);
+            tx.commit();
+            return bestellung.getBestellungId();
+
+        } catch (Exception e) {
+            if (tx.isActive()) {
+                try {
+                    tx.rollback();
+                } catch (Exception rbEx) {
+                    logger.warn("Rollback nach fehlgeschlagener Bestellung fehlgeschlagen", rbEx);
+                }
+            }
+            throw new DaoException("Fehler beim Erstellen der Bestellung für Benutzer: " + userEmail, e);
+        } finally {
+            em.close();
         }
     }
 
     @Override
     public Optional<BestellungEntity> holeBestellungNachId(int bestellungId) throws DaoException {
-        String sql = "SELECT * FROM bestellung WHERE bestellungId = ?";
-        try (ResultSet rs = dbConnection.execute(sql, bestellungId)) {
-            if (rs != null && rs.next()) {
-                return Optional.of(mappeResultSetZuBestellung(rs));
-            }
-        } catch (SQLException e) {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            BestellungEntity bestellung = em.find(BestellungEntity.class, bestellungId);
+            return Optional.ofNullable(bestellung);
+        } catch (Exception e) {
             throw new DaoException("Fehler beim Abrufen der Bestellung mit ID: " + bestellungId, e);
         }
-        return Optional.empty();
     }
 
     @Override
     public List<BestellungEntity> getBestellungenNachBenutzerEmail(String userEmail) throws DaoException {
-        List<BestellungEntity> bestellungen = new ArrayList<>();
-        String sql = "SELECT * FROM bestellung WHERE userEmail = ? ORDER BY bestelldatum DESC";
-
-        try (ResultSet rs = dbConnection.execute(sql, userEmail)) {
-            if (rs != null) {
-                while (rs.next()) {
-                    bestellungen.add(mappeResultSetZuBestellung(rs));
-                }
-            }
-        } catch (SQLException e) {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            return em.createQuery(
+                            "SELECT b FROM BestellungEntity b WHERE b.userEmail = :email ORDER BY b.bestellungId DESC",
+                            BestellungEntity.class)
+                    .setParameter("email", userEmail)
+                    .getResultList();
+        } catch (Exception e) {
             throw new DaoException("Fehler beim Abrufen der Bestellungen für Benutzer: " + userEmail, e);
         }
-        return bestellungen;
-    }
-
-    private BestellungEntity mappeResultSetZuBestellung(ResultSet rs) throws SQLException {
-        return new BestellungEntity(
-                rs.getInt("bestellungId"),
-                rs.getString("userEmail"),
-                rs.getInt("adressId"),
-                rs.getBigDecimal("gesamtpreis"),
-                rs.getString("status"),
-                rs.getTimestamp("bestelldatum")
-        );
     }
 }

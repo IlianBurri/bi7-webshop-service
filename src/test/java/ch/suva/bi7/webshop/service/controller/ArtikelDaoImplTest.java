@@ -3,109 +3,103 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.ArtikelDao;
 import ch.suva.bi7.webshop.service.dao.ArtikelDaoImpl;
 import ch.suva.bi7.webshop.service.dao.DaoException;
-import ch.suva.bi7.webshop.service.db.DBConfig;
-import ch.suva.bi7.webshop.service.db.JpaEntityManagerFactoryProvider;
 import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
-import ch.suva.bi7.webshop.service.mock.*;
-import jakarta.persistence.*;
+import ch.suva.bi7.webshop.service.mock.EntityManagerMock;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.lang.reflect.Field;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class ArtikelDaoImplTest {
 
-
-    private ArtikelDao getRealArtikelDao() {
-        try {
-            return new ArtikelDaoImpl(JpaEntityManagerFactoryProvider.createEntityManagerFactory(
-                    DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword()));
-        } catch (Exception e) {
-            assumeTrue(false, "MariaDB not available: " + e.getMessage());
-            return null;
-        }
-    }
-
     @Test
     void einArtikelKannGeladenWerden() throws Exception {
+        ArtikelEntity artikel = artikel(1, "iPhone 15 Pro", new BigDecimal("1199.00"),
+                "https://example.com/iphone.jpg");
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.addResult(List.of(artikel));
 
-        ArtikelDao dao = getRealArtikelDao();
+        ArtikelEntity erster = new ArtikelDaoImpl(jpa.factory()).getAllArtikel().get(0);
 
-        List<ArtikelEntity> artikel = dao.getAllArtikel();
-
-        assertFalse(artikel.isEmpty());
-
-        ArtikelEntity ersterArtikel = artikel.get(0);
-
-        assertEquals(1, ersterArtikel.getArtikelId());
-        assertEquals("iPhone 15 Pro", ersterArtikel.getName());
-        assertEquals(new BigDecimal("1199.00"), ersterArtikel.getPreis());
+        assertEquals(1, erster.getArtikelId());
+        assertEquals("iPhone 15 Pro", erster.getName());
+        assertEquals(new BigDecimal("1199.00"), erster.getPreis());
+        assertEquals("SELECT a FROM ArtikelEntity a", jpa.queries().get(0).sql());
     }
 
     @Test
     void mehrereArtikelWerdenGeladen() throws Exception {
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.addResult(List.of(
+                artikel(1, "iPhone 15 Pro", new BigDecimal("1199.00"), "bild"),
+                artikel(2, "Galaxy S24", new BigDecimal("899.90"), "bild")));
 
-        ArtikelDao dao = getRealArtikelDao();
-
-        List<ArtikelEntity> artikel = dao.getAllArtikel();
-
-        assertTrue(artikel.size() > 1, "Es müssen mehrere Artikel geladen werden");
+        assertEquals(2, new ArtikelDaoImpl(jpa.factory()).getAllArtikel().size());
     }
 
-
     @Test
-    void addArtikelFuehrtInsertAusUndLiefertGeneriertenKey() throws Exception {
-        List<String> actions = new ArrayList<>();
-        ArtikelDao testee = new ArtikelDaoImpl(createEntityManagerFactoryMock(actions, 42, false));
+    void addArtikelFuehrtPersistMitTransaktionAusUndLiefertGeneriertenKey() throws Exception {
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.generatedKey(42);
 
-        ArtikelEntity artikelEntity = testee.erstelleNeuenArtikel(
+        ArtikelEntity artikel = new ArtikelDaoImpl(jpa.factory()).erstelleNeuenArtikel(
                 "iPhone 16 Pro", new BigDecimal("1299.00"), "https://example.com/iphone16.jpg");
 
-        assertEquals(42, artikelEntity.getArtikelId(), "Die generierte artikelId muss zurückgegeben werden");
-
-        assertEquals(3, actions.size(), "Es müssen 3 Action's ausgeführt werden");
-        assertTrue(actions.contains("EntityTransaction.begin"));
-        assertTrue(actions.contains("EntityTransaction.commit"));
-        assertTrue(actions.contains("EntityManager.persist for Id: 42"));
+        assertEquals(42, artikel.getArtikelId());
+        assertEquals(List.of("EntityTransaction.begin", "EntityManager.persist",
+                        "EntityTransaction.commit", "EntityManager.close"),
+                jpa.actions());
     }
 
     @Test
-    void addArtikelBeiSqlFehlerWirftDaoException() {
-        ArtikelDao testee = new ArtikelDaoImpl(createEntityManagerFactoryMock(new ArrayList<>(), 0, true));
+    void addArtikelBeiSqlFehlerWirftDaoExceptionUndRolltZurueck() {
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.persistError(true);
 
         DaoException ex = assertThrows(DaoException.class,
-                () -> testee.erstelleNeuenArtikel("iPhone 16 Pro", new BigDecimal("1299.00"), null),
-                "SQL-Fehler müssen als DaoException nach oben propagieren");
-        assertEquals("Simulierter Persist-Fehler", ex.getCause().getMessage(), "Die ursprüngliche SQLException muss als Cause erhalten bleiben");
+                () -> new ArtikelDaoImpl(jpa.factory())
+                        .erstelleNeuenArtikel("iPhone 16 Pro", new BigDecimal("1299.00"), null));
+
+        assertEquals("Simulierter Persist-Fehler", ex.getCause().getMessage());
+        assertTrue(jpa.actions().contains("EntityTransaction.rollback"));
+        assertFalse(jpa.actions().contains("EntityTransaction.commit"));
     }
 
     @Test
     void alleArtikelHabenGueltigeDaten() throws Exception {
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.addResult(List.of(
+                artikel(1, "iPhone 15 Pro", new BigDecimal("1199.00"), "bild"),
+                artikel(2, "Galaxy S24", new BigDecimal("899.90"), null)));
 
-        ArtikelDao dao = getRealArtikelDao();
-
-        List<ArtikelEntity> artikel = dao.getAllArtikel();
-
-        for (ArtikelEntity a : artikel) {
-
-            assertNotNull(a.getArtikelId());
-            assertNotNull(a.getName());
-            assertFalse(a.getName().isBlank());
-
-            assertNotNull(a.getPreis());
-            assertTrue(a.getPreis().compareTo(BigDecimal.ZERO) > 0);
-
-            assertTrue(a.getBild() == null || !a.getBild().isBlank());
+        ArtikelDao dao = new ArtikelDaoImpl(jpa.factory());
+        for (ArtikelEntity artikel : dao.getAllArtikel()) {
+            assertNotNull(artikel.getArtikelId());
+            assertNotNull(artikel.getName());
+            assertFalse(artikel.getName().isBlank());
+            assertNotNull(artikel.getPreis());
+            assertTrue(artikel.getPreis().compareTo(BigDecimal.ZERO) > 0);
+            assertTrue(artikel.getBild() == null || !artikel.getBild().isBlank());
         }
     }
 
-    private EntityManagerFactory createEntityManagerFactoryMock(List<String> actions, int generierterKey, boolean simulatePersistError) {
-        EntityTransaction entityTransaction = new EntityTransactionMock(actions);
-        EntityManager em = new EntityManagerMock(entityTransaction, actions, generierterKey, simulatePersistError);
-        return new EntityManagerFactoryMock(em);
+    @Test
+    void konstruktorLehntNullAb() {
+        assertThrows(IllegalArgumentException.class, () -> new ArtikelDaoImpl(null));
+    }
+
+    private ArtikelEntity artikel(int id, String name, BigDecimal preis, String bild) {
+        ArtikelEntity artikel = new ArtikelEntity(name, preis, bild);
+        try {
+            Field field = ArtikelEntity.class.getDeclaredField("artikelId");
+            field.setAccessible(true);
+            field.set(artikel, id);
+            return artikel;
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(e);
+        }
     }
 }

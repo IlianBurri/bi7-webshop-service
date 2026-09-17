@@ -26,7 +26,7 @@ public class EinfachesBenutzerDaoMock implements BenutzerDao {
     }
 
     @Override
-    public List<String> holeAlleBenutzernamen() {
+    public List<BenutzerEntity> holeAlleBenutzernamen() {
         return new ArrayList<>();
     }
 }

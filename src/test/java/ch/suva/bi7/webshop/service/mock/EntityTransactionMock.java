@@ -7,6 +7,7 @@ import java.util.List;
 public class EntityTransactionMock implements EntityTransaction {
 
     private List<String> actions;
+    private boolean active;
 
     public EntityTransactionMock(List<String> actions) {
         this.actions = actions;
@@ -14,17 +15,20 @@ public class EntityTransactionMock implements EntityTransaction {
 
     @Override
     public void begin() {
+        active = true;
         actions.add("EntityTransaction.begin");
     }
 
     @Override
     public void commit() {
+        active = false;
         actions.add("EntityTransaction.commit");
     }
 
     @Override
     public void rollback() {
-
+        active = false;
+        actions.add("EntityTransaction.rollback");
     }
 
     @Override
@@ -39,6 +43,6 @@ public class EntityTransactionMock implements EntityTransaction {
 
     @Override
     public boolean isActive() {
-        return false;
+        return active;
     }
 }

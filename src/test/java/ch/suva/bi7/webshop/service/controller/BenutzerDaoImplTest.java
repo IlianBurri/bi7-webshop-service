@@ -1,117 +1,86 @@
 package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.BenutzerDaoImpl;
-import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.mock.ResultSetMock;
 import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
+import ch.suva.bi7.webshop.service.mock.EntityManagerMock;
+import jakarta.persistence.NoResultException;
 import org.junit.jupiter.api.Test;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class BenutzerDaoImplTest {
 
     @Test
-    void getBenutzerByEMailLiefertBenutzer() throws SQLException {
-        // Arrange
-        ResultSet resultSet = createResultSetMock(List.of(user("testBenutzer", "test", "test@somewhere.com")));
-        DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
-        BenutzerDaoImpl testee = createTestee(dbConnection);
+    void getBenutzerByEMailLiefertBenutzer() {
+        BenutzerEntity erwartet = new BenutzerEntity("testBenutzer", "test@somewhere.com", "test", false);
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.addResult(erwartet);
 
-        // Act
-        Optional<BenutzerEntity> benutzerOptional = testee.holeBenutzerNachEMail("test@somewhere.com");
+        Optional<BenutzerEntity> benutzer = new BenutzerDaoImpl(jpa.factory())
+                .holeBenutzerNachEMail("test@somewhere.com");
 
-        // Assert
-        assertTrue(benutzerOptional.isPresent());
-        assertEquals("testBenutzer", benutzerOptional.get().getUsername());
-        assertEquals("test", benutzerOptional.get().getPassword());
+        assertTrue(benutzer.isPresent());
+        assertSame(erwartet, benutzer.get());
+        assertEquals("test@somewhere.com", jpa.queries().get(0).parameters().get("email"));
     }
 
     @Test
-    void getBenutzerByEMailLiefertAdminStatus() throws SQLException {
-        ResultSet resultSet = createResultSetMock(List.of(user("admin", "admin", "admin@somewhere.com", true)));
-        DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
-        BenutzerDaoImpl testee = createTestee(dbConnection);
+    void getBenutzerByEMailLiefertAdminStatus() {
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.addResult(new BenutzerEntity("admin", "admin@somewhere.com", "admin", true));
 
-        Optional<BenutzerEntity> benutzerOptional = testee.holeBenutzerNachEMail("admin@somewhere.com");
+        BenutzerEntity benutzer = new BenutzerDaoImpl(jpa.factory())
+                .holeBenutzerNachEMail("admin@somewhere.com").orElseThrow();
 
-        assertTrue(benutzerOptional.isPresent());
-        assertTrue(benutzerOptional.get().isAdmin(), "Admin-Status muss aus der DB übernommen werden");
+        assertTrue(benutzer.isAdmin());
     }
 
     @Test
-    void getBenutzerByEMailOhneAdminFlagLiefertFalse() throws SQLException {
-        ResultSet resultSet = createResultSetMock(List.of(user("testBenutzer", "test", "test@somewhere.com")));
-        DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
-        BenutzerDaoImpl testee = createTestee(dbConnection);
+    void getBenutzerByEMailOhneAdminFlagLiefertFalse() {
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.addResult(new BenutzerEntity("testBenutzer", "test@somewhere.com", "test", false));
 
-        Optional<BenutzerEntity> benutzerOptional = testee.holeBenutzerNachEMail("test@somewhere.com");
-
-        assertTrue(benutzerOptional.isPresent());
-        assertFalse(benutzerOptional.get().isAdmin(), "Ohne Admin-Flag muss isAdmin false sein");
+        assertFalse(new BenutzerDaoImpl(jpa.factory())
+                .holeBenutzerNachEMail("test@somewhere.com").orElseThrow().isAdmin());
     }
 
     @Test
-    void getAllUsernamesLiefertAlleBenutzernamen() throws SQLException {
-        ResultSet resultSet = createResultSetMock(List.of(
-                user("testBenutzer", "test", "test@somewhere.com"),
-                user("testuser2", "test2", "test2@somewhere.com"),
-                user("testuser3", "test3", "test3@somewhere.com")));
-        DBConnection dbConnection = createDBConnectionMock(resultSet, 0);
+    void getAllUsersLiefertAlleBenutzer() {
+        List<BenutzerEntity> erwartet = List.of(
+                new BenutzerEntity("testBenutzer", "test@somewhere.com", "test", false),
+                new BenutzerEntity("testuser2", "test2@somewhere.com", "test2", false),
+                new BenutzerEntity("testuser3", "test3@somewhere.com", "test3", false));
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.addResult(erwartet);
 
-        BenutzerDaoImpl testee = createTestee(dbConnection);
+        List<BenutzerEntity> ergebnis = new BenutzerDaoImpl(jpa.factory()).holeAlleBenutzernamen();
 
-        List<String> ergebnisBenutzernamen = testee.holeAlleBenutzernamen();
-
-        assertEquals(
-                List.of("testBenutzer", "testuser2", "testuser3"),
-                ergebnisBenutzernamen,
-                "Es sollten genau 3 Benutzernamen in korrekter Reihenfolge zurück gegeben werden");
+        assertEquals(erwartet, ergebnis);
+        assertEquals("SELECT b FROM BenutzerEntity b", jpa.queries().get(0).sql());
     }
 
-    private Map<String, Object> user(String username, String password, String email) {
-        return user(username, password, email, false);
+    @Test
+    void unbekannteEmailLiefertEmpty() {
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.addResult(new NoResultException());
+
+        assertTrue(new BenutzerDaoImpl(jpa.factory())
+                .holeBenutzerNachEMail("nicht@vorhanden.example").isEmpty());
     }
 
-    private Map<String, Object> user(String username, String password, String email, boolean isAdmin) {
-        return Map.of(
-                "username", username,
-                "password", password,
-                "email", email,
-                "isAdmin", isAdmin);
+    @Test
+    void leereEmailLiefertEmptyOhneQuery() {
+        EntityManagerMock jpa = new EntityManagerMock();
+
+        assertTrue(new BenutzerDaoImpl(jpa.factory()).holeBenutzerNachEMail(" ").isEmpty());
+        assertTrue(jpa.queries().isEmpty());
     }
 
-    private BenutzerDaoImpl createTestee(DBConnection dbConnection) {
-        return new BenutzerDaoImpl(dbConnection);
-    }
-
-    private DBConnection createDBConnectionMock(ResultSet resultSet, int updateCount) {
-        return new DBConnection() {
-            @Override
-            public ResultSet execute(String sql, Object... params) {
-                return resultSet;
-            }
-
-            @Override
-            public int executeUpdate(String sql, Object... params) throws SQLException {
-                return updateCount;
-            }
-
-            @Override
-            public void close() {
-                // Nichts zu tun
-            }
-        };
-    }
-
-    private ResultSet createResultSetMock(List<Map<String, Object>> result) {
-        return new ResultSetMock(result);
+    @Test
+    void konstruktorLehntNullAb() {
+        assertThrows(IllegalArgumentException.class, () -> new BenutzerDaoImpl(null));
     }
 }

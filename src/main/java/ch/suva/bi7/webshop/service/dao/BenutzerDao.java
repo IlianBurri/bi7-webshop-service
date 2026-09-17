@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface BenutzerDao {
     Optional<BenutzerEntity> holeBenutzerNachEMail(String email) throws SQLException;
 
-    List<String> holeAlleBenutzernamen() throws SQLException;
+    List<BenutzerEntity> holeAlleBenutzernamen() throws SQLException;
 
     void speichereBenutzer(BenutzerEntity neuerBenutzer) throws Exception;
 }

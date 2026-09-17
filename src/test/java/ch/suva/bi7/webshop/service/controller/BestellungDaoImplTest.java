@@ -2,18 +2,13 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.BestellungDaoImpl;
 import ch.suva.bi7.webshop.service.dao.DaoException;
-import ch.suva.bi7.webshop.service.db.DBConnection;
-import ch.suva.bi7.webshop.service.mock.ResultSetMock;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
+import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
+import ch.suva.bi7.webshop.service.mock.EntityManagerMock;
 import org.junit.jupiter.api.Test;
 
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
-
 import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,237 +20,113 @@ class BestellungDaoImplTest {
     private static final String TEST_EMAIL = "bestellung.test@example.com";
 
     @Test
-    void bestellungenProUserFilternNachSchemaSpalteUserEmail() throws Exception {
-        List<SqlStatement> selects = new ArrayList<>();
-        BestellungDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), selects));
+    void bestellungenProUserFilternNachEmailUndSortieren() throws Exception {
+        EntityManagerMock jpa = new EntityManagerMock();
+        new BestellungDaoImpl(jpa.factory()).getBestellungenNachBenutzerEmail(TEST_EMAIL);
 
-        testee.getBestellungenNachBenutzerEmail(TEST_EMAIL);
-
-        SqlStatement sql = selects.get(0);
-        assertTrue(sql.sql().contains("WHERE userEmail = ?"),
-                "Spaltenname muss dem Schema entsprechen (userEmail), war: " + sql.sql());
-        assertTrue(sql.sql().contains("ORDER BY bestelldatum DESC"),
-                "Neueste Bestellung zuerst (Spalte bestelldatum), war: " + sql.sql());
-        assertFalse(sql.sql().contains("user_email"),
-                "Der alte snake_case-Spaltenname darf nicht mehr verwendet werden, war: " + sql.sql());
-        assertFalse(sql.sql().contains("bestellt_am"),
-                "Der alte snake_case-Spaltenname darf nicht mehr verwendet werden, war: " + sql.sql());
-        assertEquals(TEST_EMAIL, sql.params().get(0),
-                "Nur die Bestellungen dieses Users dürfen abgefragt werden");
+        SqlStatement query = jpa.queries().get(0);
+        assertTrue(query.sql().contains("WHERE b.userEmail = :email"));
+        assertTrue(query.sql().contains("ORDER BY b.bestellungId DESC"));
+        assertEquals(TEST_EMAIL, query.parameters().get("email"));
     }
 
     @Test
-    void bestellungPerIdNutztSchemaSpalteBestellungId() throws Exception {
-        List<SqlStatement> selects = new ArrayList<>();
-        BestellungDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), selects));
+    void bestellungPerIdNutztFind() throws Exception {
+        BestellungEntity erwartet = bestellung(42);
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.find(BestellungEntity.class, 42, erwartet);
 
-        testee.holeBestellungNachId(42);
-
-        SqlStatement sql = selects.get(0);
-        assertTrue(sql.sql().contains("WHERE bestellungId = ?"),
-                "Spaltenname muss dem Schema entsprechen (bestellungId), war: " + sql.sql());
-        assertEquals(List.of(42), sql.params(), "bestellungId muss als Parameter gebunden werden");
+        assertSame(erwartet, new BestellungDaoImpl(jpa.factory()).holeBestellungNachId(42).orElseThrow());
     }
 
     @Test
-    void bestellungLesenMapptZeilenMitSchemaSpaltennamen() throws Exception {
-        List<Map<String, Object>> zeilen = List.of(Map.of(
-                "bestellungId", 7,
-                "userEmail", TEST_EMAIL,
-                "adressId", 3,
-                "gesamtpreis", "3297.90",
-                "status", "BEZAHLT",
-                "bestelldatum", "2026-09-01 10:15:30"));
-        BestellungDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(zeilen), new ArrayList<>(), new ArrayList<>()));
+    void bestellungLesenLiefertGemappteEntity() throws Exception {
+        BestellungEntity erwartet = new BestellungEntity(7, TEST_EMAIL, 3, new BigDecimal("3297.90"),
+                "BEZAHLT", Timestamp.valueOf("2026-09-01 10:15:30"));
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.addResult(List.of(erwartet));
 
-        List<BestellungEntity> bestellungen = testee.getBestellungenNachBenutzerEmail(TEST_EMAIL);
+        BestellungEntity bestellung = new BestellungDaoImpl(jpa.factory())
+                .getBestellungenNachBenutzerEmail(TEST_EMAIL).get(0);
 
-        assertEquals(1, bestellungen.size(), "Es sollte genau 1 Bestellung zurückgegeben werden");
-        BestellungEntity bestellung = bestellungen.get(0);
         assertEquals(7, bestellung.getBestellungId());
         assertEquals(TEST_EMAIL, bestellung.getUserEmail());
         assertEquals(3, bestellung.getAdressId());
-        assertEquals(new BigDecimal("3297.90"), bestellung.getGesamtpreis(),
-                "Der gespeicherte Gesamtpreis muss zurückgelesen werden");
+        assertEquals(new BigDecimal("3297.90"), bestellung.getGesamtpreis());
         assertEquals("BEZAHLT", bestellung.getStatus());
-        assertEquals(Timestamp.valueOf("2026-09-01 10:15:30"), bestellung.getBestelltAm(),
-                "bestelldatum muss auf bestelltAm gemappt werden");
+        assertEquals(Timestamp.valueOf("2026-09-01 10:15:30"), bestellung.getBestelltAm());
     }
 
     @Test
     void bestellungErzeugenPersistiertGesamtpreisUndBestellpositionen() throws Exception {
-        BigDecimal gesamtpreis = new BigDecimal("1199.00").multiply(BigDecimal.valueOf(2))
-                .add(new BigDecimal("899.90"));
+        BigDecimal gesamtpreis = new BigDecimal("3297.90");
         List<WarenkorbEintragEntity> items = List.of(
-                new WarenkorbEintragEntity(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro", new BigDecimal("1199.00"), "bild"),
-                new WarenkorbEintragEntity(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24", new BigDecimal("899.90"), "bild"));
-        List<SqlStatement> updates = new ArrayList<>();
-        List<SqlStatement> selects = new ArrayList<>();
-        BestellungDaoImpl testee = createTestee(createDBConnectionMock(
-                createResultSetMock(List.of()), updates, selects, 7));
+                new WarenkorbEintragEntity(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro",
+                        new BigDecimal("1199.00"), "bild"),
+                new WarenkorbEintragEntity(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24",
+                        new BigDecimal("899.90"), "bild"));
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.generatedKey(7);
 
-        int bestellungId = testee.erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, gesamtpreis, items);
+        assertEquals(7, new BestellungDaoImpl(jpa.factory())
+                .erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, gesamtpreis, items));
 
-        assertEquals(7, bestellungId, "Der generierte Key der Bestellung muss zurückkommen");
-        assertEquals(4, updates.size(), "1 INSERT bestellung + 2 INSERT bestellposition + 1 DELETE warenkorb");
-
-        SqlStatement insertBestellung = updates.get(0);
-        assertTrue(insertBestellung.sql().startsWith("INSERT INTO bestellung"), "Erwartet INSERT, war: " + insertBestellung.sql());
-        assertTrue(insertBestellung.sql().contains("gesamtpreis"),
-                "Der Gesamtpreis muss gespeichert werden, war: " + insertBestellung.sql());
-        assertEquals(List.of(TEST_EMAIL, 3, gesamtpreis), insertBestellung.params(),
-                "userEmail, adressId und gesamtpreis müssen als Parameter gebunden werden");
-
-        SqlStatement erstePosition = updates.get(1);
-        assertTrue(erstePosition.sql().startsWith("INSERT INTO bestellposition"), "Erwartet INSERT, war: " + erstePosition.sql());
-        assertEquals(List.of(7, 5, 2, new BigDecimal("1199.00")), erstePosition.params(),
-                "bestellungId, artikelId, anzahl und einzelpreis als Parameter");
-        SqlStatement zweitePosition = updates.get(2);
-        assertEquals(List.of(7, 6, 1, new BigDecimal("899.90")), zweitePosition.params(),
-                "Pro Warenkorb-Item muss eine Bestellposition entstehen");
-
-        SqlStatement leeren = updates.get(3);
-        assertTrue(leeren.sql().startsWith("DELETE FROM warenkorb_item"), "Erwartet DELETE, war: " + leeren.sql());
-        assertEquals(List.of(TEST_EMAIL), leeren.params(), "Warenkorb des Users muss geleert werden");
-        assertTrue(selects.isEmpty(), "Nach dem Bestellen darf kein weiteres SELECT nötig sein");
+        assertEquals(3, jpa.queries().size());
+        SqlStatement erstePosition = jpa.queries().get(0);
+        assertTrue(erstePosition.nativeQuery());
+        assertTrue(erstePosition.sql().startsWith("INSERT INTO bestellposition"));
+        assertEquals(Map.of(1, 7, 2, 5, 3, 2, 4, new BigDecimal("1199.00")),
+                erstePosition.parameters());
+        assertEquals(Map.of(1, 7, 2, 6, 3, 1, 4, new BigDecimal("899.90")),
+                jpa.queries().get(1).parameters());
+        SqlStatement clearCart = jpa.queries().get(2);
+        assertTrue(clearCart.sql().startsWith("DELETE FROM warenkorb_item WHERE userEmail"));
+        assertEquals(Map.of("email", TEST_EMAIL), clearCart.parameters());
+        assertTrue(jpa.actions().contains("EntityManager.persist"));
+        assertTrue(jpa.actions().contains("EntityManager.flush"));
+        assertTrue(jpa.actions().contains("EntityTransaction.commit"));
     }
 
     @Test
     void bestellungPerIdOhneTrefferLiefertEmpty() throws Exception {
-        BestellungDaoImpl testee = createTestee(createDBConnectionMock(createResultSetMock(List.of()), new ArrayList<>(), new ArrayList<>()));
-
-        Optional<BestellungEntity> ergebnis = testee.holeBestellungNachId(999);
-
-        assertTrue(ergebnis.isEmpty(), "Ohne Treffer muss Optional.empty kommen");
+        assertTrue(new BestellungDaoImpl(new EntityManagerMock().factory())
+                .holeBestellungNachId(999).isEmpty());
     }
 
     @Test
     void datenbankFehlerWirdAlsDaoExceptionGeworfen() {
-        BestellungDaoImpl testee = createTestee(createThrowingDBConnectionMock());
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.queryException(new RuntimeException("Simulierter Datenbankfehler"));
 
         DaoException ex = assertThrows(DaoException.class,
-                () -> testee.getBestellungenNachBenutzerEmail(TEST_EMAIL),
-                "SQL-Fehler müssen als DaoException (nicht als generisches Exception) nach oben propagieren");
-        assertNotNull(ex.getCause(), "Die ursprüngliche SQLException muss als Cause erhalten bleiben");
-    }
-
-
-    private BestellungDaoImpl createTestee(DBConnection dbConnection) {
-        return new BestellungDaoImpl(dbConnection);
-    }
-
-    private DBConnection createDBConnectionMock(ResultSet resultSet, List<SqlStatement> updateLog,
-                                                List<SqlStatement> selectLog) {
-        return createDBConnectionMock(resultSet, updateLog, selectLog, 1);
-    }
-
-    private DBConnection createDBConnectionMock(ResultSet resultSet, List<SqlStatement> updateLog,
-                                                List<SqlStatement> selectLog, int generierterKey) {
-        return new DBConnection() {
-            @Override
-            public ResultSet execute(String sql, Object... params) {
-                selectLog.add(new SqlStatement(sql, List.of(params)));
-                return resultSet;
-            }
-
-            @Override
-            public int executeUpdate(String sql, Object... params) {
-                updateLog.add(new SqlStatement(sql, List.of(params)));
-                return 1;
-            }
-
-            @Override
-            public int executeUpdateReturningGeneratedKeys(String sql, Object... params) throws SQLException {
-                updateLog.add(new SqlStatement(sql, List.of(params)));
-                return generierterKey;
-            }
-
-            @Override
-            public void beginTransaction() throws SQLException {
-            }
-
-            @Override
-            public void commit() throws SQLException {
-            }
-
-            @Override
-            public void rollback() throws SQLException {
-            }
-
-            @Override
-            public void close() {
-            }
-        };
+                () -> new BestellungDaoImpl(jpa.factory()).getBestellungenNachBenutzerEmail(TEST_EMAIL));
+        assertNotNull(ex.getCause());
     }
 
     @Test
     void fehlerBeimBestellenFuehrtZuRollbackUndKeinemCommit() {
-        int[] transaktion = new int[3];
-        BestellungDaoImpl testee = new BestellungDaoImpl(new DBConnection() {
-            @Override
-            public ResultSet execute(String sql, Object... params) {
-                return createResultSetMock(List.of());
-            }
-
-            @Override
-            public int executeUpdate(String sql, Object... params) throws SQLException {
-                throw new SQLException("Simulierter Fehler bei der Bestellposition");
-            }
-
-            @Override
-            public int executeUpdateReturningGeneratedKeys(String sql, Object... params) {
-                return 9;
-            }
-
-            @Override
-            public void beginTransaction() {
-                transaktion[0]++;
-            }
-
-            @Override
-            public void commit() {
-                transaktion[1]++;
-            }
-
-            @Override
-            public void rollback() {
-                transaktion[2]++;
-            }
-
-            @Override
-            public void close() {
-            }
-        });
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.generatedKey(9);
+        jpa.updateException(new RuntimeException("Simulierter Fehler bei der Bestellposition"));
+        BestellungDaoImpl testee = new BestellungDaoImpl(jpa.factory());
 
         DaoException ex = assertThrows(DaoException.class,
                 () -> testee.erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, new BigDecimal("10.00"),
-                        List.of(new WarenkorbEintragEntity(1, TEST_EMAIL, 5, 1, "iPhone 15 Pro", new BigDecimal("10.00"), "bild"))),
-                "SQL-Fehler müssen als DaoException geworfen werden");
-        assertNotNull(ex.getCause(), "Die ursprüngliche SQLException muss erhalten bleiben");
-        assertEquals(1, transaktion[0], "Die Transaktion muss begonnen werden");
-        assertEquals(0, transaktion[1], "Bei Fehler darf nicht committet werden");
-        assertEquals(1, transaktion[2], "Bei Fehler muss zurückgerollt werden");
+                        List.of(new WarenkorbEintragEntity(1, TEST_EMAIL, 5, 1, "iPhone 15 Pro",
+                                new BigDecimal("10.00"), "bild"))));
+        assertNotNull(ex.getCause());
+        assertTrue(jpa.actions().contains("EntityTransaction.begin"));
+        assertTrue(jpa.actions().contains("EntityTransaction.rollback"));
+        assertFalse(jpa.actions().contains("EntityTransaction.commit"));
     }
 
-    private DBConnection createThrowingDBConnectionMock() {
-        return new DBConnection() {
-            @Override
-            public ResultSet execute(String sql, Object... params) throws SQLException {
-                throw new SQLException("Simulierter Datenbankfehler");
-            }
-
-            @Override
-            public int executeUpdate(String sql, Object... params) throws SQLException {
-                throw new SQLException("Simulierter Datenbankfehler");
-            }
-
-            @Override
-            public void close() {
-            }
-        };
+    @Test
+    void konstruktorLehntNullAb() {
+        assertThrows(IllegalArgumentException.class, () -> new BestellungDaoImpl(null));
     }
 
-    private ResultSet createResultSetMock(List<Map<String, Object>> result) {
-        return new ResultSetMock(result);
+    private BestellungEntity bestellung(int id) {
+        return new BestellungEntity(id, TEST_EMAIL, 3, new BigDecimal("10.00"),
+                "OFFEN", new Timestamp(0));
     }
 }

@@ -1,6 +1,6 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import java.util.List;
+import java.util.Map;
 
-record SqlStatement(String sql, List<Object> params) {
+public record SqlStatement(String sql, Map<Object, Object> parameters, boolean nativeQuery) {
 }
