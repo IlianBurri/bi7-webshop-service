@@ -18,7 +18,7 @@ public final class BestellungMapper {
                 entity.getUserEmail(),
                 entity.getAdressId(),
                 entity.getGesamtpreis(),
-                entity.getStatus(),
+                entity.getStatus().name(),
                 entity.getBestelltAm()
         );
     }

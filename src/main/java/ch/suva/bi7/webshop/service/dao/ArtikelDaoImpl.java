@@ -20,11 +20,12 @@ public class ArtikelDaoImpl implements ArtikelDao {
     }
 
     @Override
-    public List<ArtikelEntity> getAllArtikel() throws Exception {
+    public List<ArtikelEntity> getAllArtikel() {
         try (EntityManager em = entityManagerFactory.createEntityManager()) {
             return em.createQuery("SELECT a FROM ArtikelEntity a", ArtikelEntity.class).getResultList();
         }
     }
+
 
     @Override
     public ArtikelEntity erstelleNeuenArtikel(String name, BigDecimal preis, String bild) throws DaoException {

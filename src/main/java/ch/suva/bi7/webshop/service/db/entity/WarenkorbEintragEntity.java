@@ -42,7 +42,6 @@ public class WarenkorbEintragEntity {
     }
 
     public WarenkorbEintragEntity(
-            Integer warenkorbItemId,
             String userEmail,
             Integer artikelId,
             Integer menge,
@@ -50,9 +49,6 @@ public class WarenkorbEintragEntity {
             BigDecimal artikelPreis,
             String artikelBild) {
 
-        if (warenkorbItemId != null && warenkorbItemId <= 0) {
-            throw new IllegalArgumentException("warenkorbItemId muss > 0 sein");
-        }
         if (userEmail == null || userEmail.trim().isEmpty()) {
             throw new IllegalArgumentException("userEmail darf nicht null/leer sein");
         }
@@ -72,7 +68,6 @@ public class WarenkorbEintragEntity {
             throw new IllegalArgumentException("artikelBild darf nicht leer sein");
         }
 
-        this.warenkorbItemId = warenkorbItemId;
         this.userEmail = userEmail;
         this.artikelId = artikelId;
         this.menge = menge;

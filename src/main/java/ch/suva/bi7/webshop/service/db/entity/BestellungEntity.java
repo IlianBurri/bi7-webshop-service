@@ -2,6 +2,8 @@ package ch.suva.bi7.webshop.service.db.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,7 +31,8 @@ public class BestellungEntity {
     private BigDecimal gesamtpreis;
 
     @Column(name = "status", nullable = false, length = 50)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private BestellungStatus status;
 
     @Column(name = "bestelldatum")
     private Timestamp bestelltAm;
@@ -38,16 +41,11 @@ public class BestellungEntity {
         // Required by JPA
     }
 
-    public BestellungEntity(Integer bestellungId,
-                            String userEmail,
+    public BestellungEntity(String userEmail,
                             Integer adressId,
                             BigDecimal gesamtpreis,
-                            String status,
+                            BestellungStatus status,
                             Timestamp bestelltAm) {
-        if (bestellungId != null && bestellungId <= 0) {
-            throw new IllegalArgumentException(
-                    "bestellungId muss > 0 sein, wenn sie bereits vergeben ist");
-        }
         if (userEmail == null || userEmail.trim().isEmpty()) {
             throw new IllegalArgumentException(
                     "userEmail darf nicht null/leer sein");
@@ -62,20 +60,15 @@ public class BestellungEntity {
         if (gesamtpreis == null || gesamtpreis.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("gesamtpreis muss > 0 sein");
         }
-        if (status == null || status.trim().isEmpty()) {
+        if (status == null) {
             throw new IllegalArgumentException(
-                    "status darf nicht null/leer sein");
-        }
-        if (status.trim().length() > 50) {
-            throw new IllegalArgumentException(
-                    "status darf maximal 50 Zeichen lang sein");
+                    "status darf nicht null sein");
         }
 
-        this.bestellungId = bestellungId;
         this.userEmail = userEmail.trim();
         this.adressId = adressId;
         this.gesamtpreis = gesamtpreis;
-        this.status = status.trim();
+        this.status = status;
         this.bestelltAm = bestelltAm;
     }
 
@@ -95,7 +88,7 @@ public class BestellungEntity {
         return gesamtpreis;
     }
 
-    public String getStatus() {
+    public BestellungStatus getStatus() {
         return status;
     }
 
@@ -103,11 +96,4 @@ public class BestellungEntity {
         return bestelltAm;
     }
 
-    public BestellungEntity(String userEmail,
-                            Integer adressId,
-                            BigDecimal gesamtpreis,
-                            String status,
-                            Timestamp bestelltAm) {
-        this(null, userEmail, adressId, gesamtpreis, status, bestelltAm);
-    }
 }

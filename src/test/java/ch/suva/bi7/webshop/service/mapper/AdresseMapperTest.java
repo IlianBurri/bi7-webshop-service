@@ -2,6 +2,7 @@ package ch.suva.bi7.webshop.service.mapper;
 
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
 import ch.suva.bi7.webshop.service.model.AdresseDto;
+import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -11,7 +12,7 @@ class AdresseMapperTest {
 
     @Test
     void mapToDtoUebernimmtAlleWerte() {
-        AdresseEntity entity = new AdresseEntity(
+        AdresseEntity entity = EntityHelper.createAdresseEntity(
                 3, "user@example.com", "Anna", "Muster", "Hauptstrasse 1", "8000", "Zuerich", "Schweiz"
         );
 

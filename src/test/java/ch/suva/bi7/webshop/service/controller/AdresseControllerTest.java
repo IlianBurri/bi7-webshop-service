@@ -2,6 +2,7 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.AdresseDao;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
+import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import ch.suva.bi7.webshop.service.mock.AdresseContextMock;
 import ch.suva.bi7.webshop.service.mock.AdresseDaoMock;
 import ch.suva.bi7.webshop.service.mock.FehlerAdresseDao;
@@ -20,11 +21,11 @@ class AdresseControllerTest {
     private static final String TEST_EMAIL = "max@example.ch";
 
     private static final AdresseEntity BEISPIEL_ADRESSE =
-            new AdresseEntity(null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
+            EntityHelper.createAdresseEntity(1, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
 
     @Test
     void adressenAbrufenLiefertAdressenAlsJson() throws Exception {
-        AdresseEntity adresse = new AdresseEntity(1, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
+        AdresseEntity adresse = EntityHelper.createAdresseEntity(1, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
         AdresseContextMock ctx = new AdresseContextMock();
         ctx.setPathParam("email", TEST_EMAIL);
         AdresseController controller = controller(new AdresseDaoMock(List.of(adresse)));

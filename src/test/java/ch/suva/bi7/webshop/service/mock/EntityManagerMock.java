@@ -1,7 +1,7 @@
 package ch.suva.bi7.webshop.service.mock;
 
 import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
-import ch.suva.bi7.webshop.service.helper.ArtikelEntityHelper;
+import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -21,7 +21,6 @@ public class EntityManagerMock implements EntityManager {
     private EntityTransaction entityTransaction;
     private List<String> actions;
     private int generierterKey;
-    private boolean simulatePersistError = false;
     private final Deque<Object> results = new ArrayDeque<>();
     private final Deque<Integer> updateCounts = new ArrayDeque<>();
     private final List<Object> persistedEntities = new ArrayList<>();
@@ -35,18 +34,8 @@ public class EntityManagerMock implements EntityManager {
         this.actions = sharedActions;
     }
 
-    public EntityManagerMock(EntityTransaction entityTransaction, List<String> actions, int generierterKey, boolean simulatePersistError) {
-        this.entityTransaction = entityTransaction;
-        this.generierterKey = generierterKey;
-        this.simulatePersistError = simulatePersistError;
-        this.actions = actions;
-    }
-
     @Override
     public void persist(Object entity) {
-        if (simulatePersistError) {
-            throw new RuntimeException("Simulierter Persist-Fehler");
-        }
         persistedEntities.add(entity);
         if (updateException != null) {
             throw updateException;
@@ -59,7 +48,7 @@ public class EntityManagerMock implements EntityManager {
                 id.set(entity, generierterKey);
             } catch (ReflectiveOperationException ignored) {
                 if (entity instanceof ArtikelEntity artikel) {
-                    ArtikelEntityHelper.setArtikelId(artikel, generierterKey);
+                    EntityHelper.setArtikelId(artikel, generierterKey);
                 }
             }
         }
@@ -295,10 +284,6 @@ public class EntityManagerMock implements EntityManager {
 
     public void generatedKey(int key) {
         generierterKey = key;
-    }
-
-    public void persistError(boolean value) {
-        simulatePersistError = value;
     }
 
     public void queryException(RuntimeException exception) {

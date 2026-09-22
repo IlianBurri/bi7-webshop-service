@@ -34,14 +34,10 @@ public class BestellPositionEntity {
         // Required by JPA
     }
 
-    public BestellPositionEntity(Integer bestellpositionId,
-                                 Integer bestellungId,
+    public BestellPositionEntity(Integer bestellungId,
                                  Integer artikelId,
                                  Integer anzahl,
                                  BigDecimal einzelpreis) {
-        if (bestellpositionId != null && bestellpositionId <= 0) {
-            throw new IllegalArgumentException("bestellpositionId muss > 0 sein");
-        }
         if (bestellungId == null || bestellungId <= 0) {
             throw new IllegalArgumentException("bestellungId muss > 0 sein");
         }
@@ -55,18 +51,10 @@ public class BestellPositionEntity {
             throw new IllegalArgumentException("einzelpreis muss > 0 sein");
         }
 
-        this.bestellpositionId = bestellpositionId;
         this.bestellungId = bestellungId;
         this.artikelId = artikelId;
         this.anzahl = anzahl;
         this.einzelpreis = einzelpreis;
-    }
-
-    public BestellPositionEntity(Integer bestellungId,
-                                 Integer artikelId,
-                                 Integer anzahl,
-                                 BigDecimal einzelpreis) {
-        this(null, bestellungId, artikelId, anzahl, einzelpreis);
     }
 
     public Integer getBestellpositionId() {

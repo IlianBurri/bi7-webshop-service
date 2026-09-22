@@ -2,6 +2,7 @@ package ch.suva.bi7.webshop.service.mapper;
 
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.model.WarenkorbEintragDto;
+import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -13,7 +14,7 @@ class WarenkorbEintragMapperTest {
 
     @Test
     void mapToDtoUebernimmtAlleWerte() {
-        WarenkorbEintragEntity entity = new WarenkorbEintragEntity(
+        WarenkorbEintragEntity entity = EntityHelper.createWarenkorbEintragEntity(
                 5, "user@example.com", 7, 2, "Tastatur", new BigDecimal("49.90"), "bild.png"
         );
 

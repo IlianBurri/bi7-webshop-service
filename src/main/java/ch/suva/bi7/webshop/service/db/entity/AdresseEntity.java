@@ -41,18 +41,13 @@ public class AdresseEntity {
         // Required by JPA
     }
 
-    public AdresseEntity(Integer adressId,
-                         String userEmail,
+    public AdresseEntity(String userEmail,
                          String vorname,
                          String nachname,
                          String strasse,
                          String plz,
                          String ort,
                          String land) {
-        if (adressId != null && adressId <= 0) {
-            throw new IllegalArgumentException(
-                    "adressId muss > 0 sein, wenn sie bereits vergeben ist");
-        }
         if (userEmail == null || userEmail.trim().isEmpty()) {
             throw new IllegalArgumentException(
                     "userEmail darf nicht null/leer sein");
@@ -110,7 +105,6 @@ public class AdresseEntity {
                     "Land darf maximal 100 Zeichen lang sein");
         }
 
-        this.adressId = adressId;
         this.userEmail = userEmail.trim();
         this.vorname = vorname.trim();
         this.nachname = nachname.trim();

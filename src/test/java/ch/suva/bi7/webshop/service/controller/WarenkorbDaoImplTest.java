@@ -3,6 +3,7 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDaoImpl;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
+import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import ch.suva.bi7.webshop.service.mock.EntityManagerMock;
 import org.junit.jupiter.api.Test;
 
@@ -17,9 +18,9 @@ class WarenkorbDaoImplTest {
     void warenkorbLesenLiefertItemsMitJoindaten() throws Exception {
         EntityManagerMock jpa = new EntityManagerMock();
         List<WarenkorbEintragEntity> tuples = List.of(
-                new WarenkorbEintragEntity(1, "test@somewhere.com", 5, 3, "iPhone 15 Pro",
+                EntityHelper.createWarenkorbEintragEntity(1, "test@somewhere.com", 5, 3, "iPhone 15 Pro",
                         new BigDecimal("1199.00"), "https://example.com/iphone.jpg"),
-                new WarenkorbEintragEntity(2, "test@somewhere.com", 6, 1, "Samsung Galaxy S24",
+                EntityHelper.createWarenkorbEintragEntity(2, "test@somewhere.com", 6, 1, "Samsung Galaxy S24",
                         new BigDecimal("899.90"), "https://example.com/galaxy.jpg"));
         jpa.addResult(tuples);
 

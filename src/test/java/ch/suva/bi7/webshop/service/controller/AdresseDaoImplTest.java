@@ -3,6 +3,7 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.AdresseDaoImpl;
 import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
+import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import ch.suva.bi7.webshop.service.mock.EntityManagerMock;
 import org.junit.jupiter.api.Test;
 
@@ -14,14 +15,14 @@ class AdresseDaoImplTest {
 
     private static final String TEST_EMAIL = "max@example.ch";
     private static final AdresseEntity BEISPIEL_ADRESSE =
-            new AdresseEntity(null, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
+            EntityHelper.createAdresseEntity(1, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz");
 
     @Test
     void adressenLesenLiefertAdressenMitAllenFeldern() throws Exception {
         EntityManagerMock jpa = new EntityManagerMock();
         jpa.addResult(List.of(
-                new AdresseEntity(1, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz"),
-                new AdresseEntity(2, TEST_EMAIL, "Anna", "Beispiel", "Testweg 2", "3000", "Bern", "Schweiz")));
+                EntityHelper.createAdresseEntity(1, TEST_EMAIL, "Max", "Muster", "Musterstrasse 1", "8000", "Zuerich", "Schweiz"),
+                EntityHelper.createAdresseEntity(2, TEST_EMAIL, "Anna", "Beispiel", "Testweg 2", "3000", "Bern", "Schweiz")));
 
         List<AdresseEntity> adressen = new AdresseDaoImpl(jpa.factory()).ladeAdressenNachBenutzerEmail(TEST_EMAIL);
 

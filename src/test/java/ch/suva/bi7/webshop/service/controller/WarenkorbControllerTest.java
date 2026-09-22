@@ -1,6 +1,7 @@
 package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
+import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import ch.suva.bi7.webshop.service.mock.WarenkorbDaoMock;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.service.WarenkorbService;
@@ -18,7 +19,7 @@ class WarenkorbControllerTest {
 
     @Test
     void warenkorbAbrufenLiefertItemsAlsJson() throws Exception {
-        WarenkorbEintragEntity item = new WarenkorbEintragEntity(
+        WarenkorbEintragEntity item = EntityHelper.createWarenkorbEintragEntity(
                 1, "test@example.com", 5, 3,
                 "iPhone 15 Pro", new BigDecimal("1199.00"), null);
         WarenkorbContextMock ctx = new WarenkorbContextMock();

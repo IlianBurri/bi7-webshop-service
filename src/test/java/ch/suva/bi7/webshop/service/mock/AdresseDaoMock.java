@@ -2,6 +2,7 @@ package ch.suva.bi7.webshop.service.mock;
 
 import ch.suva.bi7.webshop.service.dao.AdresseDao;
 import ch.suva.bi7.webshop.service.db.entity.AdresseEntity;
+import ch.suva.bi7.webshop.service.helper.EntityHelper;
 
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class AdresseDaoMock implements AdresseDao {
     @Override
     public AdresseEntity insert(AdresseEntity adresse) {
         gespeicherteAdresse = adresse;
-        return new AdresseEntity(42, adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
+        return EntityHelper.createAdresseEntity(42, adresse.getUserEmail(), adresse.getVorname(), adresse.getNachname(),
                 adresse.getStrasse(), adresse.getPlz(), adresse.getOrt(), adresse.getLand());
     }
 

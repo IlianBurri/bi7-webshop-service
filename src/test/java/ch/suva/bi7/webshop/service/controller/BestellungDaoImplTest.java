@@ -3,8 +3,10 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.BestellungDaoImpl;
 import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
+import ch.suva.bi7.webshop.service.db.entity.BestellungStatus;
 import ch.suva.bi7.webshop.service.db.entity.BestellPositionEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
+import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import ch.suva.bi7.webshop.service.mock.EntityManagerMock;
 import org.junit.jupiter.api.Test;
 
@@ -38,8 +40,8 @@ class BestellungDaoImplTest {
 
     @Test
     void bestellungLesenLiefertGemappteEntity() throws Exception {
-        BestellungEntity erwartet = new BestellungEntity(7, TEST_EMAIL, 3, new BigDecimal("3297.90"),
-                "BEZAHLT", Timestamp.valueOf("2026-09-01 10:15:30"));
+        BestellungEntity erwartet = EntityHelper.createBestellungEntity(7, TEST_EMAIL, 3, new BigDecimal("3297.90"),
+                BestellungStatus.BEZAHLT, Timestamp.valueOf("2026-09-01 10:15:30"));
         EntityManagerMock jpa = new EntityManagerMock();
         jpa.addResult(List.of(erwartet));
 
@@ -50,7 +52,7 @@ class BestellungDaoImplTest {
         assertEquals(TEST_EMAIL, bestellung.getUserEmail());
         assertEquals(3, bestellung.getAdressId());
         assertEquals(new BigDecimal("3297.90"), bestellung.getGesamtpreis());
-        assertEquals("BEZAHLT", bestellung.getStatus());
+        assertEquals(BestellungStatus.BEZAHLT, bestellung.getStatus());
         assertEquals(Timestamp.valueOf("2026-09-01 10:15:30"), bestellung.getBestelltAm());
     }
 
@@ -58,9 +60,9 @@ class BestellungDaoImplTest {
     void bestellungErzeugenPersistiertGesamtpreisUndBestellpositionen() throws Exception {
         BigDecimal gesamtpreis = new BigDecimal("3297.90");
         List<WarenkorbEintragEntity> items = List.of(
-                new WarenkorbEintragEntity(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro",
+                EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro",
                         new BigDecimal("1199.00"), "bild"),
-                new WarenkorbEintragEntity(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24",
+                EntityHelper.createWarenkorbEintragEntity(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24",
                         new BigDecimal("899.90"), "bild"));
         EntityManagerMock jpa = new EntityManagerMock();
         jpa.generatedKey(7);
@@ -109,7 +111,7 @@ class BestellungDaoImplTest {
 
         DaoException ex = assertThrows(DaoException.class,
                 () -> testee.erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, new BigDecimal("10.00"),
-                        List.of(new WarenkorbEintragEntity(1, TEST_EMAIL, 5, 1, "iPhone 15 Pro",
+                        List.of(EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, 5, 1, "iPhone 15 Pro",
                                 new BigDecimal("10.00"), "bild"))));
         assertNotNull(ex.getCause());
         assertTrue(jpa.actions().contains("EntityTransaction.begin"));
@@ -123,7 +125,7 @@ class BestellungDaoImplTest {
     }
 
     private BestellungEntity bestellung(int id) {
-        return new BestellungEntity(id, TEST_EMAIL, 3, new BigDecimal("10.00"),
-                "OFFEN", new Timestamp(0));
+        return EntityHelper.createBestellungEntity(id, TEST_EMAIL, 3, new BigDecimal("10.00"),
+                BestellungStatus.OFFEN, new Timestamp(0));
     }
 }

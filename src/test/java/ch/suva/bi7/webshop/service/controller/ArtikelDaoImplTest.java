@@ -56,7 +56,7 @@ class ArtikelDaoImplTest {
     @Test
     void addArtikelBeiSqlFehlerWirftDaoExceptionUndRolltZurueck() {
         EntityManagerMock jpa = new EntityManagerMock();
-        jpa.persistError(true);
+        jpa.updateException(new RuntimeException("Simulierter Persist-Fehler"));
 
         DaoException ex = assertThrows(DaoException.class,
                 () -> new ArtikelDaoImpl(jpa.factory())
