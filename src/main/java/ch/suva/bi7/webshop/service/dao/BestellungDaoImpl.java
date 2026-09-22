@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.dao;
 
+import ch.suva.bi7.webshop.service.db.entity.BestellPositionEntity;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import jakarta.persistence.EntityManager;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,30 +40,22 @@ public class BestellungDaoImpl implements BestellungDao {
                     userEmail,
                     adressId,
                     gesamtpreis,
-                    "OFFEN",
-                    new java.sql.Timestamp(System.currentTimeMillis())
+                    "BEZAHLT",
+                    new Timestamp(System.currentTimeMillis())
             );
             em.persist(bestellung);
             em.flush();
 
-            // TODO kein SQL selber schreiben sonder via JPA speichen, siehe BestellungEntity
-//            String insertPositionSql = "INSERT INTO bestellposition (bestellungId, artikelId, anzahl, einzelpreis) VALUES (?, ?, ?, ?)";
-
             for (WarenkorbEintragEntity eintrag : warenkorbEintragEntityList) {
-                // TODO 1. BestellpositionEntity erstellen
-                // TOOD 2. BestellpositionEntity mit em.persist speichern
+                BestellPositionEntity bestellPosition = new BestellPositionEntity(
+                        bestellung.getBestellungId(),
+                        eintrag.getArtikelId(),
+                        eintrag.getMenge(),
+                        eintrag.getArtikelPreis()
+                );
+                em.persist(bestellPosition);
 
-                // persist verwenden statt SQL!!
-//                em.persist(bestellpositionEntity);
-                em.remove(eintrag);
-//                em.createNativeQuery(insertPositionSql)
-//                        .setParameter(1, bestellung.getBestellungId())
-//                        .setParameter(2, eintrag.getArtikelId())
-//                        .setParameter(3, eintrag.getMenge())
-//                        .setParameter(4, eintrag.getArtikelPreis())
-//                        .executeUpdate();
             }
-
             tx.commit();
             return bestellung.getBestellungId();
 

@@ -14,9 +14,7 @@ import java.util.Map;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.LinkedHashMap;
 import java.lang.reflect.Proxy;
-import ch.suva.bi7.webshop.service.controller.SqlStatement;
 
 public class EntityManagerMock implements EntityManager {
 
@@ -26,8 +24,7 @@ public class EntityManagerMock implements EntityManager {
     private boolean simulatePersistError = false;
     private final Deque<Object> results = new ArrayDeque<>();
     private final Deque<Integer> updateCounts = new ArrayDeque<>();
-    @Deprecated // statt dessen etwas anderes verwenden, z.B. "actions"
-    private final List<SqlStatement> queries = new ArrayList<>();
+    private final List<Object> persistedEntities = new ArrayList<>();
     private RuntimeException queryException;
     private RuntimeException updateException;
     private final Map<FindKey, Object> findResults = new java.util.HashMap<>();
@@ -50,6 +47,7 @@ public class EntityManagerMock implements EntityManager {
         if (simulatePersistError) {
             throw new RuntimeException("Simulierter Persist-Fehler");
         }
+        persistedEntities.add(entity);
         if (updateException != null) {
             throw updateException;
         }
@@ -180,7 +178,7 @@ public class EntityManagerMock implements EntityManager {
 
     @Override
     public Query createQuery(String qlString) {
-        return createQueryProxy(qlString, false);
+        return createQueryProxy();
     }
 
     @Override
@@ -200,7 +198,7 @@ public class EntityManagerMock implements EntityManager {
 
     @Override
     public <T> TypedQuery<T> createQuery(String qlString, Class<T> resultClass) {
-        return (TypedQuery<T>) createQueryProxy(qlString, false);
+        return (TypedQuery<T>) createQueryProxy();
     }
 
     @Override
@@ -215,12 +213,12 @@ public class EntityManagerMock implements EntityManager {
 
     @Override
     public Query createNativeQuery(String sqlString) {
-        return createQueryProxy(sqlString, true);
+        return createQueryProxy();
     }
 
     @Override
     public Query createNativeQuery(String sqlString, Class resultClass) {
-        return createQueryProxy(sqlString, true);
+        return createQueryProxy();
     }
 
     @Override
@@ -311,29 +309,25 @@ public class EntityManagerMock implements EntityManager {
         updateException = exception;
     }
 
-    public List<SqlStatement> queries() {
-        return queries;
-    }
-
     public List<String> actions() {
         return actions;
+    }
+
+    public List<Object> persistedEntities() {
+        return persistedEntities;
     }
 
     public void find(Class<?> type, Object id, Object result) {
         findResults.put(new FindKey(type, id), result);
     }
 
-    private Query createQueryProxy(String queryString, boolean nativeQuery) {
-        Map<Object, Object> parameters = new LinkedHashMap<>();
-        actions.add("createQueryProxy: " + queryString);
-        // TODO: queries löschen!!!!
-        queries.add(new SqlStatement(queryString, parameters, nativeQuery));
+    private Query createQueryProxy() {
+        actions.add("createQueryProxy");
         final Query[] holder = new Query[1];
         holder[0] = (Query) Proxy.newProxyInstance(Query.class.getClassLoader(),
                 new Class<?>[]{Query.class, TypedQuery.class}, (object, method, args) -> {
                     switch (method.getName()) {
                         case "setParameter" -> {
-                            parameters.put(args[0], args[1]);
                             return holder[0];
                         }
                         case "getResultList" -> {

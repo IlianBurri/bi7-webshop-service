@@ -81,6 +81,21 @@ public class WarenkorbEintragEntity {
         this.artikelBild = artikelBild;
     }
 
+    public WarenkorbEintragEntity(String userEmail, Integer artikelId, Integer menge) {
+        if (userEmail == null || userEmail.trim().isEmpty()) {
+            throw new IllegalArgumentException("userEmail darf nicht null/leer sein");
+        }
+        if (artikelId == null || artikelId <= 0) {
+            throw new IllegalArgumentException("artikelId muss > 0 sein");
+        }
+        if (menge == null || menge <= 0) {
+            throw new IllegalArgumentException("menge muss > 0 sein");
+        }
+        this.userEmail = userEmail;
+        this.artikelId = artikelId;
+        this.menge = menge;
+    }
+
     public Integer getWarenkorbItemId() {
         return warenkorbItemId;
     }
@@ -95,6 +110,13 @@ public class WarenkorbEintragEntity {
 
     public Integer getMenge() {
         return menge;
+    }
+
+    public void erhoeheMenge(int menge) {
+        if (menge <= 0) {
+            throw new IllegalArgumentException("menge muss > 0 sein");
+        }
+        this.menge += menge;
     }
 
     public String getArtikelName() {

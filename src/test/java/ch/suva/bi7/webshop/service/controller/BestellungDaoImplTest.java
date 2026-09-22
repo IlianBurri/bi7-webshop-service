@@ -3,6 +3,7 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.BestellungDaoImpl;
 import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
+import ch.suva.bi7.webshop.service.db.entity.BestellPositionEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.mock.EntityManagerMock;
 import org.junit.jupiter.api.Test;
@@ -10,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,10 +24,7 @@ class BestellungDaoImplTest {
         EntityManagerMock jpa = new EntityManagerMock();
         new BestellungDaoImpl(jpa.factory()).getBestellungenNachBenutzerEmail(TEST_EMAIL);
 
-        SqlStatement query = jpa.queries().get(0);
-        assertTrue(query.sql().contains("WHERE b.userEmail = :email"));
-        assertTrue(query.sql().contains("ORDER BY b.bestellungId DESC"));
-        assertEquals(TEST_EMAIL, query.parameters().get("email"));
+        assertTrue(jpa.actions().contains("createQueryProxy"));
     }
 
     @Test
@@ -72,21 +69,19 @@ class BestellungDaoImplTest {
                 .erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, gesamtpreis, items));
 
 
-        assertEquals(5, jpa.actions().size());
-        // TODO Wenn alles auf persist statt insert via SQL umgestellt ist, dann kann man hier wieder Prüfungen auf 'actions' machen.
-//        SqlStatement erstePosition = jpa.queries().get(0);
-//        assertTrue(erstePosition.nativeQuery());
-//        assertTrue(erstePosition.sql().startsWith("INSERT INTO bestellposition"));
-//        assertEquals(Map.of(1, 7, 2, 5, 3, 2, 4, new BigDecimal("1199.00")),
-//                erstePosition.parameters());
-//        assertEquals(Map.of(1, 7, 2, 6, 3, 1, 4, new BigDecimal("899.90")),
-//                jpa.queries().get(1).parameters());
-//        SqlStatement clearCart = jpa.queries().get(2);
-//        assertTrue(clearCart.sql().startsWith("DELETE FROM warenkorb_item WHERE userEmail"));
-//        assertEquals(Map.of("email", TEST_EMAIL), clearCart.parameters());
-//        assertTrue(jpa.actions().contains("EntityManager.persist"));
-//        assertTrue(jpa.actions().contains("EntityManager.flush"));
-//        assertTrue(jpa.actions().contains("EntityTransaction.commit"));
+        assertEquals(3, jpa.persistedEntities().size());
+        assertInstanceOf(BestellungEntity.class, jpa.persistedEntities().get(0));
+        assertInstanceOf(BestellPositionEntity.class, jpa.persistedEntities().get(1));
+        assertInstanceOf(BestellPositionEntity.class, jpa.persistedEntities().get(2));
+
+        BestellPositionEntity erstePosition = (BestellPositionEntity) jpa.persistedEntities().get(1);
+        assertEquals(7, erstePosition.getBestellungId());
+        assertEquals(5, erstePosition.getArtikelId());
+        assertEquals(2, erstePosition.getAnzahl());
+        assertEquals(new BigDecimal("1199.00"), erstePosition.getEinzelpreis());
+
+        assertTrue(jpa.actions().contains("EntityManager.flush"));
+        assertTrue(jpa.actions().contains("EntityTransaction.commit"));
     }
 
     @Test

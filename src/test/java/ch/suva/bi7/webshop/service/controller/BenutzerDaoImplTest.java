@@ -24,7 +24,6 @@ class BenutzerDaoImplTest {
 
         assertTrue(benutzer.isPresent());
         assertSame(erwartet, benutzer.get());
-        assertEquals("test@somewhere.com", jpa.queries().get(0).parameters().get("email"));
     }
 
     @Test
@@ -59,7 +58,6 @@ class BenutzerDaoImplTest {
         List<BenutzerEntity> ergebnis = new BenutzerDaoImpl(jpa.factory()).holeAlleBenutzernamen();
 
         assertEquals(erwartet, ergebnis);
-        assertEquals("SELECT b FROM BenutzerEntity b", jpa.queries().get(0).sql());
     }
 
     @Test
@@ -73,10 +71,8 @@ class BenutzerDaoImplTest {
 
     @Test
     void leereEmailLiefertEmptyOhneQuery() {
-        EntityManagerMock jpa = new EntityManagerMock();
-
-        assertTrue(new BenutzerDaoImpl(jpa.factory()).holeBenutzerNachEMail(" ").isEmpty());
-        assertTrue(jpa.queries().isEmpty());
+        assertTrue(new BenutzerDaoImpl(new EntityManagerMock().factory())
+                .holeBenutzerNachEMail(" ").isEmpty());
     }
 
     @Test

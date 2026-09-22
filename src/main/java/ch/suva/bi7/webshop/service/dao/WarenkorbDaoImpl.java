@@ -40,14 +40,19 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
         try {
             tx.begin();
 
-            String sql = "INSERT INTO warenkorb_item (userEmail, artikelId, menge) VALUES (:email, :artikelId, :menge) " +
-                    "ON DUPLICATE KEY UPDATE menge = menge + :menge";
-
-            em.createNativeQuery(sql)
+            List<WarenkorbEintragEntity> vorhandeneEintraege = em.createQuery(
+                            "SELECT w FROM WarenkorbEintragEntity w " +
+                                    "WHERE w.userEmail = :email AND w.artikelId = :artikelId",
+                            WarenkorbEintragEntity.class)
                     .setParameter("email", email)
                     .setParameter("artikelId", artikelId)
-                    .setParameter("menge", menge)
-                    .executeUpdate();
+                    .getResultList();
+
+            if (vorhandeneEintraege.isEmpty()) {
+                em.persist(new WarenkorbEintragEntity(email, artikelId, menge));
+            } else {
+                vorhandeneEintraege.get(0).erhoeheMenge(menge);
+            }
 
             tx.commit();
         } catch (Exception e) {

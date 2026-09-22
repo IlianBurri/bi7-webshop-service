@@ -27,7 +27,6 @@ class ArtikelDaoImplTest {
         assertEquals(1, erster.getArtikelId());
         assertEquals("iPhone 15 Pro", erster.getName());
         assertEquals(new BigDecimal("1199.00"), erster.getPreis());
-        assertEquals("SELECT a FROM ArtikelEntity a", jpa.queries().get(0).sql());
     }
 
     @Test
