@@ -9,9 +9,9 @@ import ch.suva.bi7.webshop.service.mock.WarenkorbContextMock;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,10 +45,8 @@ class WarenkorbControllerTest {
     @Test
     void artikelHinzufuegenUndMengeAktualisierenFunktionieren() throws Exception {
         WarenkorbDaoMock dao = new WarenkorbDaoMock(Collections.emptyList());
-        WarenkorbContextMock addCtx = new WarenkorbContextMock();
-        addCtx.setQueryParam("email", "test@example.com");
-        addCtx.setQueryParam("artikelId", "5");
-        addCtx.setQueryParam("menge", "3");
+        WarenkorbContextMock addCtx = new WarenkorbContextMock(Map.of(
+                "email", "test@example.com", "artikelId", 5, "menge", 3));
         WarenkorbController controller = controller(dao);
 
         controller.fuegeArtikelZuWarenkorbHinzu.handle(addCtx);
@@ -58,9 +56,8 @@ class WarenkorbControllerTest {
         assertEquals(5, dao.addArtikelId);
         assertEquals(3, dao.addMenge);
 
-        WarenkorbContextMock updateCtx = new WarenkorbContextMock();
+        WarenkorbContextMock updateCtx = new WarenkorbContextMock(Map.of("menge", 5));
         updateCtx.setPathParam("id", "7");
-        updateCtx.setQueryParam("menge", "5");
 
         controller.aktualisiereMenge.handle(updateCtx);
 
@@ -73,35 +70,28 @@ class WarenkorbControllerTest {
     void addToWarenkorbMitUngueltigenParameternLiefert400() throws Exception {
         WarenkorbController controller = controller(new WarenkorbDaoMock(Collections.emptyList()));
 
-        WarenkorbContextMock fehlendeArtikelId = new WarenkorbContextMock();
-        fehlendeArtikelId.setQueryParam("email", "test@example.com");
+        WarenkorbContextMock fehlendeArtikelId = new WarenkorbContextMock(
+                Map.of("email", "test@example.com"));
         controller.fuegeArtikelZuWarenkorbHinzu.handle(fehlendeArtikelId);
         assertEquals(400, fehlendeArtikelId.gesetzterStatus);
 
-        WarenkorbContextMock mengeNull = new WarenkorbContextMock();
-        mengeNull.setQueryParam("email", "test@example.com");
-        mengeNull.setQueryParam("artikelId", "5");
-        mengeNull.setQueryParam("menge", "0");
+        WarenkorbContextMock mengeNull = new WarenkorbContextMock(Map.of(
+                "email", "test@example.com", "artikelId", 5, "menge", 0));
         controller.fuegeArtikelZuWarenkorbHinzu.handle(mengeNull);
         assertEquals(400, mengeNull.gesetzterStatus);
 
-        WarenkorbContextMock negativeMenge = new WarenkorbContextMock();
-        negativeMenge.setQueryParam("email", "test@example.com");
-        negativeMenge.setQueryParam("artikelId", "5");
-        negativeMenge.setQueryParam("menge", "-2");
+        WarenkorbContextMock negativeMenge = new WarenkorbContextMock(Map.of(
+                "email", "test@example.com", "artikelId", 5, "menge", -2));
         controller.fuegeArtikelZuWarenkorbHinzu.handle(negativeMenge);
         assertEquals(400, negativeMenge.gesetzterStatus);
 
-        WarenkorbContextMock artikelIdKeineZahl = new WarenkorbContextMock();
-        artikelIdKeineZahl.setQueryParam("email", "test@example.com");
-        artikelIdKeineZahl.setQueryParam("artikelId", "abc");
+        WarenkorbContextMock artikelIdKeineZahl = new WarenkorbContextMock(Map.of(
+                "email", "test@example.com", "artikelId", "abc"));
         controller.fuegeArtikelZuWarenkorbHinzu.handle(artikelIdKeineZahl);
         assertEquals(400, artikelIdKeineZahl.gesetzterStatus);
 
-        WarenkorbContextMock mengeKeineZahl = new WarenkorbContextMock();
-        mengeKeineZahl.setQueryParam("email", "test@example.com");
-        mengeKeineZahl.setQueryParam("artikelId", "5");
-        mengeKeineZahl.setQueryParam("menge", "abc");
+        WarenkorbContextMock mengeKeineZahl = new WarenkorbContextMock(Map.of(
+                "email", "test@example.com", "artikelId", 5, "menge", "abc"));
         controller.fuegeArtikelZuWarenkorbHinzu.handle(mengeKeineZahl);
         assertEquals(400, mengeKeineZahl.gesetzterStatus);
     }
@@ -110,26 +100,23 @@ class WarenkorbControllerTest {
     void updateMengeMitUngueltigenParameternLiefert400() throws Exception {
         WarenkorbController controller = controller(new WarenkorbDaoMock(Collections.emptyList()));
 
-        WarenkorbContextMock mengeFehlt = new WarenkorbContextMock();
+        WarenkorbContextMock mengeFehlt = new WarenkorbContextMock(Map.of());
         mengeFehlt.setPathParam("id", "7");
         controller.aktualisiereMenge.handle(mengeFehlt);
         assertEquals(400, mengeFehlt.gesetzterStatus);
 
-        WarenkorbContextMock mengeNull = new WarenkorbContextMock();
+        WarenkorbContextMock mengeNull = new WarenkorbContextMock(Map.of("menge", 0));
         mengeNull.setPathParam("id", "7");
-        mengeNull.setQueryParam("menge", "0");
         controller.aktualisiereMenge.handle(mengeNull);
         assertEquals(400, mengeNull.gesetzterStatus);
 
-        WarenkorbContextMock idKeineZahl = new WarenkorbContextMock();
+        WarenkorbContextMock idKeineZahl = new WarenkorbContextMock(Map.of("menge", 3));
         idKeineZahl.setPathParam("id", "abc");
-        idKeineZahl.setQueryParam("menge", "3");
         controller.aktualisiereMenge.handle(idKeineZahl);
         assertEquals(400, idKeineZahl.gesetzterStatus);
 
-        WarenkorbContextMock mengeKeineZahl = new WarenkorbContextMock();
+        WarenkorbContextMock mengeKeineZahl = new WarenkorbContextMock(Map.of("menge", "abc"));
         mengeKeineZahl.setPathParam("id", "7");
-        mengeKeineZahl.setQueryParam("menge", "abc");
         controller.aktualisiereMenge.handle(mengeKeineZahl);
         assertEquals(400, mengeKeineZahl.gesetzterStatus);
     }
@@ -149,9 +136,8 @@ class WarenkorbControllerTest {
     void updateMengeBeiFehlendemItemLiefert404() throws Exception {
         WarenkorbDaoMock dao = new WarenkorbDaoMock(Collections.emptyList());
         dao.updateErgebnis = false;
-        WarenkorbContextMock ctx = new WarenkorbContextMock();
+        WarenkorbContextMock ctx = new WarenkorbContextMock(Map.of("menge", 3));
         ctx.setPathParam("id", "999");
-        ctx.setQueryParam("menge", "3");
         WarenkorbController controller = controller(dao);
 
         controller.aktualisiereMenge.handle(ctx);
@@ -187,8 +173,8 @@ class WarenkorbControllerTest {
         assertEquals(7, dao.deleteId);
 
         WarenkorbDaoMock daoOhneEmail = new WarenkorbDaoMock(Collections.emptyList());
-        WarenkorbContextMock fehlerCtx = new WarenkorbContextMock();
-        fehlerCtx.setQueryParam("artikelId", "5");
+        WarenkorbContextMock fehlerCtx = new WarenkorbContextMock(
+                Map.of("artikelId", 5));
         WarenkorbController fehlerController = controller(daoOhneEmail);
 
         fehlerController.fuegeArtikelZuWarenkorbHinzu.handle(fehlerCtx);

@@ -3,6 +3,7 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.model.CheckoutRequest;
 import ch.suva.bi7.webshop.service.model.CheckoutResponse;
 import ch.suva.bi7.webshop.service.service.BestellungService;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,8 @@ public class BestellungController {
                     ergebnis.bestellungId(),
                     ergebnis.gesamtpreis(),
                     ergebnis.status()));
+        } catch (BadRequestResponse e) {
+            ctx.status(400).result("Ungültiger JSON-Request-Body.");
         } catch (IllegalArgumentException e) {
             ctx.status(400).result(e.getMessage());
         } catch (Exception e) {

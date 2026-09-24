@@ -4,6 +4,7 @@ import ch.suva.bi7.webshop.service.model.AktionResponse;
 import ch.suva.bi7.webshop.service.model.WarenkorbAddRequest;
 import ch.suva.bi7.webshop.service.model.WarenkorbMengeRequest;
 import ch.suva.bi7.webshop.service.service.WarenkorbService;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,8 @@ public class WarenkorbController {
                     anfrage.email, anfrage.artikelId, anfrage.menge);
             ctx.status(201).json(new AktionResponse(
                     "ok", "Artikel zum Warenkorb hinzugefügt."));
+        } catch (BadRequestResponse e) {
+            ctx.status(400).result("Ungültiger JSON-Request-Body.");
         } catch (NumberFormatException e) {
             ctx.status(400).result(
                     "artikelId und menge müssen Zahlen sein.");
@@ -70,6 +73,8 @@ public class WarenkorbController {
                 return;
             }
             ctx.status(200).json(new AktionResponse("ok", "Menge aktualisiert."));
+        } catch (BadRequestResponse e) {
+            ctx.status(400).result("Ungültiger JSON-Request-Body.");
         } catch (NumberFormatException e) {
             ctx.status(400).result("ID und menge müssen Zahlen sein.");
         } catch (IllegalArgumentException e) {

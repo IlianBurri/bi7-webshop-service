@@ -1,7 +1,10 @@
 package ch.suva.bi7.webshop.service.mock;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.config.Key;
 import io.javalin.config.MultipartConfig;
+import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import io.javalin.json.JsonMapper;
@@ -22,6 +25,9 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class EinfacherContextMock implements io.javalin.http.Context {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
     public int gesetzterStatus = 0;
     public Object gesendetesJson = null;
     private Object vorgegebenerBody;
@@ -33,7 +39,17 @@ public class EinfacherContextMock implements io.javalin.http.Context {
 
     @Override
     public <T> T bodyAsClass(Class<T> clazz) {
-        return clazz.cast(vorgegebenerBody);
+        if (vorgegebenerBody == null) {
+            return null;
+        }
+        if (clazz.isInstance(vorgegebenerBody)) {
+            return clazz.cast(vorgegebenerBody);
+        }
+        try {
+            return OBJECT_MAPPER.convertValue(vorgegebenerBody, clazz);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestResponse(e.getMessage());
+        }
     }
 
     @Override

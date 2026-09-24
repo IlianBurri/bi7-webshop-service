@@ -5,6 +5,7 @@ import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import ch.suva.bi7.webshop.service.mock.BestellungContextMock;
 import ch.suva.bi7.webshop.service.mock.CheckoutWarenkorbDao;
 import ch.suva.bi7.webshop.service.mock.FakeBestellungDao;
+import ch.suva.bi7.webshop.service.model.CheckoutResponse;
 import ch.suva.bi7.webshop.service.service.BestellungService;
 import org.junit.jupiter.api.Test;
 
@@ -37,11 +38,11 @@ class BestellungControllerTest {
         assertEquals(3, bestellungDao.letzteAdressId);
         assertEquals(2, bestellungDao.letzteItems.size());
 
-        Map<?, ?> antwort = (Map<?, ?>) ctx.gesendetesJson;
-        assertEquals(5, antwort.get("bestellungId"));
-        assertEquals(new BigDecimal("3297.90"), antwort.get("gesamtpreis"),
+        CheckoutResponse antwort = (CheckoutResponse) ctx.gesendetesJson;
+        assertEquals(5, antwort.bestellungId);
+        assertEquals(new BigDecimal("3297.90"), antwort.gesamtpreis,
                 "Die Checkout-Antwort muss den gespeicherten Gesamtpreis enthalten");
-        assertEquals("BEZAHLT", antwort.get("status"));
+        assertEquals("BEZAHLT", antwort.status);
     }
 
     @Test

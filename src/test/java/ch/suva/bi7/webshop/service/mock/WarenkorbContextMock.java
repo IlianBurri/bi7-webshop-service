@@ -12,7 +12,11 @@ public class WarenkorbContextMock extends EinfacherContextMock {
     public String gesendetesResult;
 
     public WarenkorbContextMock() {
-        super(null);
+        this(null);
+    }
+
+    public WarenkorbContextMock(Object vorgegebenerBody) {
+        super(vorgegebenerBody);
     }
 
     public void setPathParam(String key, String value) {
