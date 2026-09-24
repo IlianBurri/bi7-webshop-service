@@ -3,7 +3,7 @@ package ch.suva.bi7.webshop.service.controller;
 import ch.suva.bi7.webshop.service.dao.BestellungDaoImpl;
 import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
-import ch.suva.bi7.webshop.service.db.entity.BestellungStatus;
+import ch.suva.bi7.webshop.service.db.entity.BestellungStatusEnum;
 import ch.suva.bi7.webshop.service.db.entity.BestellPositionEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.helper.EntityHelper;
@@ -41,7 +41,7 @@ class BestellungDaoImplTest {
     @Test
     void bestellungLesenLiefertGemappteEntity() throws Exception {
         BestellungEntity erwartet = EntityHelper.createBestellungEntity(7, TEST_EMAIL, 3, new BigDecimal("3297.90"),
-                BestellungStatus.BEZAHLT, Timestamp.valueOf("2026-09-01 10:15:30"));
+                BestellungStatusEnum.BEZAHLT, Timestamp.valueOf("2026-09-01 10:15:30"));
         EntityManagerMock jpa = new EntityManagerMock();
         jpa.addResult(List.of(erwartet));
 
@@ -52,7 +52,7 @@ class BestellungDaoImplTest {
         assertEquals(TEST_EMAIL, bestellung.getUserEmail());
         assertEquals(3, bestellung.getAdressId());
         assertEquals(new BigDecimal("3297.90"), bestellung.getGesamtpreis());
-        assertEquals(BestellungStatus.BEZAHLT, bestellung.getStatus());
+        assertEquals(BestellungStatusEnum.BEZAHLT, bestellung.getStatus());
         assertEquals(Timestamp.valueOf("2026-09-01 10:15:30"), bestellung.getBestelltAm());
     }
 
@@ -126,6 +126,6 @@ class BestellungDaoImplTest {
 
     private BestellungEntity bestellung(int id) {
         return EntityHelper.createBestellungEntity(id, TEST_EMAIL, 3, new BigDecimal("10.00"),
-                BestellungStatus.OFFEN, new Timestamp(0));
+                BestellungStatusEnum.OFFEN, new Timestamp(0));
     }
 }

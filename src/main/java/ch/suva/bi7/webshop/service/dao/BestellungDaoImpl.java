@@ -2,7 +2,7 @@ package ch.suva.bi7.webshop.service.dao;
 
 import ch.suva.bi7.webshop.service.db.entity.BestellPositionEntity;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
-import ch.suva.bi7.webshop.service.db.entity.BestellungStatus;
+import ch.suva.bi7.webshop.service.db.entity.BestellungStatusEnum;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -41,7 +41,7 @@ public class BestellungDaoImpl implements BestellungDao {
                     userEmail,
                     adressId,
                     gesamtpreis,
-                    BestellungStatus.BEZAHLT,
+                    BestellungStatusEnum.BEZAHLT,
                     new Timestamp(System.currentTimeMillis())
             );
             em.persist(bestellung);

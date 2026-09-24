@@ -32,7 +32,7 @@ public class BestellungEntity {
 
     @Column(name = "status", nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
-    private BestellungStatus status;
+    private BestellungStatusEnum status;
 
     @Column(name = "bestelldatum")
     private Timestamp bestelltAm;
@@ -44,7 +44,7 @@ public class BestellungEntity {
     public BestellungEntity(String userEmail,
                             Integer adressId,
                             BigDecimal gesamtpreis,
-                            BestellungStatus status,
+                            BestellungStatusEnum status,
                             Timestamp bestelltAm) {
         if (userEmail == null || userEmail.trim().isEmpty()) {
             throw new IllegalArgumentException(
@@ -88,7 +88,7 @@ public class BestellungEntity {
         return gesamtpreis;
     }
 
-    public BestellungStatus getStatus() {
+    public BestellungStatusEnum getStatus() {
         return status;
     }
 

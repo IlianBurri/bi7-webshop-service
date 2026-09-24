@@ -1,5 +1,8 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.model.AktionResponse;
+import ch.suva.bi7.webshop.service.model.WarenkorbAddRequest;
+import ch.suva.bi7.webshop.service.model.WarenkorbMengeRequest;
 import ch.suva.bi7.webshop.service.service.WarenkorbService;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
@@ -36,18 +39,13 @@ public class WarenkorbController {
 
     public Handler fuegeArtikelZuWarenkorbHinzu = ctx -> {
         try {
-            String mengeParameter = ctx.queryParam("menge");
-            int menge = mengeParameter == null
-                    || mengeParameter.trim().isEmpty()
-                    ? 1
-                    : Integer.parseInt(mengeParameter);
+            WarenkorbAddRequest anfrage =
+                    ctx.bodyAsClass(WarenkorbAddRequest.class);
 
             warenkorbService.fuegeArtikelHinzu(
-                    ctx.queryParam("email"),
-                    Integer.parseInt(ctx.queryParam("artikelId")),
-                    menge);
-            ctx.status(201).result(
-                    "Artikel zum Warenkorb hinzugefügt.");
+                    anfrage.email, anfrage.artikelId, anfrage.menge);
+            ctx.status(201).json(new AktionResponse(
+                    "ok", "Artikel zum Warenkorb hinzugefügt."));
         } catch (NumberFormatException e) {
             ctx.status(400).result(
                     "artikelId und menge müssen Zahlen sein.");
@@ -64,13 +62,14 @@ public class WarenkorbController {
     public Handler aktualisiereMenge = ctx -> {
         try {
             int itemId = Integer.parseInt(ctx.pathParam("id"));
-            int menge = Integer.parseInt(ctx.queryParam("menge"));
-            if (!warenkorbService.aktualisiereMenge(itemId, menge)) {
+            WarenkorbMengeRequest anfrage =
+                    ctx.bodyAsClass(WarenkorbMengeRequest.class);
+            if (!warenkorbService.aktualisiereMenge(itemId, anfrage.menge)) {
                 ctx.status(404).result(
                         "Warenkorb-Item nicht gefunden.");
                 return;
             }
-            ctx.status(200).result("Menge aktualisiert.");
+            ctx.status(200).json(new AktionResponse("ok", "Menge aktualisiert."));
         } catch (NumberFormatException e) {
             ctx.status(400).result("ID und menge müssen Zahlen sein.");
         } catch (IllegalArgumentException e) {
@@ -91,7 +90,8 @@ public class WarenkorbController {
                         "Warenkorb-Item nicht gefunden.");
                 return;
             }
-            ctx.status(200).result("Warenkorb-Item gelöscht.");
+            ctx.status(200).json(new AktionResponse(
+                    "ok", "Warenkorb-Item gelöscht."));
         } catch (NumberFormatException e) {
             ctx.status(400).result("ID muss eine Zahl sein.");
         } catch (IllegalArgumentException e) {

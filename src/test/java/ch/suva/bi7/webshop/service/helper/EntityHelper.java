@@ -5,7 +5,7 @@ import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.BenutzerEntity;
 import ch.suva.bi7.webshop.service.db.entity.BestellPositionEntity;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
-import ch.suva.bi7.webshop.service.db.entity.BestellungStatus;
+import ch.suva.bi7.webshop.service.db.entity.BestellungStatusEnum;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 
 import java.math.BigDecimal;
@@ -76,7 +76,7 @@ public class EntityHelper {
         }
     }
 
-    public static BestellungEntity createBestellungEntity(Integer bestellungId, String userEmail, Integer adressId, BigDecimal gesamtpreis, BestellungStatus status, Timestamp bestelltAm) {
+    public static BestellungEntity createBestellungEntity(Integer bestellungId, String userEmail, Integer adressId, BigDecimal gesamtpreis, BestellungStatusEnum status, Timestamp bestelltAm) {
         if (bestellungId == null || bestellungId.intValue() <= 0) {
             throw new IllegalArgumentException("BestellungId darf nicht null oder klein 1 sein");
         }

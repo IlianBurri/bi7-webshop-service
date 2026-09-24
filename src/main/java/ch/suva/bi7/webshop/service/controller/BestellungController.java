@@ -1,11 +1,12 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.model.CheckoutRequest;
+import ch.suva.bi7.webshop.service.model.CheckoutResponse;
 import ch.suva.bi7.webshop.service.service.BestellungService;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 
 public class BestellungController {
 
@@ -30,21 +31,16 @@ public class BestellungController {
         }
 
         try {
-            Map<String, Object> anfrageDaten = ctx.bodyAsClass(Map.class);
-            Object adressIdWert = anfrageDaten.get("adressId");
-            if (!(adressIdWert instanceof Number nummer)) {
-                throw new IllegalArgumentException(
-                        "adressId muss eine Zahl sein.");
-            }
+            CheckoutRequest anfrage = ctx.bodyAsClass(CheckoutRequest.class);
 
             BestellungService.BestellungErgebnis ergebnis =
                     bestellungService.erstelleBestellung(
-                            sessionEmail, nummer.intValue());
+                            sessionEmail, anfrage.adressId);
 
-            ctx.status(201).json(Map.of(
-                    "bestellungId", ergebnis.bestellungId(),
-                    "gesamtpreis", ergebnis.gesamtpreis(),
-                    "status", ergebnis.status()));
+            ctx.status(201).json(new CheckoutResponse(
+                    ergebnis.bestellungId(),
+                    ergebnis.gesamtpreis(),
+                    ergebnis.status()));
         } catch (IllegalArgumentException e) {
             ctx.status(400).result(e.getMessage());
         } catch (Exception e) {
