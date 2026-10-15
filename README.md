@@ -148,6 +148,34 @@ curl http://localhost:7070/artikel # erwartet: JSON-Liste der Artikel
 curl http://localhost:7070/users   # erwartet: JSON-Liste der Benutzernamen
 ```
 
+### Backend als Docker-Image offline bauen
+
+Hilfsskript zum Bauen und Exportieren des Docker-Images:
+
+```bash
+./build-docker-image-and-export.sh -o bi7-webshop-service_1.0.tar
+```
+
+Beispiel für die Übertragung per `scp` von `192.168.1.30` nach `192.168.1.20`:
+
+```bash
+scp bi7-webshop-service_1.0.tar bi7@192.168.1.20:.
+```
+
+"Auf dem Zielrechner importieren und starten:"
+
+```bash
+sudo podman load -i bi7-webshop-service_1.0.tar
+sudo podman run --rm --network=host \
+  -e DB_HOST=127.0.0.1 \
+  -e DB_PORT=3306 \
+  -e DB_NAME=webshopdb \
+  -e DB_USER=webshopuser \
+  -e DB_PASSWORD=webshoppassword \
+  -e APP_IS_DEV=false \
+  bi7-webshop-service:1.0
+```
+
 ---
 
 ## 2. UI-Webserver starten (bi7-webshop-ui)
