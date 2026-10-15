@@ -165,6 +165,7 @@ scp bi7-webshop-service_1.0.tar bi7@192.168.1.20:.
 Auf dem Zielrechner importieren und starten:
 
 ```bash
+# Ob 'docker' oder 'podman' verwendet wird, ist egal – die Befehle sind identisch.
 sudo podman load -i bi7-webshop-service_1.0.tar
 sudo podman run --name bi7-webshop-service --rm --network=host \
   -e DB_HOST=127.0.0.1 \
