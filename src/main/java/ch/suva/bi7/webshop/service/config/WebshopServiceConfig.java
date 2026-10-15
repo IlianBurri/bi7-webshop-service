@@ -1,21 +1,21 @@
-package ch.suva.bi7.webshop.service.db;
+package ch.suva.bi7.webshop.service.config;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public final class DBConfig {
+public final class WebshopServiceConfig {
 
     private static final String PROPERTIES_FILE = "application-dev.properties";
 
     private static final Properties PROPERTIES = loadProperties();
 
-    private DBConfig() {
+    private WebshopServiceConfig() {
     }
 
     private static Properties loadProperties() {
         Properties props = new Properties();
-        try (InputStream in = DBConfig.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
+        try (InputStream in = WebshopServiceConfig.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
             if (in == null) {
                 throw new IllegalStateException(
                         "Konfigurationsdatei '" + PROPERTIES_FILE + "' wurde nicht im Classpath gefunden");
@@ -28,23 +28,23 @@ public final class DBConfig {
         return props;
     }
 
-    public static String getHost() {
+    public static String getDBHost() {
         return requireValue("db.host", "DB_HOST");
     }
 
-    public static String getSchema() {
+    public static String getDBSchema() {
         return requireValue("db.name", "DB_NAME");
     }
 
-    public static String getUser() {
+    public static String getDBUser() {
         return requireValue("db.user", "DB_USER");
     }
 
-    public static String getPassword() {
+    public static String getDBPassword() {
         return requireValue("db.password", "DB_PASSWORD");
     }
 
-    public static int getPort() {
+    public static int getDBPort() {
         return Integer.valueOf(requireValue("db.port", "DB_PORT")).intValue();
     }
 
@@ -58,6 +58,18 @@ public final class DBConfig {
             return false;
         }
         return parseBoolean(value, "app.isDev");
+    }
+
+    public static boolean runLiquibaseMigration() {
+        String envValue = System.getenv("APP_RUN_LIQUIBASE_MIGRATION");
+        if (envValue != null && !envValue.isBlank()) {
+            return parseBoolean(envValue, "APP_RUN_LIQUIBASE_MIGRATION");
+        }
+        String value = PROPERTIES.getProperty("app.runLiquibaseMigration", "true");
+        if (value == null || value.isBlank()) {
+            return true;
+        }
+        return parseBoolean(value, "app.runLiquibaseMigration");
     }
 
     private static boolean parseBoolean(String value, String source) {

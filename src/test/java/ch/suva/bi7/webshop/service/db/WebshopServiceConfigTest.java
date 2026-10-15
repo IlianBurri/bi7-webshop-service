@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.db;
 
+import ch.suva.bi7.webshop.service.config.WebshopServiceConfig;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -10,7 +11,7 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class DBConfigTest {
+class WebshopServiceConfigTest {
 
     private static final String PROPERTIES_FILE = "application-dev.properties";
 
@@ -20,7 +21,7 @@ class DBConfigTest {
     @Test
     void propertiesDateiEnthaeltAllePflichtKeys() throws IOException {
         Properties props = new Properties();
-        try (InputStream in = DBConfig.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
+        try (InputStream in = WebshopServiceConfig.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
             assertNotNull(in, "Konfigurationsdatei '" + PROPERTIES_FILE + "' muss im Classpath liegen");
             props.load(in);
         }

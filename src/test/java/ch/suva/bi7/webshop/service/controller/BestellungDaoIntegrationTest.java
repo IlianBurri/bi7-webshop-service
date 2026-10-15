@@ -2,7 +2,7 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.BestellungDao;
 import ch.suva.bi7.webshop.service.dao.BestellungDaoImpl;
-import ch.suva.bi7.webshop.service.db.DBConfig;
+import ch.suva.bi7.webshop.service.config.WebshopServiceConfig;
 import ch.suva.bi7.webshop.service.db.JpaEntityManagerFactoryProvider;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import jakarta.persistence.EntityManagerFactory;
@@ -25,8 +25,8 @@ class BestellungDaoIntegrationTest {
     void setUp() {
         try {
             entityManagerFactory = JpaEntityManagerFactoryProvider.createEntityManagerFactory(
-                    DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(),
-                    DBConfig.getUser(), DBConfig.getPassword());
+                    WebshopServiceConfig.getDBHost(), WebshopServiceConfig.getDBPort(), WebshopServiceConfig.getDBSchema(),
+                    WebshopServiceConfig.getDBUser(), WebshopServiceConfig.getDBPassword());
             bestellungDao = new BestellungDaoImpl(entityManagerFactory);
         } catch (Exception e) {
             assumeTrue(false, "MariaDB not available: " + e.getMessage());

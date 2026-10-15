@@ -2,7 +2,7 @@ package ch.suva.bi7.webshop.service;
 
 import ch.suva.bi7.webshop.service.controller.*;
 import ch.suva.bi7.webshop.service.dao.*;
-import ch.suva.bi7.webshop.service.db.DBConfig;
+import ch.suva.bi7.webshop.service.config.WebshopServiceConfig;
 import ch.suva.bi7.webshop.service.db.JpaEntityManagerFactoryProvider;
 import ch.suva.bi7.webshop.service.db.LiquibaseMigrationRunner;
 import ch.suva.bi7.webshop.service.service.*;
@@ -12,15 +12,19 @@ import jakarta.persistence.EntityManagerFactory;
 public class Bi7WebshopService {
     public static void main(String[] args) {
         try {
-            LiquibaseMigrationRunner.migrate(
-                    DBConfig.getHost(),
-                    DBConfig.getPort(),
-                    DBConfig.getSchema(),
-                    DBConfig.getUser(),
-                    DBConfig.getPassword());
+            if (WebshopServiceConfig.runLiquibaseMigration()) {
+                LiquibaseMigrationRunner.migrate(
+                        WebshopServiceConfig.getDBHost(),
+                        WebshopServiceConfig.getDBPort(),
+                        WebshopServiceConfig.getDBSchema(),
+                        WebshopServiceConfig.getDBUser(),
+                        WebshopServiceConfig.getDBPassword());
+            } else {
+                System.out.println("Liquibase Migrationen werden nicht ausgeführt. Setze 'app.runLiquibaseMigration=true' in der Konfiguration, um Migrationen auszuführen.");
+            }
 
             EntityManagerFactory entityManagerFactory = JpaEntityManagerFactoryProvider.createEntityManagerFactory(
-                    DBConfig.getHost(), DBConfig.getPort(), DBConfig.getSchema(), DBConfig.getUser(), DBConfig.getPassword());
+                    WebshopServiceConfig.getDBHost(), WebshopServiceConfig.getDBPort(), WebshopServiceConfig.getDBSchema(), WebshopServiceConfig.getDBUser(), WebshopServiceConfig.getDBPassword());
             // Beim Shudown der Anwendung die EntityManagerFactory schließen, um Ressourcen freizugeben
             Runtime.getRuntime().addShutdownHook(new Thread(entityManagerFactory::close));
 
@@ -42,7 +46,7 @@ public class Bi7WebshopService {
             var app = Javalin.create(config -> {
                 config.bundledPlugins.enableCors(cors -> {
                     cors.addRule(it -> {
-                        if (DBConfig.isDev()) {
+                        if (WebshopServiceConfig.isDev()) {
                             it.reflectClientOrigin = true;
                         } else {
                             it.allowHost("http://localhost:8080", "http://127.0.0.1:8080");
