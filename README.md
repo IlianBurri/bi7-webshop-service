@@ -162,11 +162,11 @@ Beispiel für die Übertragung per `scp` von `192.168.1.30` nach `192.168.1.20`:
 scp bi7-webshop-service_1.0.tar bi7@192.168.1.20:.
 ```
 
-"Auf dem Zielrechner importieren und starten:"
+Auf dem Zielrechner importieren und starten:
 
 ```bash
 sudo podman load -i bi7-webshop-service_1.0.tar
-sudo podman run --rm --network=host \
+sudo podman run --name bi7-webshop-service --rm --network=host \
   -e DB_HOST=127.0.0.1 \
   -e DB_PORT=3306 \
   -e DB_NAME=webshopdb \
