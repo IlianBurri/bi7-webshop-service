@@ -46,4 +46,11 @@ public class ArtikelDaoImpl implements ArtikelDao {
             throw new DaoException("Fehler beim Speichern des Artikels", e);
         }
     }
+
+    @Override
+    public ArtikelEntity getArtikelById(Integer artikelId) {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            return em.find(ArtikelEntity.class, artikelId);
+        }
+    }
 }

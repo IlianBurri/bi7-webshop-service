@@ -9,4 +9,6 @@ public interface ArtikelDao {
     List<ArtikelEntity> getAllArtikel() throws Exception;
 
     ArtikelEntity erstelleNeuenArtikel(String name, BigDecimal preis, String bild) throws Exception;
+
+    ArtikelEntity getArtikelById(Integer artikelId);
 }
