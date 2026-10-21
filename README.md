@@ -159,13 +159,13 @@ Hilfsskript zum Bauen und Exportieren des Docker-Images:
 Für Raspberry Pi 3 mit 32-bit OS (`arm/v7`) kannst du direkt die Plattform setzen:
 
 ```bash
-./build-docker-image-and-export.sh -p linux/arm/v7 -t bi7-webshop-service:1.0-armv7 -o bi7-webshop-service_1.0.tar
+./build-docker-image-and-export.sh -p linux/arm/v7 -t bi7-webshop-service:1.0 -o bi7-webshop-service_1.0.tar
 ```
 
 Für `linux/amd64` entsprechend wie z.B. REHL 9 oder Ubuntu 22.04:
 
 ```bash
-./build-docker-image-and-export.sh -p linux/amd64 -t bi7-webshop-service:1.0-amd64 -o bi7-webshop-service_1.0.tar
+./build-docker-image-and-export.sh -p linux/amd64 -t bi7-webshop-service:1.0 -o bi7-webshop-service_1.0.tar
 ```
 
 Beispiel für die Übertragung per `scp` von `192.168.1.30` nach `192.168.1.20`:
