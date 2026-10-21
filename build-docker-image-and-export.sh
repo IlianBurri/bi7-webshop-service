@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: ./build-and-export.sh [-t TAG] [-o ARCHIVE]
+Usage: ./build-docker-image-and-export.sh [-t TAG] [-o ARCHIVE] [-p PLATFORM]
 
 Builds the backend locally, prepares runtime dependencies, builds the container image,
 and optionally exports it as a tar archive for manual transfer.
@@ -11,17 +11,20 @@ and optionally exports it as a tar archive for manual transfer.
 Options:
   -t TAG       Image tag to build (default: bi7-webshop-service:1.0)
   -o ARCHIVE   Optional output file for `podman save` (for example: bi7-webshop-service_1.0.tar)
+  -p PLATFORM  Target platform for the container image (for example: linux/arm/v7 or linux/arm64/v8)
   -h           Show this help text
 EOF
 }
 
 TAG="bi7-webshop-service:1.0"
 ARCHIVE=""
+PLATFORM=""
 
-while getopts ":t:o:h" opt; do
+while getopts ":t:o:p:h" opt; do
   case "$opt" in
     t) TAG="$OPTARG" ;;
     o) ARCHIVE="$OPTARG" ;;
+    p) PLATFORM="$OPTARG" ;;
     h)
       usage
       exit 0
@@ -56,7 +59,11 @@ echo "[1/3] Building application classes and runtime dependencies..."
 mvn -q -DskipTests package dependency:copy-dependencies -DincludeScope=runtime -DoutputDirectory=target/dependency
 
 echo "[2/3] Building container image: $TAG"
-podman build -t "$TAG" .
+if [[ -n "$PLATFORM" ]]; then
+  podman build --platform "$PLATFORM" -t "$TAG" .
+else
+  podman build -t "$TAG" .
+fi
 
 if [[ -n "$ARCHIVE" ]]; then
   echo "[3/3] Exporting image to: $ARCHIVE"
