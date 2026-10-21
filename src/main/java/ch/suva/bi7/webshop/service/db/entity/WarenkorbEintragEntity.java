@@ -5,8 +5,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 
 import java.math.BigDecimal;
 
@@ -21,21 +22,12 @@ public class WarenkorbEintragEntity {
     @Column(name = "userEmail", nullable = false, length = 150)
     private String userEmail;
 
-    @Column(name = "artikelId", nullable = false)
-    private Integer artikelId;
-
     @Column(name = "menge", nullable = false)
     private Integer menge;
 
-    @Transient
-    private String artikelName;
-
-    @Transient
-    private BigDecimal artikelPreis;
-
-    @Transient
-    private String artikelBild;
-
+    @ManyToOne
+    @JoinColumn(name = "artikelId", insertable = true, updatable = true)
+    private ArtikelEntity artikel;
 
     protected WarenkorbEintragEntity() {
         // Required by JPA
@@ -43,51 +35,22 @@ public class WarenkorbEintragEntity {
 
     public WarenkorbEintragEntity(
             String userEmail,
-            Integer artikelId,
-            Integer menge,
-            String artikelName,
-            BigDecimal artikelPreis,
-            String artikelBild) {
+            ArtikelEntity artikel,
+            Integer menge
+            ) {
 
         if (userEmail == null || userEmail.trim().isEmpty()) {
             throw new IllegalArgumentException("userEmail darf nicht null/leer sein");
         }
-        if (artikelId == null || artikelId <= 0) {
-            throw new IllegalArgumentException("artikelId muss > 0 sein");
+        if (artikel == null) {
+            throw new IllegalArgumentException("artikel darf nicht null sein");
         }
         if (menge == null || menge <= 0) {
             throw new IllegalArgumentException("menge muss > 0 sein");
         }
-        if (artikelName == null || artikelName.trim().isEmpty()) {
-            throw new IllegalArgumentException("artikelName darf nicht null/leer sein");
-        }
-        if (artikelPreis == null || artikelPreis.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("artikelPreis muss > 0 sein");
-        }
-        if (artikelBild != null && artikelBild.trim().isEmpty()) {
-            throw new IllegalArgumentException("artikelBild darf nicht leer sein");
-        }
 
         this.userEmail = userEmail;
-        this.artikelId = artikelId;
-        this.menge = menge;
-        this.artikelName = artikelName;
-        this.artikelPreis = artikelPreis;
-        this.artikelBild = artikelBild;
-    }
-
-    public WarenkorbEintragEntity(String userEmail, Integer artikelId, Integer menge) {
-        if (userEmail == null || userEmail.trim().isEmpty()) {
-            throw new IllegalArgumentException("userEmail darf nicht null/leer sein");
-        }
-        if (artikelId == null || artikelId <= 0) {
-            throw new IllegalArgumentException("artikelId muss > 0 sein");
-        }
-        if (menge == null || menge <= 0) {
-            throw new IllegalArgumentException("menge muss > 0 sein");
-        }
-        this.userEmail = userEmail;
-        this.artikelId = artikelId;
+        this.artikel = artikel;
         this.menge = menge;
     }
 
@@ -97,10 +60,6 @@ public class WarenkorbEintragEntity {
 
     public String getUserEmail() {
         return userEmail;
-    }
-
-    public Integer getArtikelId() {
-        return artikelId;
     }
 
     public Integer getMenge() {
@@ -115,14 +74,16 @@ public class WarenkorbEintragEntity {
     }
 
     public String getArtikelName() {
-        return artikelName;
+        return artikel.getName();
     }
 
     public BigDecimal getArtikelPreis() {
-        return artikelPreis;
+        return artikel.getPreis();
     }
 
     public String getArtikelBild() {
-        return artikelBild;
+        return artikel.getBild();
     }
+
+    public Integer getArtikelId() { return artikel.getArtikelId();}
 }

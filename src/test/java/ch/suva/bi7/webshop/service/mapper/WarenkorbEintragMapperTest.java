@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.mapper;
 
+import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.model.WarenkorbEintragDto;
 import ch.suva.bi7.webshop.service.helper.EntityHelper;
@@ -14,9 +15,9 @@ class WarenkorbEintragMapperTest {
 
     @Test
     void mapToDtoUebernimmtAlleWerte() {
+        ArtikelEntity artikel = EntityHelper.createArtikelEntity(7,"Tastatur",new BigDecimal("49.90"),"bild.png");
         WarenkorbEintragEntity entity = EntityHelper.createWarenkorbEintragEntity(
-                5, "user@example.com", 7, 2, "Tastatur", new BigDecimal("49.90"), "bild.png"
-        );
+                5, "user@example.com", artikel, 2);
 
         WarenkorbEintragDto dto = WarenkorbEintragMapper.toDto(entity);
 

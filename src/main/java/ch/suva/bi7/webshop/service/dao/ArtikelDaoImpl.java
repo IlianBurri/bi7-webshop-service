@@ -53,4 +53,11 @@ public class ArtikelDaoImpl implements ArtikelDao {
             return em.find(ArtikelEntity.class, artikelId);
         }
     }
+
+   /* @Override
+    public ArtikelEntity getArtikelById(Integer artikelId) throws Exception {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            return em.find(ArtikelEntity.class,artikelId);
+        }
+    }*/
 }

@@ -35,7 +35,7 @@ public class Bi7WebshopService {
             AdresseController adresseController = new AdresseController(
                     new AdresseService(new AdresseDaoImpl(entityManagerFactory)));
             WarenkorbController warenkorbController = new WarenkorbController(
-                    new WarenkorbService(warenkorbDao));
+                    new WarenkorbService(warenkorbDao, artikelDao));
             ArtikelController artikelController = new ArtikelController(new ArtikelService(artikelDao), benutzerService);
             BenutzerController benutzerController = new BenutzerController(benutzerService);
 

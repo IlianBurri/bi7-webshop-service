@@ -27,6 +27,6 @@ public class ArtikelDaoMock implements ArtikelDao {
 
     @Override
     public ArtikelEntity getArtikelById(Integer artikelId) {
-        return items.getFirst();
+        return items.get(0);
     }
 }

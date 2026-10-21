@@ -16,4 +16,9 @@ public class FakeArtikelDao implements ArtikelDao {
     public ArtikelEntity erstelleNeuenArtikel(String name, BigDecimal preis, String bild) throws Exception {
         return null;
     }
+
+    @Override
+    public ArtikelEntity getArtikelById(Integer artikelId) throws Exception {
+        return null;
+    }
 }

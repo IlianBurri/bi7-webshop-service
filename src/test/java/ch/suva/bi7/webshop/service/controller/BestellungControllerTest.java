@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import ch.suva.bi7.webshop.service.mock.BestellungContextMock;
@@ -21,9 +22,12 @@ class BestellungControllerTest {
 
     @Test
     void checkoutLiefertBestellungIdGesamtpreisUndStatus() throws Exception {
+        ArtikelEntity artikel1 = EntityHelper.createArtikelEntity(5,"Iphone 15 pro",new BigDecimal("1199.00"),"bild.png");
+        ArtikelEntity artikel2 = EntityHelper.createArtikelEntity(6,"Samsung Galaxy S24",new BigDecimal("899.90"),"bild.png");
+
         List<WarenkorbEintragEntity> warenkorb = List.of(
-                EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro", new BigDecimal("1199.00"), "bild"),
-                EntityHelper.createWarenkorbEintragEntity(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24", new BigDecimal("899.90"), "bild"));
+                EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, artikel1, 2),
+                EntityHelper.createWarenkorbEintragEntity(2, TEST_EMAIL, artikel2, 1));
         FakeBestellungDao bestellungDao = new FakeBestellungDao();
         CheckoutWarenkorbDao warenkorbDao = new CheckoutWarenkorbDao(warenkorb);
         BestellungContextMock ctx = new BestellungContextMock(Map.of("adressId", 3));

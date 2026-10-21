@@ -1,7 +1,9 @@
 package ch.suva.bi7.webshop.service.service;
 
+import ch.suva.bi7.webshop.service.dao.ArtikelDao;
 import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
+import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.mapper.WarenkorbEintragMapper;
 import ch.suva.bi7.webshop.service.model.WarenkorbEintragDto;
 
@@ -10,13 +12,15 @@ import java.util.List;
 public class WarenkorbService {
 
     private final WarenkorbDao warenkorbDao;
+    private final ArtikelDao artikelDao;
 
-    public WarenkorbService(WarenkorbDao warenkorbDao) {
+    public WarenkorbService(WarenkorbDao warenkorbDao , ArtikelDao artikelDao) {
         if (warenkorbDao == null) {
             throw new IllegalArgumentException(
                     "warenkorbDao must not be null");
         }
         this.warenkorbDao = warenkorbDao;
+        this.artikelDao = artikelDao;
     }
 
     public List<WarenkorbEintragDto> ladeWarenkorb(String email)
@@ -30,17 +34,23 @@ public class WarenkorbService {
 
     public void fuegeArtikelHinzu(
             String email,
-            int artikelId,
+            Integer artikelId,
             int menge
     ) throws DaoException {
         pruefeEmail(email);
-        if (artikelId <= 0) {
-            throw new IllegalArgumentException("artikelId muss > 0 sein.");
+        if (artikelId == null) {
+            throw new IllegalArgumentException("artikel darf nicht null sein.");
         }
         if (menge <= 0) {
             throw new IllegalArgumentException("menge muss > 0 sein.");
         }
-        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(email, artikelId, menge);
+        ArtikelEntity artikel = null;
+        try {
+            artikel = artikelDao.getArtikelById(artikelId);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        warenkorbDao.fuegeArtikelZuWarenkorbHinzu(email, artikel, menge);
     }
 
     public boolean aktualisiereMenge(

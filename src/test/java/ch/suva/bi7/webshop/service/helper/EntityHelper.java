@@ -114,12 +114,12 @@ public class EntityHelper {
         }
     }
 
-    public static WarenkorbEintragEntity createWarenkorbEintragEntity(Integer warenkorbItemId, String userEmail, Integer artikelId, Integer menge, String artikelName, BigDecimal artikelPreis, String artikelBild) {
+    public static WarenkorbEintragEntity createWarenkorbEintragEntity(Integer warenkorbItemId, String userEmail, ArtikelEntity artikel, Integer menge) {
         if (warenkorbItemId == null || warenkorbItemId.intValue() <= 0) {
             throw new IllegalArgumentException("WarenkorbItemId darf nicht null oder klein 1 sein");
         }
         WarenkorbEintragEntity warenkorbEintragEntity = new WarenkorbEintragEntity(
-                userEmail, artikelId, menge, artikelName, artikelPreis, artikelBild);
+                userEmail, artikel, menge);
         setWarenkorbItemId(warenkorbEintragEntity, warenkorbItemId);
         return warenkorbEintragEntity;
     }
@@ -132,5 +132,14 @@ public class EntityHelper {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static WarenkorbEintragEntity createWarenkorbEintragEntity(int warenkorbItemId, String userEmail, int artikelId, int menge, String s, BigDecimal bigDecimal, String bild) {
+        ArtikelEntity artikel = createArtikelEntity(artikelId,s,bigDecimal,bild);
+
+        WarenkorbEintragEntity warenkorbEintragEntity = new WarenkorbEintragEntity(
+                userEmail, artikel, menge);
+        setWarenkorbItemId(warenkorbEintragEntity, warenkorbItemId);
+        return warenkorbEintragEntity;
     }
 }

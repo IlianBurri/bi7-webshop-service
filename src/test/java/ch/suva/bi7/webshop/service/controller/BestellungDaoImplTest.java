@@ -2,10 +2,7 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.BestellungDaoImpl;
 import ch.suva.bi7.webshop.service.dao.DaoException;
-import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
-import ch.suva.bi7.webshop.service.db.entity.BestellungStatusEnum;
-import ch.suva.bi7.webshop.service.db.entity.BestellPositionEntity;
-import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
+import ch.suva.bi7.webshop.service.db.entity.*;
 import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import ch.suva.bi7.webshop.service.mock.EntityManagerMock;
 import org.junit.jupiter.api.Test;
@@ -59,11 +56,13 @@ class BestellungDaoImplTest {
     @Test
     void bestellungErzeugenPersistiertGesamtpreisUndBestellpositionen() throws Exception {
         BigDecimal gesamtpreis = new BigDecimal("3297.90");
+        ArtikelEntity artikel1 = EntityHelper.createArtikelEntity(5,"Computer",new BigDecimal("1199.00"),"bild.png");
+        ArtikelEntity artikel2 = EntityHelper.createArtikelEntity(6,"Computer",new BigDecimal("1000"),"bild.png");
+
         List<WarenkorbEintragEntity> items = List.of(
-                EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, 5, 2, "iPhone 15 Pro",
-                        new BigDecimal("1199.00"), "bild"),
-                EntityHelper.createWarenkorbEintragEntity(2, TEST_EMAIL, 6, 1, "Samsung Galaxy S24",
-                        new BigDecimal("899.90"), "bild"));
+
+                EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, artikel1, 2),
+                EntityHelper.createWarenkorbEintragEntity(2, TEST_EMAIL, artikel2, 1));
         EntityManagerMock jpa = new EntityManagerMock();
         jpa.generatedKey(7);
 
@@ -109,10 +108,11 @@ class BestellungDaoImplTest {
         jpa.updateException(new RuntimeException("Simulierter Fehler bei der Bestellposition"));
         BestellungDaoImpl testee = new BestellungDaoImpl(jpa.factory());
 
+        ArtikelEntity artikel1 = EntityHelper.createArtikelEntity(5,"Iphone 15 pro",new BigDecimal("1000"),"bild.png");
+
         DaoException ex = assertThrows(DaoException.class,
                 () -> testee.erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, new BigDecimal("10.00"),
-                        List.of(EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, 5, 1, "iPhone 15 Pro",
-                                new BigDecimal("10.00"), "bild"))));
+                        List.of(EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, artikel1, 1))));
         assertNotNull(ex.getCause());
         assertTrue(jpa.actions().contains("EntityTransaction.begin"));
         assertTrue(jpa.actions().contains("EntityTransaction.rollback"));
