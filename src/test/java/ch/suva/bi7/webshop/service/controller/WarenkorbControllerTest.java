@@ -1,8 +1,10 @@
 package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.ArtikelDao;
+import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.helper.EntityHelper;
+import ch.suva.bi7.webshop.service.mock.ArtikelDaoMock;
 import ch.suva.bi7.webshop.service.mock.FakeArtikelDao;
 import ch.suva.bi7.webshop.service.mock.WarenkorbDaoMock;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
@@ -11,6 +13,7 @@ import ch.suva.bi7.webshop.service.mock.WarenkorbContextMock;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +52,9 @@ class WarenkorbControllerTest {
         WarenkorbDaoMock dao = new WarenkorbDaoMock(Collections.emptyList());
         WarenkorbContextMock addCtx = new WarenkorbContextMock(Map.of(
                 "email", "test@example.com", "artikelId", 5, "menge", 3));
-        WarenkorbController controller = controller(dao, new FakeArtikelDao());
+        List<ArtikelEntity> artikelEntityList = new ArrayList<ArtikelEntity>();
+        artikelEntityList.add(EntityHelper.createArtikelEntity(5,"Computer",new BigDecimal("1000"),"bild.png"));
+        WarenkorbController controller = controller(dao, new ArtikelDaoMock(artikelEntityList));
 
         controller.fuegeArtikelZuWarenkorbHinzu.handle(addCtx);
 

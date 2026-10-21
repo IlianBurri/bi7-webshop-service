@@ -22,11 +22,18 @@ public class ArtikelDaoMock implements ArtikelDao {
 
     @Override
     public ArtikelEntity erstelleNeuenArtikel(String name, BigDecimal preis, String bild) throws Exception {
-        return null;
+        ArtikelEntity artikelEntity = new ArtikelEntity(name, preis, bild);
+        items.add(artikelEntity);
+        return artikelEntity;
     }
 
     @Override
-    public ArtikelEntity getArtikelById(Integer artikelId) {
-        return items.get(0);
+    public ArtikelEntity getArtikelById(Integer artikelId) throws Exception {
+        for (ArtikelEntity artikel : items) {
+            if (artikel.getArtikelId().equals(artikelId)) {
+                return artikel;
+            }
+        }
+        return null;
     }
 }
