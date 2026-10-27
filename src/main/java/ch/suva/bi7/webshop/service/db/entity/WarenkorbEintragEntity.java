@@ -25,6 +25,10 @@ public class WarenkorbEintragEntity {
     @Column(name = "menge", nullable = false)
     private Integer menge;
 
+    // TODO Wieder umstellen auf FK 'artikelId' und ManyToOne + ArtikelEntity löschen.
+    // @Column(name = "artikelId", nullable = false)
+    // private Integer artikelId;
+
     @ManyToOne
     @JoinColumn(name = "artikelId", insertable = true, updatable = true)
     private ArtikelEntity artikel;
@@ -73,14 +77,17 @@ public class WarenkorbEintragEntity {
         this.menge += menge;
     }
 
+    // TODO Entfernen:
     public String getArtikelName() {
         return artikel.getName();
     }
 
+    // TODO Entfernen:
     public BigDecimal getArtikelPreis() {
         return artikel.getPreis();
     }
 
+    // TODO Entfernen:
     public String getArtikelBild() {
         return artikel.getBild();
     }

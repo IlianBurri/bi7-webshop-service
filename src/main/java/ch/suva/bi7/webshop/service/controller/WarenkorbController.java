@@ -1,13 +1,13 @@
 package ch.suva.bi7.webshop.service.controller;
 
-import ch.suva.bi7.webshop.service.model.AktionResponse;
-import ch.suva.bi7.webshop.service.model.WarenkorbAddRequest;
-import ch.suva.bi7.webshop.service.model.WarenkorbMengeRequest;
+import ch.suva.bi7.webshop.service.model.*;
 import ch.suva.bi7.webshop.service.service.WarenkorbService;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public class WarenkorbController {
 
@@ -16,6 +16,7 @@ public class WarenkorbController {
 
     private WarenkorbService warenkorbService;
 
+    // TODO ArtikelService hinzufügen, um ArtikelDto zu laden
     public WarenkorbController(WarenkorbService warenkorbService) {
         if (warenkorbService == null) {
             throw new IllegalArgumentException(
@@ -26,8 +27,14 @@ public class WarenkorbController {
 
     public Handler ladeWarenkorb = ctx -> {
         try {
-            ctx.status(200).json(warenkorbService.ladeWarenkorb(
-                    ctx.pathParam("email")));
+            // Schritt 2: Je WarenkorbEintragDto den zugehörigen ArtikelDto laden und in den WarenkorbEintragDto setzen.
+            List<WarenkorbEintragDto> warenkorbList = warenkorbService.ladeWarenkorb(ctx.pathParam("email"));
+            for (WarenkorbEintragDto warenkorbEintrag : warenkorbList) {
+                // TODO ArtikelDto laden via ArtikelService und in den WarenkorbEintragDto setzen
+//                ArtikelDto artikelDto = artikelServier.getArtikelById(warenkorbEintrag.getArtikelId());
+//                warenkorbEintrag.setArtikelDto(artikelDto);
+            }
+            ctx.status(200).json(warenkorbList);
         } catch (IllegalArgumentException e) {
             ctx.status(400).result(e.getMessage());
         } catch (Exception e) {

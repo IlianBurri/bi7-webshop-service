@@ -25,19 +25,19 @@ public class FakeArtikelService extends ArtikelService {
     }
 
     @Override
-    public List<ArtikelDto> getAllArtikel() throws Exception {
+    public List<ArtikelDto> getAllArtikel() {
         callCount++;
         if (throwException) {
-            throw new Exception("Datenbank Fehler");
+            throw new RuntimeException("Datenbank Fehler");
         }
         return artikel;
     }
 
     @Override
-    public ArtikelDto erstelleNeuenArtikel(String name, BigDecimal preis, String bild) throws Exception {
+    public ArtikelDto erstelleNeuenArtikel(String name, BigDecimal preis, String bild) {
         addArtikelCallCount++;
         if (throwException) {
-            throw new Exception("Datenbank Fehler");
+            throw new RuntimeException("Datenbank Fehler");
         }
         if (artikel == null || artikel.isEmpty()) {
             return null;

@@ -10,24 +10,45 @@ import java.util.List;
 
 public class ArtikelService {
 
-    private ArtikelDao artikelDao = null;
+    private final ArtikelDao artikelDao;
 
     public ArtikelService(ArtikelDao artikelDao) {
         if (artikelDao == null) {
-            throw new IllegalArgumentException("entityManagerFactory must not be null");
+            throw new IllegalArgumentException("artikelDao must not be null");
         }
         this.artikelDao = artikelDao;
     }
 
-    public List<ArtikelDto> getAllArtikel() throws Exception {
-        List<ArtikelEntity> artikelEntityList = artikelDao.getAllArtikel();
-        return artikelEntityList.stream()
-                .map(ArtikelMapper::toDto)
-                .toList();
+    public List<ArtikelDto> getAllArtikel() {
+        try {
+            List<ArtikelEntity> artikelEntityList = artikelDao.getAllArtikel();
+            return artikelEntityList.stream()
+                    .map(ArtikelMapper::toDto)
+                    .toList();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public ArtikelDto erstelleNeuenArtikel(String name, BigDecimal preis, String bild) throws Exception {
-        ArtikelEntity artikelEntity = artikelDao.erstelleNeuenArtikel(name, preis, bild);
-        return ArtikelMapper.toDto(artikelEntity);
+    // TODO Tests schreiben
+    public ArtikelDto getArtikelById(Integer artikelId) {
+        try {
+            ArtikelEntity artikelEntity = artikelDao.getArtikelById(artikelId);
+            if (artikelEntity == null) {
+                return null;
+            }
+            return ArtikelMapper.toDto(artikelEntity);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public ArtikelDto erstelleNeuenArtikel(String name, BigDecimal preis, String bild) {
+        try {
+            ArtikelEntity artikelEntity = artikelDao.erstelleNeuenArtikel(name, preis, bild);
+            return ArtikelMapper.toDto(artikelEntity);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

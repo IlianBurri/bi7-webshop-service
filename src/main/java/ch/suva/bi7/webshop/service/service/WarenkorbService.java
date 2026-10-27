@@ -12,6 +12,7 @@ import java.util.List;
 public class WarenkorbService {
 
     private final WarenkorbDao warenkorbDao;
+    // TODO ArtikelDao entfernen, wenn WarenkorbEintragEntity wieder auf FK 'artikelId' umgestellt ist.
     private final ArtikelDao artikelDao;
 
     public WarenkorbService(WarenkorbDao warenkorbDao , ArtikelDao artikelDao) {
@@ -26,6 +27,7 @@ public class WarenkorbService {
     public List<WarenkorbEintragDto> ladeWarenkorb(String email)
             throws DaoException {
         pruefeEmail(email);
+        // Schritt 1: WarenkorbEintragEntity aus der Datenbank laden mit 'artikelId' als Fremdschlüssel aber artikelDto ersteinmal 'null' setzen.
         return warenkorbDao.getWarenkorbNachBenutzer(email)
                 .stream()
                 .map(WarenkorbEintragMapper::toDto)
@@ -45,6 +47,7 @@ public class WarenkorbService {
             throw new IllegalArgumentException("menge muss > 0 sein.");
         }
         ArtikelEntity artikel = null;
+        // TODO Lookup von ArtikelEntity via artikelId entfällt:
         try {
             artikel = artikelDao.getArtikelById(artikelId);
         } catch (Exception e) {
