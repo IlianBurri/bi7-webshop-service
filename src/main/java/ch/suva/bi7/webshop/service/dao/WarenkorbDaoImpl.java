@@ -1,6 +1,5 @@
 package ch.suva.bi7.webshop.service.dao;
 
-import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -24,7 +23,6 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
         try (EntityManager em = entityManagerFactory.createEntityManager()) {
             return em.createQuery(
                             "SELECT w FROM WarenkorbEintragEntity w " +
-                                    "JOIN FETCH w.artikel " +
                                     "WHERE w.userEmail = :email " +
                                     "ORDER BY w.warenkorbItemId",
                             WarenkorbEintragEntity.class)
@@ -36,7 +34,7 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
     }
 
     @Override
-    public void fuegeArtikelZuWarenkorbHinzu(String email, ArtikelEntity artikel, int menge) throws DaoException {
+    public void fuegeArtikelZuWarenkorbHinzu(String email, Integer artikelId, int menge) throws DaoException {
         EntityManager em = entityManagerFactory.createEntityManager();
         EntityTransaction tx = em.getTransaction();
         try {
@@ -44,14 +42,14 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
 
             List<WarenkorbEintragEntity> vorhandeneEintraege = em.createQuery(
                             "SELECT w FROM WarenkorbEintragEntity w " +
-                                    "WHERE w.userEmail = :email AND w.artikel = :artikel",
+                                    "WHERE w.userEmail = :email AND w.artikelId = :artikelId",
                             WarenkorbEintragEntity.class)
                     .setParameter("email", email)
-                    .setParameter("artikel", artikel)
+                    .setParameter("artikelId", artikelId)
                     .getResultList();
 
             if (vorhandeneEintraege.isEmpty()) {
-                em.persist(new WarenkorbEintragEntity(email, artikel, menge));
+                em.persist(new WarenkorbEintragEntity(email, artikelId, menge));
             } else {
                 vorhandeneEintraege.get(0).erhoeheMenge(menge);
             }

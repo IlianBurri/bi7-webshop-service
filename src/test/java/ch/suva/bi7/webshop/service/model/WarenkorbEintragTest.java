@@ -1,11 +1,8 @@
 package ch.suva.bi7.webshop.service.model;
 
-import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,17 +11,12 @@ class WarenkorbEintragTest {
     @Test
     void gueltigesWarenkorbItemKannErstelltWerden() {
         WarenkorbEintragEntity item = EntityHelper.createWarenkorbEintragEntity(
-                1, "user@example.com", 5, 3,
-                "iPhone 15 Pro", new BigDecimal("1199.00"), "https://example.com/bild.jpg"
-        );
+                1, "user@example.com", 5, 3);
 
         assertEquals(1, item.getWarenkorbItemId());
         assertEquals("user@example.com", item.getUserEmail());
         assertEquals(5, item.getArtikelId());
         assertEquals(3, item.getMenge());
-        assertEquals("iPhone 15 Pro", item.getArtikelName());
-        assertEquals(new BigDecimal("1199.00"), item.getArtikelPreis());
-        assertEquals("https://example.com/bild.jpg", item.getArtikelBild());
     }
 
 /*    @Test

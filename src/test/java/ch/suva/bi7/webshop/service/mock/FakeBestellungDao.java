@@ -6,6 +6,7 @@ import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class FakeBestellungDao implements BestellungDao {
@@ -15,15 +16,18 @@ public class FakeBestellungDao implements BestellungDao {
     public int letzteAdressId;
     public BigDecimal letzterGesamtpreis;
     public List<WarenkorbEintragEntity> letzteItems;
+    public Map<Integer, BigDecimal> letzteArtikelPreise;
 
     @Override
     public int erstelleBestellungMitWarenkorbItems(String userEmail, int adressId, BigDecimal gesamtpreis,
-                                                   List<WarenkorbEintragEntity> items) {
+                                                   List<WarenkorbEintragEntity> items,
+                                                   Map<Integer, BigDecimal> artikelPreise) {
         wurdeAufgerufen = true;
         letzterUserEmail = userEmail;
         letzteAdressId = adressId;
         letzterGesamtpreis = gesamtpreis;
         letzteItems = items;
+        letzteArtikelPreise = artikelPreise;
         return 5;
     }
 

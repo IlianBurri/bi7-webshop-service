@@ -1,32 +1,30 @@
 package ch.suva.bi7.webshop.service.mapper;
 
-import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.model.WarenkorbEintragDto;
 import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class WarenkorbEintragMapperTest {
 
     @Test
     void mapToDtoUebernimmtAlleWerte() {
-        ArtikelEntity artikel = EntityHelper.createArtikelEntity(7,"Tastatur",new BigDecimal("49.90"),"bild.png");
         WarenkorbEintragEntity entity = EntityHelper.createWarenkorbEintragEntity(
-                5, "user@example.com", artikel, 2);
+                5, "user@example.com", 7, 2);
 
         WarenkorbEintragDto dto = WarenkorbEintragMapper.toDto(entity);
 
         assertEquals(entity.getWarenkorbItemId(), dto.getWarenkorbItemId());
         assertEquals(entity.getArtikelId(), dto.getArtikelId());
         assertEquals(entity.getMenge(), dto.getMenge());
-        assertEquals(entity.getArtikelName(), dto.getArtikelName());
-        assertEquals(entity.getArtikelPreis(), dto.getArtikelPreis());
-        assertEquals(entity.getArtikelBild(), dto.getArtikelBild());
+        // Artikeldaten setzt erst der Controller via ArtikelService
+        assertNull(dto.getArtikelName());
+        assertNull(dto.getArtikelPreis());
+        assertNull(dto.getArtikelBild());
     }
 
     @Test

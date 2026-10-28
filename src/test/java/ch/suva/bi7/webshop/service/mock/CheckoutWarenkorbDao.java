@@ -1,7 +1,6 @@
 package ch.suva.bi7.webshop.service.mock;
 
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
-import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 
 import java.util.List;
@@ -20,7 +19,7 @@ public class CheckoutWarenkorbDao implements WarenkorbDao {
     }
 
     @Override
-    public void fuegeArtikelZuWarenkorbHinzu(String email, ArtikelEntity artikel, int menge) {
+    public void fuegeArtikelZuWarenkorbHinzu(String email, Integer artikelId, int menge) {
     }
 
     @Override

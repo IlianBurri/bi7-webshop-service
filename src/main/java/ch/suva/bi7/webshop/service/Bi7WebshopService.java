@@ -9,6 +9,8 @@ import ch.suva.bi7.webshop.service.service.*;
 import io.javalin.Javalin;
 import jakarta.persistence.EntityManagerFactory;
 
+import java.util.List;
+
 public class Bi7WebshopService {
     public static void main(String[] args) {
         try {
@@ -32,25 +34,25 @@ public class Bi7WebshopService {
             WarenkorbDao warenkorbDao = new WarenkorbDaoImpl(entityManagerFactory);
             ArtikelDao artikelDao = new ArtikelDaoImpl(entityManagerFactory);
             BenutzerService benutzerService = new BenutzerService(benutzerDao);
+            ArtikelService artikelService = new ArtikelService(artikelDao);
             AdresseController adresseController = new AdresseController(
                     new AdresseService(new AdresseDaoImpl(entityManagerFactory)));
             WarenkorbController warenkorbController = new WarenkorbController(
-                    new WarenkorbService(warenkorbDao, artikelDao));
-            ArtikelController artikelController = new ArtikelController(new ArtikelService(artikelDao), benutzerService);
+                    new WarenkorbService(warenkorbDao), artikelService);
+            ArtikelController artikelController = new ArtikelController(artikelService, benutzerService);
             BenutzerController benutzerController = new BenutzerController(benutzerService);
 
             BestellungDao bestellungDao = new BestellungDaoImpl(entityManagerFactory);
             BestellungController bestellungController = new BestellungController(
-                    new BestellungService(bestellungDao, warenkorbDao));
+                    new BestellungService(bestellungDao, warenkorbDao, artikelService));
+
+            List<String> corsAllowedOrigins = WebshopServiceConfig.getCorsAllowedOrigins();
 
             var app = Javalin.create(config -> {
                 config.bundledPlugins.enableCors(cors -> {
                     cors.addRule(it -> {
-                        if (WebshopServiceConfig.isDev()) {
-                            it.reflectClientOrigin = true;
-                        } else {
-                            it.allowHost("http://localhost:8080", "http://127.0.0.1:8080");
-                        }
+                        it.allowHost(corsAllowedOrigins.get(0),
+                                corsAllowedOrigins.subList(1, corsAllowedOrigins.size()).toArray(String[]::new));
                         it.allowCredentials = true;
                         it.exposeHeader("sessionId");
                     });

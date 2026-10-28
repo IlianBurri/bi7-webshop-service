@@ -51,19 +51,22 @@ public class ArtikelController {
 
     public Handler erstelleNeuenArtikel = ctx -> {
         String email = ctx.sessionAttribute("userEmail");
-        logger.info("Benutzer '{}' ist Admin, erstelle Artikel...", email);
 
         Optional<BenutzerDto> benutzerOptional = benutzerService.holeBenutzerNachEMail(email);
 
         if (benutzerOptional.isEmpty()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Nicht angemeldet: " + email));
+            logger.info("Benutzer '{}' ist nicht angemeldet, liefere unauthorized", email);
             return;
         }
 
         if (!benutzerOptional.get().isAdmin()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Nur Administratoren dürfen Artikel anlegen."));
+            logger.info("Benutzer '{}' ist kein Admin, liefere unauthorized", email);
             return;
         }
+
+        logger.info("Benutzer '{}' ist Admin, erstelle Artikel...", email);
 
         try {
             AddArtikelRequest eingabe = ctx.bodyAsClass(AddArtikelRequest.class);

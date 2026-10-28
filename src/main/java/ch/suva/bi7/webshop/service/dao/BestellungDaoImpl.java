@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class BestellungDaoImpl implements BestellungDao {
@@ -30,7 +31,8 @@ public class BestellungDaoImpl implements BestellungDao {
 
     @Override
     public int erstelleBestellungMitWarenkorbItems(String userEmail, int adressId, BigDecimal gesamtpreis,
-                                                   List<WarenkorbEintragEntity> warenkorbEintragEntityList) throws DaoException {
+                                                   List<WarenkorbEintragEntity> warenkorbEintragEntityList,
+                                                   Map<Integer, BigDecimal> artikelPreise) throws DaoException {
         EntityManager em = entityManagerFactory.createEntityManager();
         EntityTransaction tx = em.getTransaction();
 
@@ -52,7 +54,7 @@ public class BestellungDaoImpl implements BestellungDao {
                         bestellung.getBestellungId(),
                         eintrag.getArtikelId(),
                         eintrag.getMenge(),
-                        eintrag.getArtikelPreis()
+                        artikelPreise.get(eintrag.getArtikelId())
                 );
                 em.persist(bestellPosition);
 

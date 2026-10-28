@@ -6,26 +6,35 @@ import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.mapper.BestellungMapper;
+import ch.suva.bi7.webshop.service.model.ArtikelDto;
 import ch.suva.bi7.webshop.service.model.BestellungDto;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class BestellungService {
 
     private final BestellungDao bestellungDao;
     private final WarenkorbDao warenkorbDao;
+    private final ArtikelService artikelService;
 
     public BestellungService(
             BestellungDao bestellungDao,
-            WarenkorbDao warenkorbDao
+            WarenkorbDao warenkorbDao,
+            ArtikelService artikelService
     ) {
         if (bestellungDao == null || warenkorbDao == null) {
             throw new IllegalArgumentException("DAOs dürfen nicht null sein");
         }
+        if (artikelService == null) {
+            throw new IllegalArgumentException("artikelService darf nicht null sein");
+        }
         this.bestellungDao = bestellungDao;
         this.warenkorbDao = warenkorbDao;
+        this.artikelService = artikelService;
     }
 
     public List<BestellungDto> ladeBestellungenNachBenutzer(
@@ -64,13 +73,23 @@ public class BestellungService {
             throw new IllegalArgumentException("Warenkorb ist leer.");
         }
 
+        Map<Integer, BigDecimal> artikelPreise = new HashMap<>();
+        for (WarenkorbEintragEntity item : warenkorb) {
+            ArtikelDto artikel = artikelService.getArtikelById(item.getArtikelId());
+            if (artikel == null) {
+                throw new IllegalArgumentException(
+                        "Artikel " + item.getArtikelId() + " nicht gefunden.");
+            }
+            artikelPreise.put(item.getArtikelId(), artikel.getPreis());
+        }
+
         BigDecimal gesamtpreis = warenkorb.stream()
-                .map(item -> item.getArtikelPreis()
+                .map(item -> artikelPreise.get(item.getArtikelId())
                         .multiply(BigDecimal.valueOf(item.getMenge())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         int bestellungId = bestellungDao.erstelleBestellungMitWarenkorbItems(
-                userEmail, adressId, gesamtpreis, warenkorb);
+                userEmail, adressId, gesamtpreis, warenkorb, artikelPreise);
 
         return new BestellungErgebnis(bestellungId, gesamtpreis, "BEZAHLT");
     }

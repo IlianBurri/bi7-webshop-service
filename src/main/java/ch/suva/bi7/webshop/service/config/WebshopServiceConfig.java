@@ -2,6 +2,8 @@ package ch.suva.bi7.webshop.service.config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 public final class WebshopServiceConfig {
@@ -48,18 +50,6 @@ public final class WebshopServiceConfig {
         return Integer.valueOf(requireValue("db.port", "DB_PORT")).intValue();
     }
 
-    public static boolean isDev() {
-        String envValue = System.getenv("APP_IS_DEV");
-        if (envValue != null && !envValue.isBlank()) {
-            return parseBoolean(envValue, "APP_IS_DEV");
-        }
-        String value = PROPERTIES.getProperty("app.isDev");
-        if (value == null || value.isBlank()) {
-            return false;
-        }
-        return parseBoolean(value, "app.isDev");
-    }
-
     public static boolean runLiquibaseMigration() {
         String envValue = System.getenv("APP_RUN_LIQUIBASE_MIGRATION");
         if (envValue != null && !envValue.isBlank()) {
@@ -92,5 +82,18 @@ public final class WebshopServiceConfig {
                     "' (oder Umgebungsvariable '" + envKey + "' ist nicht gesetzt)");
         }
         return value;
+    }
+
+    public static List<String> getCorsAllowedOrigins() {
+        String value = requireValue("app.corsAllowedOrigins", "APP_CORS_ALLOWED_ORIGINS");
+        List<String> origins = Arrays.stream(value.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
+        if (origins.isEmpty()) {
+            throw new IllegalStateException(
+                    "Konfigurationskey 'app.corsAllowedOrigins' muss mindestens eine Origin enthalten");
+        }
+        return origins;
     }
 }

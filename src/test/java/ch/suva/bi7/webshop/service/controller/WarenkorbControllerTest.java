@@ -8,6 +8,8 @@ import ch.suva.bi7.webshop.service.mock.ArtikelDaoMock;
 import ch.suva.bi7.webshop.service.mock.FakeArtikelDao;
 import ch.suva.bi7.webshop.service.mock.WarenkorbDaoMock;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
+import ch.suva.bi7.webshop.service.model.WarenkorbEintragDto;
+import ch.suva.bi7.webshop.service.service.ArtikelService;
 import ch.suva.bi7.webshop.service.service.WarenkorbService;
 import ch.suva.bi7.webshop.service.mock.WarenkorbContextMock;
 import org.junit.jupiter.api.Test;
@@ -25,17 +27,22 @@ class WarenkorbControllerTest {
     @Test
     void warenkorbAbrufenLiefertItemsAlsJson() throws Exception {
         WarenkorbEintragEntity item = EntityHelper.createWarenkorbEintragEntity(
-                1, "test@example.com", 5, 3,
-                "iPhone 15 Pro", new BigDecimal("1199.00"), null);
+                1, "test@example.com", 5, 3);
+        ArtikelEntity artikel = EntityHelper.createArtikelEntity(
+                5, "iPhone 15 Pro", new BigDecimal("1199.00"), null);
         WarenkorbContextMock ctx = new WarenkorbContextMock();
         ctx.setPathParam("email", "test@example.com");
-        WarenkorbController controller = controller(new WarenkorbDaoMock(List.of(item)), new FakeArtikelDao());
+        WarenkorbController controller = controller(new WarenkorbDaoMock(List.of(item)), new ArtikelDaoMock(List.of(artikel)));
 
         controller.ladeWarenkorb.handle(ctx);
 
         assertEquals(200, ctx.gesetzterStatus);
         List<?> json = (List<?>) ctx.gesendetesJson;
         assertEquals(1, json.size());
+        WarenkorbEintragDto eintrag = (WarenkorbEintragDto) json.get(0);
+        assertEquals("iPhone 15 Pro", eintrag.getArtikelName());
+        assertEquals(new BigDecimal("1199.00"), eintrag.getArtikelPreis());
+        assertNull(eintrag.getArtikelBild());
 
         WarenkorbContextMock leererCtx = new WarenkorbContextMock();
         leererCtx.setPathParam("email", "test@example.com");
@@ -200,6 +207,6 @@ class WarenkorbControllerTest {
                 "Der API-Vertrag muss eine konkrete Fehlermeldung liefern");
     }
     private static WarenkorbController controller(WarenkorbDao dao, ArtikelDao artikelDao) {
-        return new WarenkorbController(new WarenkorbService(dao, artikelDao));
+        return new WarenkorbController(new WarenkorbService(dao), new ArtikelService(artikelDao));
     }
 }

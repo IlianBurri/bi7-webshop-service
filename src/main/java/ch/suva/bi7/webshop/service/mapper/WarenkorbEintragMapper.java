@@ -16,10 +16,7 @@ public final class WarenkorbEintragMapper {
         return new WarenkorbEintragDto(
                 entity.getWarenkorbItemId(),
                 entity.getArtikelId(),
-                entity.getMenge(),
-                entity.getArtikelName(),
-                entity.getArtikelPreis(),
-                entity.getArtikelBild()
+                entity.getMenge()
         );
     }
 }

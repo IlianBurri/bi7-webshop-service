@@ -2,7 +2,6 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDaoImpl;
-import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.helper.EntityHelper;
 import ch.suva.bi7.webshop.service.mock.EntityManagerMock;
@@ -18,11 +17,9 @@ class WarenkorbDaoImplTest {
     @Test
     void warenkorbLesenLiefertItemsMitJoindaten() throws Exception {
         EntityManagerMock jpa = new EntityManagerMock();
-        ArtikelEntity artikel1 = EntityHelper.createArtikelEntity(5,"iPhone 15 Pro",new BigDecimal("1199.00"),"https://example.com/iphone.jpg");
-        ArtikelEntity artikel2 = EntityHelper.createArtikelEntity(7,"Computer",new BigDecimal("1000"),"bild.png");
         List<WarenkorbEintragEntity> tuples = List.of(
-                EntityHelper.createWarenkorbEintragEntity(1, "test@somewhere.com", artikel1, 3),
-                EntityHelper.createWarenkorbEintragEntity(2, "test@somewhere.com", artikel2, 1));
+                EntityHelper.createWarenkorbEintragEntity(1, "test@somewhere.com", 5, 3),
+                EntityHelper.createWarenkorbEintragEntity(2, "test@somewhere.com", 7, 1));
         jpa.addResult(tuples);
 
         WarenkorbDao testee = new WarenkorbDaoImpl(jpa.factory());
@@ -35,9 +32,6 @@ class WarenkorbDaoImplTest {
         assertEquals("test@somewhere.com", erster.getUserEmail());
         assertEquals(5, erster.getArtikelId());
         assertEquals(3, erster.getMenge());
-        assertEquals("iPhone 15 Pro", erster.getArtikelName());
-        assertEquals(new BigDecimal("1199.00"), erster.getArtikelPreis());
-        assertEquals("https://example.com/iphone.jpg", erster.getArtikelBild());
 
         EntityManagerMock leer = new EntityManagerMock();
         assertTrue(new WarenkorbDaoImpl( leer.factory())
@@ -48,9 +42,8 @@ class WarenkorbDaoImplTest {
     void artikelHinzufuegenNutztAtomaresUpsert() throws Exception {
         EntityManagerMock jpa = new EntityManagerMock();
 
-        ArtikelEntity artikel = EntityHelper.createArtikelEntity(5,"Computer",new BigDecimal("1000"),"bild.png");
         new WarenkorbDaoImpl(jpa.factory())
-                .fuegeArtikelZuWarenkorbHinzu("test@somewhere.com", artikel, 3);
+                .fuegeArtikelZuWarenkorbHinzu("test@somewhere.com", 5, 3);
 
         assertTrue(jpa.actions().contains("EntityTransaction.begin"));
         assertTrue(jpa.actions().contains("EntityTransaction.commit"));

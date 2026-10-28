@@ -5,12 +5,14 @@ import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface BestellungDao {
 
     int erstelleBestellungMitWarenkorbItems(String userEmail, int adressId, BigDecimal gesamtpreis,
-                                            List<WarenkorbEintragEntity> warenkorbEintragEntityList) throws DaoException;
+                                            List<WarenkorbEintragEntity> warenkorbEintragEntityList,
+                                            Map<Integer, BigDecimal> artikelPreise) throws DaoException;
 
     Optional<BestellungEntity> holeBestellungNachId(int bestellungId) throws DaoException;
 

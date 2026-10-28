@@ -19,7 +19,7 @@ public class EntityHelper {
 
     public static ArtikelEntity createArtikelEntity(Integer artikelId, String name, BigDecimal preis, String bild) {
         if (artikelId == null || artikelId.intValue() <= 0) {
-            throw new IllegalArgumentException("artikelId darf nicht null oder klein 1 sein");
+            throw new IllegalArgumentException("artikelId darf nicht null oder kleiner 1 sein");
         }
         ArtikelEntity artikelEntity = new ArtikelEntity(name, preis, bild);
         setArtikelId(artikelEntity, artikelId);
@@ -40,7 +40,7 @@ public class EntityHelper {
 
     public static AdresseEntity createAdresseEntity(Integer adressId, String userEmail, String vorname, String nachname, String strasse, String plz, String ort, String land) {
         if (adressId == null || adressId.intValue() <= 0) {
-            throw new IllegalArgumentException("adresseId darf nicht null oder klein 1 sein");
+            throw new IllegalArgumentException("adresseId darf nicht null oder kleiner 1 sein");
         }
         AdresseEntity adresseEntity = new AdresseEntity(userEmail, vorname, nachname, strasse, plz, ort, land);
         setAdresseId(adresseEntity, adressId);
@@ -59,7 +59,7 @@ public class EntityHelper {
 
     public static BenutzerEntity createBenutzerEntity(Integer benutzerId, String username, String email, String password, Boolean isAdmin) {
         if (benutzerId == null || benutzerId.intValue() <= 0) {
-            throw new IllegalArgumentException("BenutzerId darf nicht null oder klein 1 sein");
+            throw new IllegalArgumentException("BenutzerId darf nicht null oder kleiner 1 sein");
         }
         BenutzerEntity benutzerEntity = new BenutzerEntity(username, email, password, isAdmin);
         setBenutzerId(benutzerEntity, benutzerId);
@@ -78,7 +78,7 @@ public class EntityHelper {
 
     public static BestellungEntity createBestellungEntity(Integer bestellungId, String userEmail, Integer adressId, BigDecimal gesamtpreis, BestellungStatusEnum status, Timestamp bestelltAm) {
         if (bestellungId == null || bestellungId.intValue() <= 0) {
-            throw new IllegalArgumentException("BestellungId darf nicht null oder klein 1 sein");
+            throw new IllegalArgumentException("BestellungId darf nicht null oder kleiner 1 sein");
         }
         BestellungEntity bestellungEntity = new BestellungEntity(userEmail, adressId, gesamtpreis, status, bestelltAm);
         setBestellungId(bestellungEntity, bestellungId);
@@ -97,7 +97,7 @@ public class EntityHelper {
 
     public static BestellPositionEntity createBestellPositionEntity(Integer bestellpositionId, Integer bestellungId, Integer artikelId, Integer anzahl, BigDecimal einzelpreis) {
         if (bestellpositionId == null || bestellpositionId.intValue() <= 0) {
-            throw new IllegalArgumentException("BestellpositionId darf nicht null oder klein 1 sein");
+            throw new IllegalArgumentException("BestellpositionId darf nicht null oder kleiner 1 sein");
         }
         BestellPositionEntity bestellPositionEntity = new BestellPositionEntity(bestellungId, artikelId, anzahl, einzelpreis);
         setBestellpositionId(bestellPositionEntity, bestellpositionId);
@@ -114,12 +114,12 @@ public class EntityHelper {
         }
     }
 
-    public static WarenkorbEintragEntity createWarenkorbEintragEntity(Integer warenkorbItemId, String userEmail, ArtikelEntity artikel, Integer menge) {
+    public static WarenkorbEintragEntity createWarenkorbEintragEntity(Integer warenkorbItemId, String userEmail, Integer artikelId, Integer menge) {
         if (warenkorbItemId == null || warenkorbItemId.intValue() <= 0) {
-            throw new IllegalArgumentException("WarenkorbItemId darf nicht null oder klein 1 sein");
+            throw new IllegalArgumentException("WarenkorbItemId darf nicht null oder kleiner 1 sein");
         }
         WarenkorbEintragEntity warenkorbEintragEntity = new WarenkorbEintragEntity(
-                userEmail, artikel, menge);
+                userEmail, artikelId, menge);
         setWarenkorbItemId(warenkorbEintragEntity, warenkorbItemId);
         return warenkorbEintragEntity;
     }
@@ -132,14 +132,5 @@ public class EntityHelper {
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static WarenkorbEintragEntity createWarenkorbEintragEntity(int warenkorbItemId, String userEmail, int artikelId, int menge, String s, BigDecimal bigDecimal, String bild) {
-        ArtikelEntity artikel = createArtikelEntity(artikelId,s,bigDecimal,bild);
-
-        WarenkorbEintragEntity warenkorbEintragEntity = new WarenkorbEintragEntity(
-                userEmail, artikel, menge);
-        setWarenkorbItemId(warenkorbEintragEntity, warenkorbItemId);
-        return warenkorbEintragEntity;
     }
 }

@@ -1,6 +1,7 @@
 package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.model.*;
+import ch.suva.bi7.webshop.service.service.ArtikelService;
 import ch.suva.bi7.webshop.service.service.WarenkorbService;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
@@ -15,14 +16,19 @@ public class WarenkorbController {
             LoggerFactory.getLogger(WarenkorbController.class);
 
     private WarenkorbService warenkorbService;
+    private ArtikelService artikelService;
 
-    // TODO ArtikelService hinzufügen, um ArtikelDto zu laden
-    public WarenkorbController(WarenkorbService warenkorbService) {
+    public WarenkorbController(WarenkorbService warenkorbService, ArtikelService artikelService) {
         if (warenkorbService == null) {
             throw new IllegalArgumentException(
                     "warenkorbService must not be null");
         }
+        if (artikelService == null) {
+            throw new IllegalArgumentException(
+                    "artikelService must not be null");
+        }
         this.warenkorbService = warenkorbService;
+        this.artikelService = artikelService;
     }
 
     public Handler ladeWarenkorb = ctx -> {
@@ -30,9 +36,8 @@ public class WarenkorbController {
             // Schritt 2: Je WarenkorbEintragDto den zugehörigen ArtikelDto laden und in den WarenkorbEintragDto setzen.
             List<WarenkorbEintragDto> warenkorbList = warenkorbService.ladeWarenkorb(ctx.pathParam("email"));
             for (WarenkorbEintragDto warenkorbEintrag : warenkorbList) {
-                // TODO ArtikelDto laden via ArtikelService und in den WarenkorbEintragDto setzen
-//                ArtikelDto artikelDto = artikelServier.getArtikelById(warenkorbEintrag.getArtikelId());
-//                warenkorbEintrag.setArtikelDto(artikelDto);
+                ArtikelDto artikelDto = artikelService.getArtikelById(warenkorbEintrag.getArtikelId());
+                warenkorbEintrag.setArtikelDto(artikelDto);
             }
             ctx.status(200).json(warenkorbList);
         } catch (IllegalArgumentException e) {

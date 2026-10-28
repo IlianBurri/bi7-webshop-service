@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,18 +57,17 @@ class BestellungDaoImplTest {
     @Test
     void bestellungErzeugenPersistiertGesamtpreisUndBestellpositionen() throws Exception {
         BigDecimal gesamtpreis = new BigDecimal("3297.90");
-        ArtikelEntity artikel1 = EntityHelper.createArtikelEntity(5,"Computer",new BigDecimal("1199.00"),"bild.png");
-        ArtikelEntity artikel2 = EntityHelper.createArtikelEntity(6,"Computer",new BigDecimal("1000"),"bild.png");
-
         List<WarenkorbEintragEntity> items = List.of(
-
-                EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, artikel1, 2),
-                EntityHelper.createWarenkorbEintragEntity(2, TEST_EMAIL, artikel2, 1));
+                EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, 5, 2),
+                EntityHelper.createWarenkorbEintragEntity(2, TEST_EMAIL, 6, 1));
+        Map<Integer, BigDecimal> artikelPreise = Map.of(
+                5, new BigDecimal("1199.00"),
+                6, new BigDecimal("1000"));
         EntityManagerMock jpa = new EntityManagerMock();
         jpa.generatedKey(7);
 
         assertEquals(7, new BestellungDaoImpl(jpa.factory())
-                .erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, gesamtpreis, items));
+                .erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, gesamtpreis, items, artikelPreise));
 
 
         assertEquals(3, jpa.persistedEntities().size());
@@ -108,11 +108,10 @@ class BestellungDaoImplTest {
         jpa.updateException(new RuntimeException("Simulierter Fehler bei der Bestellposition"));
         BestellungDaoImpl testee = new BestellungDaoImpl(jpa.factory());
 
-        ArtikelEntity artikel1 = EntityHelper.createArtikelEntity(5,"Iphone 15 pro",new BigDecimal("1000"),"bild.png");
-
         DaoException ex = assertThrows(DaoException.class,
                 () -> testee.erstelleBestellungMitWarenkorbItems(TEST_EMAIL, 3, new BigDecimal("10.00"),
-                        List.of(EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, artikel1, 1))));
+                        List.of(EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, 5, 1)),
+                        Map.of(5, new BigDecimal("1000"))));
         assertNotNull(ex.getCause());
         assertTrue(jpa.actions().contains("EntityTransaction.begin"));
         assertTrue(jpa.actions().contains("EntityTransaction.rollback"));

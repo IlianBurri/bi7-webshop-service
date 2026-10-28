@@ -16,7 +16,7 @@ class WebshopServiceConfigTest {
     private static final String PROPERTIES_FILE = "application-dev.properties";
 
     private static final List<String> PFLICHT_KEYS =
-            List.of("db.host", "db.port", "db.name", "db.user", "db.password", "app.isDev");
+            List.of("db.host", "db.port", "db.name", "db.user", "db.password", "app.corsAllowedOrigins");
 
     @Test
     void propertiesDateiEnthaeltAllePflichtKeys() throws IOException {

@@ -8,28 +8,16 @@ public class WarenkorbEintragDto {
 
     private final Integer warenkorbItemId;
     private final Integer artikelId;
-    // Zusätzlich zur 'artikelId' auch artikelDto hier ablegen.
     private final Integer menge;
-    // TODO Statt artikelName, artikelPreis, artikelBild einfach ArtikelDto verwenden, wenn WarenkorbEintragEntity wieder auf FK 'artikelId' umgestellt ist.
-    private final String artikelName;
-    private final BigDecimal artikelPreis;
-    private final String artikelBild;
-    // TODO Neu das hier verwenden:
-    //private final ArtikelDto artikelDto;
+    private ArtikelDto artikelDto;
 
     public WarenkorbEintragDto(
             @JsonProperty("warenkorbItemId") Integer warenkorbItemId,
             @JsonProperty("artikelId") Integer artikelId,
-            @JsonProperty("menge") Integer menge,
-            @JsonProperty("artikelName") String artikelName,
-            @JsonProperty("artikelPreis") BigDecimal artikelPreis,
-            @JsonProperty("artikelBild") String artikelBild) {
+            @JsonProperty("menge") Integer menge) {
         this.warenkorbItemId = warenkorbItemId;
         this.artikelId = artikelId;
         this.menge = menge;
-        this.artikelName = artikelName;
-        this.artikelPreis = artikelPreis;
-        this.artikelBild = artikelBild;
     }
 
     public Integer getWarenkorbItemId() {
@@ -44,18 +32,19 @@ public class WarenkorbEintragDto {
         return menge;
     }
 
+    public void setArtikelDto(ArtikelDto artikelDto) {
+        this.artikelDto = artikelDto;
+    }
+
     public String getArtikelName() {
-        // TODO Umstellen auf artikelDto.getName(), wenn WarenkorbEintragEntity wieder auf FK 'artikelId' umgestellt ist.
-        return artikelName;
+        return artikelDto == null ? null : artikelDto.getName();
     }
 
     public BigDecimal getArtikelPreis() {
-        // TODO Umstellen auf artikelDto.getPreis(), wenn WarenkorbEintragEntity wieder auf FK 'artikelId' umgestellt ist.
-        return artikelPreis;
+        return artikelDto == null ? null : artikelDto.getPreis();
     }
 
     public String getArtikelBild() {
-        // TODO Umstellen auf artikelDto.getBild(), wenn WarenkorbEintragEntity wieder auf FK 'artikelId' umgestellt ist.
-        return artikelBild;
+        return artikelDto == null ? null : artikelDto.getBild();
     }
 }
