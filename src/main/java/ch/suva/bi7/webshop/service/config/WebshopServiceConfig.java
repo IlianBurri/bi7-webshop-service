@@ -84,6 +84,9 @@ public final class WebshopServiceConfig {
         return value;
     }
 
+    // TODO Zwei Methoden bereitstellen, siehe unten:
+    // 1. getFirstCorsAllowedOrigin() => Rückgabe des ersten Eintrags in der Liste als 'String'
+    // 2. getAdditionalCorsAllowedOrigins() -> Weitere Werte exklusive dem ersten als 'String[]'
     public static List<String> getCorsAllowedOrigins() {
         String value = requireValue("app.corsAllowedOrigins", "APP_CORS_ALLOWED_ORIGINS");
         List<String> origins = Arrays.stream(value.split(","))
@@ -95,5 +98,15 @@ public final class WebshopServiceConfig {
                     "Konfigurationskey 'app.corsAllowedOrigins' muss mindestens eine Origin enthalten");
         }
         return origins;
+    }
+
+    public static String getFirstCorsAllowedOrigin() {
+        // Darf nie null oder leer sein
+        throw new RuntimeException("Not implemented yet");
+    }
+
+    public static String[] getAdditionalCorsAllowedOrigins() {
+        // Leerees Arrays falls nicht vorhanden.
+        throw new RuntimeException("Not implemented yet");
     }
 }

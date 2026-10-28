@@ -51,6 +51,10 @@ public class Bi7WebshopService {
             var app = Javalin.create(config -> {
                 config.bundledPlugins.enableCors(cors -> {
                     cors.addRule(it -> {
+                        // TODO Mehoden implementieren und verwenden
+//                        it.allowHost(
+//                                WebshopServiceConfig.getFirstCorsAllowedOrigin(),
+//                                WebshopServiceConfig.getAdditionalCorsAllowedOrigins());
                         it.allowHost(corsAllowedOrigins.get(0),
                                 corsAllowedOrigins.subList(1, corsAllowedOrigins.size()).toArray(String[]::new));
                         it.allowCredentials = true;

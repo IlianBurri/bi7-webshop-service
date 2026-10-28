@@ -19,6 +19,7 @@ public class BestellungService {
 
     private final BestellungDao bestellungDao;
     private final WarenkorbDao warenkorbDao;
+    // TODO Auf ArtikelDao wechseln:
     private final ArtikelService artikelService;
 
     public BestellungService(
