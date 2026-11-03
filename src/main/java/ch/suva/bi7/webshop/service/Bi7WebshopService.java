@@ -46,13 +46,19 @@ public class Bi7WebshopService {
             BestellungController bestellungController = new BestellungController(
                     new BestellungService(bestellungDao, warenkorbDao, artikelDao));
 
-            var app = Javalin.create(config -> {
+            Javalin.create(config -> {
+                // CORS: Der Browser (z.B. 192.168.1.40) lädt die Seite vom UI-Server und sendet dessen Origin mit.
+                // Erlaubt werden muss also die Origin des UI-Servers (Schema + Host + Port), nicht die IP des Clients.
                 config.bundledPlugins.enableCors(cors -> {
                     cors.addRule(it -> {
-                        it.allowHost(
-                                WebshopServiceConfig.getFirstCorsAllowedOrigin(),
-                                WebshopServiceConfig.getAdditionalCorsAllowedOrigins());
+                        // Wenn man 'allowCredentials' auf true setzt, verlangt die CORS-Spezifikation, dass die
+                        // erlaubten Origins explizit angegeben werden. Ein Wildcard '*' ist dann nicht erlaubt.
                         it.allowCredentials = true;
+                        it.allowHost(WebshopServiceConfig.getFirstCorsAllowedOrigin(),
+                                     WebshopServiceConfig.getAdditionalCorsAllowedOrigins());
+                        // Hosts ohne Schema würden sonst als https://... interpretiert, der UI-Server läuft aber auf http
+                        it.defaultScheme = "http";
+                        // Damit das JavaScript den Header "sessionId" aus der Antwort lesen darf
                         it.exposeHeader("sessionId");
                     });
                 });
