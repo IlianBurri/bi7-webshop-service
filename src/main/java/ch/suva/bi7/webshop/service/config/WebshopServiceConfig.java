@@ -6,7 +6,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public final class WebshopServiceConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(WebshopServiceConfig.class);
 
     private static final String PROPERTIES_FILE = "application-dev.properties";
 
@@ -84,9 +89,6 @@ public final class WebshopServiceConfig {
         return value;
     }
 
-    // TODO Zwei Methoden bereitstellen, siehe unten:
-    // 1. getFirstCorsAllowedOrigin() => Rückgabe des ersten Eintrags in der Liste als 'String'
-    // 2. getAdditionalCorsAllowedOrigins() -> Weitere Werte exklusive dem ersten als 'String[]'
     public static List<String> getCorsAllowedOrigins() {
         String value = requireValue("app.corsAllowedOrigins", "APP_CORS_ALLOWED_ORIGINS");
         List<String> origins = Arrays.stream(value.split(","))
@@ -101,12 +103,33 @@ public final class WebshopServiceConfig {
     }
 
     public static String getFirstCorsAllowedOrigin() {
-        // Darf nie null oder leer sein
-        throw new RuntimeException("Not implemented yet");
+        // getCorsAllowedOrigins() garantiert mindestens einen nicht leeren Eintrag
+        return getCorsAllowedOrigins().get(0);
     }
 
     public static String[] getAdditionalCorsAllowedOrigins() {
-        // Leerees Arrays falls nicht vorhanden.
-        throw new RuntimeException("Not implemented yet");
+        // Leeres Array, falls nur eine Origin konfiguriert ist
+        List<String> origins = getCorsAllowedOrigins();
+        return origins.subList(1, origins.size()).toArray(String[]::new);
+    }
+
+    public static void logKonfiguration() {
+        logger.info("Webshop-Service startet mit folgender Konfiguration:");
+        logger.info("  db.host                   = {} ({})", getDBHost(), quelle("DB_HOST"));
+        logger.info("  db.port                   = {} ({})", getDBPort(), quelle("DB_PORT"));
+        logger.info("  db.name                   = {} ({})", getDBSchema(), quelle("DB_NAME"));
+        logger.info("  db.user                   = {} ({})", getDBUser(), quelle("DB_USER"));
+        logger.info("  db.password               = ****** ({})", quelle("DB_PASSWORD"));
+        logger.info("  app.runLiquibaseMigration = {} ({})", runLiquibaseMigration(), quelle("APP_RUN_LIQUIBASE_MIGRATION"));
+        logger.info("  cors.ersteOrigin          = {} ({})", getFirstCorsAllowedOrigin(), quelle("APP_CORS_ALLOWED_ORIGINS"));
+        logger.info("  cors.weitereOrigins       = {} ({})", String.join(", ", getAdditionalCorsAllowedOrigins()), quelle("APP_CORS_ALLOWED_ORIGINS"));
+    }
+
+    private static String quelle(String envKey) {
+        String envValue = System.getenv(envKey);
+        if (envValue != null && !envValue.isBlank()) {
+            return "Umgebungsvariable " + envKey;
+        }
+        return PROPERTIES_FILE;
     }
 }

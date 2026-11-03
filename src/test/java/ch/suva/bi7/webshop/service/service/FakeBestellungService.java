@@ -29,7 +29,7 @@ public class FakeBestellungService extends BestellungService {
             boolean throwException
     ) {
         super(new FakeBestellungDao(), new WarenkorbDaoMock(Collections.emptyList()),
-                new ArtikelService(new FakeArtikelDao()));
+                new FakeArtikelDao());
         this.bestellungen = bestellungen;
         this.throwException = throwException;
     }

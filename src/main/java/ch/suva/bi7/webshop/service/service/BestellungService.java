@@ -1,12 +1,13 @@
 package ch.suva.bi7.webshop.service.service;
 
+import ch.suva.bi7.webshop.service.dao.ArtikelDao;
 import ch.suva.bi7.webshop.service.dao.BestellungDao;
 import ch.suva.bi7.webshop.service.dao.DaoException;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
+import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.mapper.BestellungMapper;
-import ch.suva.bi7.webshop.service.model.ArtikelDto;
 import ch.suva.bi7.webshop.service.model.BestellungDto;
 
 import java.math.BigDecimal;
@@ -19,23 +20,19 @@ public class BestellungService {
 
     private final BestellungDao bestellungDao;
     private final WarenkorbDao warenkorbDao;
-    // TODO Auf ArtikelDao wechseln:
-    private final ArtikelService artikelService;
+    private final ArtikelDao artikelDao;
 
     public BestellungService(
             BestellungDao bestellungDao,
             WarenkorbDao warenkorbDao,
-            ArtikelService artikelService
+            ArtikelDao artikelDao
     ) {
-        if (bestellungDao == null || warenkorbDao == null) {
+        if (bestellungDao == null || warenkorbDao == null || artikelDao == null) {
             throw new IllegalArgumentException("DAOs dürfen nicht null sein");
-        }
-        if (artikelService == null) {
-            throw new IllegalArgumentException("artikelService darf nicht null sein");
         }
         this.bestellungDao = bestellungDao;
         this.warenkorbDao = warenkorbDao;
-        this.artikelService = artikelService;
+        this.artikelDao = artikelDao;
     }
 
     public List<BestellungDto> ladeBestellungenNachBenutzer(
@@ -76,7 +73,13 @@ public class BestellungService {
 
         Map<Integer, BigDecimal> artikelPreise = new HashMap<>();
         for (WarenkorbEintragEntity item : warenkorb) {
-            ArtikelDto artikel = artikelService.getArtikelById(item.getArtikelId());
+            ArtikelEntity artikel;
+            try {
+                artikel = artikelDao.getArtikelById(item.getArtikelId());
+            } catch (Exception e) {
+                throw new DaoException(
+                        "Artikel " + item.getArtikelId() + " konnte nicht geladen werden.", e);
+            }
             if (artikel == null) {
                 throw new IllegalArgumentException(
                         "Artikel " + item.getArtikelId() + " nicht gefunden.");

@@ -30,7 +30,6 @@ public class ArtikelService {
         }
     }
 
-    // TODO Tests schreiben
     public ArtikelDto getArtikelById(Integer artikelId) {
         try {
             ArtikelEntity artikelEntity = artikelDao.getArtikelById(artikelId);

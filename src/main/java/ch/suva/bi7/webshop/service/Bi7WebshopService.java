@@ -9,11 +9,11 @@ import ch.suva.bi7.webshop.service.service.*;
 import io.javalin.Javalin;
 import jakarta.persistence.EntityManagerFactory;
 
-import java.util.List;
-
 public class Bi7WebshopService {
     public static void main(String[] args) {
         try {
+            WebshopServiceConfig.logKonfiguration();
+
             if (WebshopServiceConfig.runLiquibaseMigration()) {
                 LiquibaseMigrationRunner.migrate(
                         WebshopServiceConfig.getDBHost(),
@@ -44,19 +44,14 @@ public class Bi7WebshopService {
 
             BestellungDao bestellungDao = new BestellungDaoImpl(entityManagerFactory);
             BestellungController bestellungController = new BestellungController(
-                    new BestellungService(bestellungDao, warenkorbDao, artikelService));
-
-            List<String> corsAllowedOrigins = WebshopServiceConfig.getCorsAllowedOrigins();
+                    new BestellungService(bestellungDao, warenkorbDao, artikelDao));
 
             var app = Javalin.create(config -> {
                 config.bundledPlugins.enableCors(cors -> {
                     cors.addRule(it -> {
-                        // TODO Mehoden implementieren und verwenden
-//                        it.allowHost(
-//                                WebshopServiceConfig.getFirstCorsAllowedOrigin(),
-//                                WebshopServiceConfig.getAdditionalCorsAllowedOrigins());
-                        it.allowHost(corsAllowedOrigins.get(0),
-                                corsAllowedOrigins.subList(1, corsAllowedOrigins.size()).toArray(String[]::new));
+                        it.allowHost(
+                                WebshopServiceConfig.getFirstCorsAllowedOrigin(),
+                                WebshopServiceConfig.getAdditionalCorsAllowedOrigins());
                         it.allowCredentials = true;
                         it.exposeHeader("sessionId");
                     });
