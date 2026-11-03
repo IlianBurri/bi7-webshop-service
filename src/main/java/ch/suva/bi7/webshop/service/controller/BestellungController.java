@@ -27,6 +27,7 @@ public class BestellungController {
     public Handler erstelleBestellung = ctx -> {
         String sessionEmail = ctx.sessionAttribute("userEmail");
         if (sessionEmail == null) {
+            logger.error("Benutzer ist nicht eingeloggt. Bestellung kann nicht erstellt werden: {}", ctx);
             ctx.status(401).result("Nicht eingeloggt.");
             return;
         }
@@ -42,9 +43,12 @@ public class BestellungController {
                     ergebnis.bestellungId(),
                     ergebnis.gesamtpreis(),
                     ergebnis.status()));
+            logger.info("Bestellung erfolgreich erstellt: {}", ergebnis);
         } catch (BadRequestResponse e) {
+            logger.error("Ungültiger JSON-Request-Body {} {}", ctx, e);
             ctx.status(400).result("Ungültiger JSON-Request-Body.");
         } catch (IllegalArgumentException e) {
+            logger.error("IllegalArgumentException {} {}", ctx, e);
             ctx.status(400).result(e.getMessage());
         } catch (Exception e) {
             logger.error("Fehler beim Erstellen der Bestellung: {}",

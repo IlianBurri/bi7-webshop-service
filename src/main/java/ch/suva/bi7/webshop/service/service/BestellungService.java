@@ -95,6 +95,8 @@ public class BestellungService {
         int bestellungId = bestellungDao.erstelleBestellungMitWarenkorbItems(
                 userEmail, adressId, gesamtpreis, warenkorb, artikelPreise);
 
+        warenkorbDao.leereWarenkorbNachBenutzer(userEmail);
+
         return new BestellungErgebnis(bestellungId, gesamtpreis, "BEZAHLT");
     }
 

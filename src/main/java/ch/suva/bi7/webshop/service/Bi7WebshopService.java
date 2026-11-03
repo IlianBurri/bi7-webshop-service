@@ -7,6 +7,7 @@ import ch.suva.bi7.webshop.service.db.JpaEntityManagerFactoryProvider;
 import ch.suva.bi7.webshop.service.db.LiquibaseMigrationRunner;
 import ch.suva.bi7.webshop.service.service.*;
 import io.javalin.Javalin;
+import org.eclipse.jetty.http.HttpCookie;
 import jakarta.persistence.EntityManagerFactory;
 
 public class Bi7WebshopService {
@@ -47,6 +48,11 @@ public class Bi7WebshopService {
                     new BestellungService(bestellungDao, warenkorbDao, artikelDao));
 
             Javalin.create(config -> {
+                config.jetty.modifyServletContextHandler(handler -> {
+                    handler.getSessionHandler().setSameSite(HttpCookie.SameSite.NONE);
+                    handler.getSessionHandler().getSessionCookieConfig().setSecure(true);
+                });
+
                 // CORS: Der Browser (z.B. 192.168.1.40) lädt die Seite vom UI-Server und sendet dessen Origin mit.
                 // Erlaubt werden muss also die Origin des UI-Servers (Schema + Host + Port), nicht die IP des Clients.
                 config.bundledPlugins.enableCors(cors -> {
