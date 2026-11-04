@@ -7,8 +7,19 @@ import ch.suva.bi7.webshop.service.db.JpaEntityManagerFactoryProvider;
 import ch.suva.bi7.webshop.service.db.LiquibaseMigrationRunner;
 import ch.suva.bi7.webshop.service.service.*;
 import io.javalin.Javalin;
+import nl.altindag.ssl.SSLFactory;
+import nl.altindag.ssl.pem.util.PemUtils;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.SecureRequestCustomizer;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.http.HttpCookie;
 import jakarta.persistence.EntityManagerFactory;
+
+import java.nio.file.Path;
+import javax.net.ssl.X509ExtendedKeyManager;
 
 public class Bi7WebshopService {
     public static void main(String[] args) {
@@ -48,6 +59,15 @@ public class Bi7WebshopService {
                     new BestellungService(bestellungDao, warenkorbDao, artikelDao));
 
             Javalin.create(config -> {
+                config.jetty.addConnector((server, httpConfig) -> {
+                    HttpConfiguration httpsConfig = new HttpConfiguration(httpConfig);
+                    httpsConfig.addCustomizer(new SecureRequestCustomizer());
+                    ServerConnector connector = new ServerConnector(server,
+                            new SslConnectionFactory(erstelleSslContextFactory(), "http/1.1"),
+                            new HttpConnectionFactory(httpsConfig));
+                    connector.setPort(7070);
+                    return connector;
+                });
                 config.jetty.modifyServletContextHandler(handler -> {
                     handler.getSessionHandler().setSameSite(HttpCookie.SameSite.NONE);
                     handler.getSessionHandler().getSessionCookieConfig().setSecure(true);
@@ -90,11 +110,24 @@ public class Bi7WebshopService {
 
                 config.routes.post("/api/bestellung/checkout", bestellungController.erstelleBestellung);
                 config.routes.get("/api/bestellung/{email}", bestellungController.ladeBestellungenNachBenutzer);
-            }).start(7070);
+            }).start();
         } catch (Exception e) {
             System.err.println("Webshop konnte nicht gestartet werden: " + e.getMessage());
             e.printStackTrace();
             System.exit(1);
         }
+    }
+
+    private static SslContextFactory.Server erstelleSslContextFactory() {
+        Path certPath = Path.of(WebshopServiceConfig.getSslCertPath());
+        Path keyPath = Path.of(WebshopServiceConfig.getSslKeyPath());
+        String keyPassword = WebshopServiceConfig.getSslKeyPassword();
+        X509ExtendedKeyManager keyManager = keyPassword == null
+                ? PemUtils.loadIdentityMaterial(certPath, keyPath)
+                : PemUtils.loadIdentityMaterial(certPath, keyPath, keyPassword.toCharArray());
+
+        SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
+        sslContextFactory.setSslContext(SSLFactory.builder().withIdentityMaterial(keyManager).build().getSslContext());
+        return sslContextFactory;
     }
 }

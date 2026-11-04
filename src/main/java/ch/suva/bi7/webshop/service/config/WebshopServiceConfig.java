@@ -113,6 +113,22 @@ public final class WebshopServiceConfig {
         return origins.subList(1, origins.size()).toArray(String[]::new);
     }
 
+    public static String getSslCertPath() {
+        return requireValue("app.ssl.certPath", "APP_SSL_CERT_PATH");
+    }
+
+    public static String getSslKeyPath() {
+        return requireValue("app.ssl.keyPath", "APP_SSL_KEY_PATH");
+    }
+    public static String getSslKeyPassword() {
+        String envValue = System.getenv("APP_SSL_KEY_PASSWORD");
+        if (envValue != null && !envValue.isBlank()) {
+            return envValue;
+        }
+        String value = PROPERTIES.getProperty("app.ssl.keyPassword");
+        return (value == null || value.isBlank()) ? null : value;
+    }
+
     public static void logKonfiguration() {
         logger.info("Webshop-Service startet mit folgender Konfiguration:");
         logger.info("  db.host                   = {} ({})", getDBHost(), quelle("DB_HOST"));
@@ -123,6 +139,9 @@ public final class WebshopServiceConfig {
         logger.info("  app.runLiquibaseMigration = {} ({})", runLiquibaseMigration(), quelle("APP_RUN_LIQUIBASE_MIGRATION"));
         logger.info("  cors.ersteOrigin          = {} ({})", getFirstCorsAllowedOrigin(), quelle("APP_CORS_ALLOWED_ORIGINS"));
         logger.info("  cors.weitereOrigins       = {} ({})", String.join(", ", getAdditionalCorsAllowedOrigins()), quelle("APP_CORS_ALLOWED_ORIGINS"));
+        logger.info("  app.ssl.certPath          = {} ({})", getSslCertPath(), quelle("APP_SSL_CERT_PATH"));
+        logger.info("  app.ssl.keyPath           = {} ({})", getSslKeyPath(), quelle("APP_SSL_KEY_PATH"));
+        logger.info("  app.ssl.keyPassword       = {} ({})", getSslKeyPassword() == null ? "<nicht gesetzt>" : "******", quelle("APP_SSL_KEY_PASSWORD"));
     }
 
     private static String quelle(String envKey) {
