@@ -82,8 +82,8 @@ public class Bi7WebshopService {
                         it.allowCredentials = true;
                         it.allowHost(WebshopServiceConfig.getFirstCorsAllowedOrigin(),
                                      WebshopServiceConfig.getAdditionalCorsAllowedOrigins());
-                        // Hosts ohne Schema würden sonst als https://... interpretiert, der UI-Server läuft aber auf http
-                        it.defaultScheme = "http";
+                        // Hosts ohne Schema werden als https://... interpretiert (UI-Server läuft ebenfalls auf HTTPS)
+                        it.defaultScheme = "https";
                         // Damit das JavaScript den Header "sessionId" aus der Antwort lesen darf
                         it.exposeHeader("sessionId");
                     });
