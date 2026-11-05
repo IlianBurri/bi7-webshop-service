@@ -8,6 +8,8 @@ import ch.suva.bi7.webshop.service.mock.ArtikelDaoMock;
 import ch.suva.bi7.webshop.service.mock.FakeArtikelDao;
 import ch.suva.bi7.webshop.service.mock.WarenkorbDaoMock;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
+import ch.suva.bi7.webshop.service.model.VerfuegbarkeitResponse;
+import ch.suva.bi7.webshop.service.model.VerfuegbarkeitsProblemDto;
 import ch.suva.bi7.webshop.service.model.WarenkorbEintragDto;
 import ch.suva.bi7.webshop.service.service.ArtikelService;
 import ch.suva.bi7.webshop.service.service.WarenkorbService;
@@ -29,7 +31,7 @@ class WarenkorbControllerTest {
         WarenkorbEintragEntity item = EntityHelper.createWarenkorbEintragEntity(
                 1, "test@example.com", 5, 3);
         ArtikelEntity artikel = EntityHelper.createArtikelEntity(
-                5, "iPhone 15 Pro", new BigDecimal("1199.00"), null);
+                5, "iPhone 15 Pro", new BigDecimal("1199.00"), null, 3);
         WarenkorbContextMock ctx = new WarenkorbContextMock();
         ctx.setPathParam("email", "test@example.com");
         WarenkorbController controller = controller(new WarenkorbDaoMock(List.of(item)), new ArtikelDaoMock(List.of(artikel)));
@@ -43,6 +45,7 @@ class WarenkorbControllerTest {
         assertEquals("iPhone 15 Pro", eintrag.getArtikelName());
         assertEquals(new BigDecimal("1199.00"), eintrag.getArtikelPreis());
         assertNull(eintrag.getArtikelBild());
+        assertEquals(3, eintrag.getArtikelLagerbestand(), "Der Warenkorb liefert den Lagerbestand des Artikels mit");
 
         WarenkorbContextMock leererCtx = new WarenkorbContextMock();
         leererCtx.setPathParam("email", "test@example.com");
@@ -56,7 +59,8 @@ class WarenkorbControllerTest {
 
     @Test
     void artikelHinzufuegenUndMengeAktualisierenFunktionieren() throws Exception {
-        WarenkorbDaoMock dao = new WarenkorbDaoMock(Collections.emptyList());
+        WarenkorbDaoMock dao = new WarenkorbDaoMock(List.of(
+                EntityHelper.createWarenkorbEintragEntity(7, "test@example.com", 5, 1)));
         WarenkorbContextMock addCtx = new WarenkorbContextMock(Map.of(
                 "email", "test@example.com", "artikelId", 5, "menge", 3));
         List<ArtikelEntity> artikelEntityList = new ArrayList<ArtikelEntity>();
@@ -206,7 +210,198 @@ class WarenkorbControllerTest {
         assertEquals("Fehler beim Abrufen des Warenkorbs.", dbFehlerCtx.gesendetesResult,
                 "Der API-Vertrag muss eine konkrete Fehlermeldung liefern");
     }
+
+    @Test
+    void verfuegbarkeitOkWennMengeKleinerOderGleichLagerbestand() throws Exception {
+        WarenkorbContextMock ctx = verfuegbarkeitPruefen(
+                List.of(EntityHelper.createWarenkorbEintragEntity(1, "test@example.com", 5, 2),
+                        EntityHelper.createWarenkorbEintragEntity(2, "test@example.com", 6, 5)),
+                List.of(EntityHelper.createArtikelEntity(5, "iPhone 15 Pro", new BigDecimal("1199.00"), null, 6),
+                        EntityHelper.createArtikelEntity(6, "Samsung Galaxy S24", new BigDecimal("899.90"), null, 5)));
+
+        assertEquals(200, ctx.gesetzterStatus);
+        VerfuegbarkeitResponse antwort = (VerfuegbarkeitResponse) ctx.gesendetesJson;
+        assertTrue(antwort.allesVerfuegbar, "Grenzfall: Menge 5 bei Lagerbestand 5 ist noch verfügbar");
+        assertTrue(antwort.probleme.isEmpty());
+    }
+
+    @Test
+    void verfuegbarkeitMeldetZuGrosseMenge() throws Exception {
+        WarenkorbContextMock ctx = verfuegbarkeitPruefen(
+                List.of(EntityHelper.createWarenkorbEintragEntity(1, "test@example.com", 5, 3)),
+                List.of(EntityHelper.createArtikelEntity(5, "iPhone 15 Pro", new BigDecimal("1199.00"), null, 2)));
+
+        assertEquals(200, ctx.gesetzterStatus);
+        VerfuegbarkeitResponse antwort = (VerfuegbarkeitResponse) ctx.gesendetesJson;
+        assertFalse(antwort.allesVerfuegbar);
+        assertEquals(1, antwort.probleme.size());
+        VerfuegbarkeitsProblemDto problem = antwort.probleme.get(0);
+        assertEquals(1, problem.warenkorbItemId);
+        assertEquals(5, problem.artikelId);
+    }
+
+    @Test
+    void verfuegbarkeitMeldetAusverkauftenArtikel() throws Exception {
+        WarenkorbContextMock ctx = verfuegbarkeitPruefen(
+                List.of(EntityHelper.createWarenkorbEintragEntity(1, "test@example.com", 5, 1)),
+                List.of(EntityHelper.createArtikelEntity(5, "iPhone 15 Pro", new BigDecimal("1199.00"), null, 0)));
+
+        VerfuegbarkeitResponse antwort = (VerfuegbarkeitResponse) ctx.gesendetesJson;
+        assertFalse(antwort.allesVerfuegbar);
+        assertEquals(1, antwort.probleme.get(0).warenkorbItemId);
+    }
+
+    @Test
+    void verfuegbarkeitMeldetNurDenBetroffenenArtikel() throws Exception {
+        WarenkorbContextMock ctx = verfuegbarkeitPruefen(
+                List.of(EntityHelper.createWarenkorbEintragEntity(1, "test@example.com", 5, 1),
+                        EntityHelper.createWarenkorbEintragEntity(2, "test@example.com", 6, 4)),
+                List.of(EntityHelper.createArtikelEntity(5, "iPhone 15 Pro", new BigDecimal("1199.00"), null, 10),
+                        EntityHelper.createArtikelEntity(6, "Samsung Galaxy S24", new BigDecimal("899.90"), null, 3)));
+
+        VerfuegbarkeitResponse antwort = (VerfuegbarkeitResponse) ctx.gesendetesJson;
+        assertFalse(antwort.allesVerfuegbar, "Ein einziger fehlender Artikel reicht, um den Checkout zu stoppen");
+        assertEquals(1, antwort.probleme.size());
+        assertEquals(2, antwort.probleme.get(0).warenkorbItemId, "Die Meldung muss beim richtigen Eintrag landen");
+    }
+
+    @Test
+    void verfuegbarkeitMeldetGeloeschtenArtikel() throws Exception {
+        WarenkorbContextMock ctx = verfuegbarkeitPruefen(
+                List.of(EntityHelper.createWarenkorbEintragEntity(1, "test@example.com", 99, 1)),
+                new ArrayList<>());
+
+        VerfuegbarkeitResponse antwort = (VerfuegbarkeitResponse) ctx.gesendetesJson;
+        assertFalse(antwort.allesVerfuegbar);
+        assertEquals(99, antwort.probleme.get(0).artikelId);
+    }
+
+    @Test
+    void verfuegbarkeitBeiDbFehlerLiefert500() throws Exception {
+        WarenkorbContextMock ctx = new WarenkorbContextMock();
+        ctx.setPathParam("email", "test@example.com");
+
+        controller(new WarenkorbDaoMock(true), new FakeArtikelDao()).pruefeVerfuegbarkeit.handle(ctx);
+
+        assertEquals(500, ctx.gesetzterStatus);
+        assertEquals("Fehler bei der Verfügbarkeitsprüfung.", ctx.gesendetesResult);
+    }
+
+    // ---------- Lagerbestand schon beim Hinzufügen / Ändern prüfen ----------
+
+    @Test
+    void hinzufuegenMitMengeUeberLagerbestandLiefert409() throws Exception {
+        WarenkorbDaoMock dao = new WarenkorbDaoMock(Collections.emptyList());
+        WarenkorbContextMock ctx = new WarenkorbContextMock(Map.of("email", "test@example.com", "artikelId", 5, "menge", 4));
+
+        controller(dao, artikelMitBestand(3)).fuegeArtikelZuWarenkorbHinzu.handle(ctx);
+
+        assertEquals(409, ctx.gesetzterStatus);
+        assertEquals("Von \"Samsung Galaxy S24\" sind nur noch 3 Stück verfügbar.",
+                ((Map<?, ?>) ctx.gesendetesJson).get("error"));
+        assertNull(dao.addArtikelId, "Bei zu wenig Lagerbestand darf nichts in den Warenkorb kommen");
+    }
+
+    @Test
+    void hinzufuegenZaehltBereitsVorhandeneMengeMit() throws Exception {
+        WarenkorbDaoMock dao = new WarenkorbDaoMock(List.of(
+                EntityHelper.createWarenkorbEintragEntity(1, "test@example.com", 5, 3)));
+        WarenkorbContextMock ctx = new WarenkorbContextMock(Map.of("email", "test@example.com", "artikelId", 5, "menge", 3));
+
+        controller(dao, artikelMitBestand(5)).fuegeArtikelZuWarenkorbHinzu.handle(ctx);
+
+        assertEquals(409, ctx.gesetzterStatus, "3 im Warenkorb + 3 neu = 6 > Bestand 5");
+        assertTrue(((String) ((Map<?, ?>) ctx.gesendetesJson).get("error")).contains("Davon hast du bereits 3 im Warenkorb."));
+        assertNull(dao.addArtikelId);
+    }
+
+    @Test
+    void hinzufuegenBisGenauZumLagerbestandIstErlaubt() throws Exception {
+        WarenkorbDaoMock dao = new WarenkorbDaoMock(List.of(
+                EntityHelper.createWarenkorbEintragEntity(1, "test@example.com", 5, 2)));
+        WarenkorbContextMock ctx = new WarenkorbContextMock(Map.of("email", "test@example.com", "artikelId", 5, "menge", 3));
+
+        controller(dao, artikelMitBestand(5)).fuegeArtikelZuWarenkorbHinzu.handle(ctx);
+
+        assertEquals(201, ctx.gesetzterStatus, "Grenzfall: 2 + 3 = 5 bei Bestand 5");
+        assertEquals(3, dao.addMenge);
+    }
+
+    @Test
+    void hinzufuegenEinesAusverkauftenArtikelsLiefert409() throws Exception {
+        WarenkorbDaoMock dao = new WarenkorbDaoMock(Collections.emptyList());
+        WarenkorbContextMock ctx = new WarenkorbContextMock(Map.of("email", "test@example.com", "artikelId", 5, "menge", 1));
+
+        controller(dao, artikelMitBestand(0)).fuegeArtikelZuWarenkorbHinzu.handle(ctx);
+
+        assertEquals(409, ctx.gesetzterStatus);
+        assertEquals("\"Samsung Galaxy S24\" ist ausverkauft.", ((Map<?, ?>) ctx.gesendetesJson).get("error"));
+    }
+
+    @Test
+    void hinzufuegenEinesUnbekanntenArtikelsLiefert400() throws Exception {
+        WarenkorbDaoMock dao = new WarenkorbDaoMock(Collections.emptyList());
+        WarenkorbContextMock ctx = new WarenkorbContextMock(Map.of("email", "test@example.com", "artikelId", 99, "menge", 1));
+
+        controller(dao, new FakeArtikelDao()).fuegeArtikelZuWarenkorbHinzu.handle(ctx);
+
+        assertEquals(400, ctx.gesetzterStatus);
+        assertNull(dao.addArtikelId);
+    }
+
+    @Test
+    void mengeErhoehenUeberLagerbestandLiefert409() throws Exception {
+        WarenkorbDaoMock dao = new WarenkorbDaoMock(List.of(
+                EntityHelper.createWarenkorbEintragEntity(7, "test@example.com", 5, 3)));
+        WarenkorbContextMock ctx = new WarenkorbContextMock(Map.of("menge", 4));
+        ctx.setPathParam("id", "7");
+
+        controller(dao, artikelMitBestand(3)).aktualisiereMenge.handle(ctx);
+
+        assertEquals(409, ctx.gesetzterStatus);
+        assertNull(dao.updateId, "Die Menge darf nicht über den Lagerbestand erhöht werden");
+    }
+
+    @Test
+    void mengeErhoehenBisGenauZumLagerbestandIstErlaubt() throws Exception {
+        WarenkorbDaoMock dao = new WarenkorbDaoMock(List.of(
+                EntityHelper.createWarenkorbEintragEntity(7, "test@example.com", 5, 2)));
+        WarenkorbContextMock ctx = new WarenkorbContextMock(Map.of("menge", 3));
+        ctx.setPathParam("id", "7");
+
+        controller(dao, artikelMitBestand(3)).aktualisiereMenge.handle(ctx);
+
+        assertEquals(200, ctx.gesetzterStatus);
+        assertEquals(3, dao.updateNeueMenge);
+    }
+
+    @Test
+    void mengeReduzierenIstImmerErlaubtAuchUeberLagerbestand() throws Exception {
+        WarenkorbDaoMock dao = new WarenkorbDaoMock(List.of(
+                EntityHelper.createWarenkorbEintragEntity(7, "test@example.com", 5, 5)));
+        WarenkorbContextMock ctx = new WarenkorbContextMock(Map.of("menge", 4));
+        ctx.setPathParam("id", "7");
+
+        controller(dao, artikelMitBestand(3)).aktualisiereMenge.handle(ctx);
+
+        assertEquals(200, ctx.gesetzterStatus, "Von 5 auf 4 reduzieren muss gehen, auch wenn nur 3 an Lager sind");
+        assertEquals(4, dao.updateNeueMenge);
+    }
+
+    private static ArtikelDaoMock artikelMitBestand(int lagerbestand) {
+        return new ArtikelDaoMock(List.of(EntityHelper.createArtikelEntity(
+                5, "Samsung Galaxy S24", new BigDecimal("899.90"), null, lagerbestand)));
+    }
+
+        private static WarenkorbContextMock verfuegbarkeitPruefen(List<WarenkorbEintragEntity> warenkorb,
+                                                              List<ArtikelEntity> artikel) throws Exception {
+        WarenkorbContextMock ctx = new WarenkorbContextMock();
+        ctx.setPathParam("email", "test@example.com");
+        controller(new WarenkorbDaoMock(warenkorb), new ArtikelDaoMock(artikel)).pruefeVerfuegbarkeit.handle(ctx);
+        return ctx;
+    }
+
     private static WarenkorbController controller(WarenkorbDao dao, ArtikelDao artikelDao) {
-        return new WarenkorbController(new WarenkorbService(dao), new ArtikelService(artikelDao));
+        return new WarenkorbController(new WarenkorbService(dao, artikelDao), new ArtikelService(artikelDao));
     }
 }

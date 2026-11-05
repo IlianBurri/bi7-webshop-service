@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +40,8 @@ public class BestellungDaoImpl implements BestellungDao {
         try {
             tx.begin();
 
+            reduziereLagerbestand(em, warenkorbEintragEntityList);
+
             BestellungEntity bestellung = new BestellungEntity(
                     userEmail,
                     adressId,
@@ -59,6 +62,11 @@ public class BestellungDaoImpl implements BestellungDao {
                 em.persist(bestellPosition);
 
             }
+
+            em.createNativeQuery("DELETE FROM warenkorb_item WHERE userEmail = :email")
+                    .setParameter("email", userEmail)
+                    .executeUpdate();
+
             tx.commit();
             return bestellung.getBestellungId();
 
@@ -70,9 +78,38 @@ public class BestellungDaoImpl implements BestellungDao {
                     logger.warn("Rollback nach fehlgeschlagener Bestellung fehlgeschlagen", rbEx);
                 }
             }
+            if (e instanceof LagerbestandException lagerbestandException) {
+                logger.info("Bestellung für '{}' zurückgerollt: {}", userEmail, e.getMessage());
+                throw lagerbestandException;
+            }
             throw new DaoException("Fehler beim Erstellen der Bestellung für Benutzer: " + userEmail, e);
         } finally {
             em.close();
+        }
+    }
+
+    private void reduziereLagerbestand(EntityManager em, List<WarenkorbEintragEntity> eintraege)
+            throws LagerbestandException {
+        List<WarenkorbEintragEntity> sortiert = eintraege.stream()
+                .sorted(Comparator.comparing(WarenkorbEintragEntity::getArtikelId))
+                .toList();
+
+        for (WarenkorbEintragEntity eintrag : sortiert) {
+            int menge = eintrag.getMenge();
+            if (menge <= 0)
+            {
+                throw new IllegalArgumentException("Menge muss > 0 sein für Artikel " + eintrag.getArtikelId());
+            }
+            int geaenderteZeilen = em.createNativeQuery(
+                            "UPDATE artikel SET lagerbestand = lagerbestand - :menge " +
+                                    "WHERE artikelId = :artikelId AND lagerbestand >= :menge")
+                    .setParameter("menge", menge)
+                    .setParameter("artikelId", eintrag.getArtikelId())
+                    .executeUpdate();
+            if (geaenderteZeilen == 0) {
+                throw new LagerbestandException(eintrag.getArtikelId(),
+                        "Artikel " + eintrag.getArtikelId() + " ist nicht in der Menge " + menge + " an Lager.");
+            }
         }
     }
 

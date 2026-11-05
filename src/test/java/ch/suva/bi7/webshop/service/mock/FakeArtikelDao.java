@@ -18,6 +18,11 @@ public class FakeArtikelDao implements ArtikelDao {
     }
 
     @Override
+    public int fuelleLagerAuf(int mindestbestand) throws Exception {
+        return 0;
+    }
+
+    @Override
     public ArtikelEntity getArtikelById(Integer artikelId) throws Exception {
         return null;
     }

@@ -52,6 +52,18 @@ class ArtikelServiceTest {
     }
 
     @Test
+    void lagerAuffuellenNutztStandardLagerbestand() {
+        ArtikelDaoMock dao = new ArtikelDaoMock(List.of(
+                EntityHelper.createArtikelEntity(5, "iPhone 15 Pro", new BigDecimal("1199.00"), null, 0),
+                EntityHelper.createArtikelEntity(6, "Galaxy S24", new BigDecimal("899.90"), null, 25)));
+
+        int aufgefuellt = new ArtikelService(dao).fuelleLagerAuf();
+
+        assertEquals(10, dao.letzterMindestbestand, "Aufgefüllt wird auf den Standard-Lagerbestand 10");
+        assertEquals(1, aufgefuellt, "Nur der Artikel unter 10 wird aufgefüllt");
+    }
+
+    @Test
     void konstruktorLehntNullAb() {
         assertThrows(IllegalArgumentException.class, () -> new ArtikelService(null));
     }

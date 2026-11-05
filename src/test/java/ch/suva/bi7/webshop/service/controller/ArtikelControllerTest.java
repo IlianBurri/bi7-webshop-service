@@ -24,8 +24,8 @@ class ArtikelControllerTest {
     @Test
     void fetchAllArtikelLiefertArtikellisteAlsJson() throws Exception {
         FakeArtikelService fakeArtikelService = new FakeArtikelService(List.of(
-                new ArtikelDto(1, "iPhone 15 Pro", new BigDecimal("1199.00"), "https://example.com/iphone.jpg"),
-                new ArtikelDto(2, "Samsung Galaxy S24", new BigDecimal("899.90"), "https://example.com/galaxy.jpg")
+                    new ArtikelDto(1, "iPhone 15 Pro", new BigDecimal("1199.00"), "https://example.com/iphone.jpg", 10),
+                new ArtikelDto(2, "Samsung Galaxy S24", new BigDecimal("899.90"), "https://example.com/galaxy.jpg", 0)
         ));
         ArtikelController testee = createTestee(fakeArtikelService, null);
 
@@ -41,11 +41,13 @@ class ArtikelControllerTest {
         assertEquals("iPhone 15 Pro", erster.getName());
         assertEquals(new BigDecimal("1199.00"), erster.getPreis());
         assertEquals("https://example.com/iphone.jpg", erster.getBild());
+        assertEquals(10, erster.getLagerbestand(), "Der Lagerbestand muss im JSON mitgeschickt werden");
 
         ArtikelDto zweiter = (ArtikelDto) json.get(1);
         assertEquals("Samsung Galaxy S24", zweiter.getName());
         assertEquals(new BigDecimal("899.90"), zweiter.getPreis());
         assertEquals("https://example.com/galaxy.jpg", zweiter.getBild());
+        assertEquals(0, zweiter.getLagerbestand(), "Auch ein ausverkaufter Artikel (0) wird geliefert");
     }
 
 
@@ -346,7 +348,7 @@ class ArtikelControllerTest {
 
     private FakeArtikelService getFakeArtikelServiceOneArtikel() {
         return new FakeArtikelService(List.of(
-                new ArtikelDto(42, "iPhone 15 Pro", new BigDecimal("1199.00"), "https://example.com/iphone.jpg")
+                new ArtikelDto(42, "iPhone 15 Pro", new BigDecimal("1199.00"), "https://example.com/iphone.jpg", 10)
         ));
     }
 }

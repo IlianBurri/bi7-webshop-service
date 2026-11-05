@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.LagerbestandException;
 import ch.suva.bi7.webshop.service.model.CheckoutRequest;
 import ch.suva.bi7.webshop.service.model.CheckoutResponse;
 import ch.suva.bi7.webshop.service.service.BestellungService;
@@ -7,6 +8,8 @@ import io.javalin.http.BadRequestResponse;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 
 public class BestellungController {
@@ -44,6 +47,11 @@ public class BestellungController {
                     ergebnis.gesamtpreis(),
                     ergebnis.status()));
             logger.info("Bestellung erfolgreich erstellt: {}", ergebnis);
+        } catch (LagerbestandException e) {
+            logger.info("Bestellung von '{}' abgelehnt (Lagerbestand): {}", sessionEmail, e.getMessage());
+            ctx.status(409).json(Map.of(
+                    "error", e.getMessage(),
+                    "artikelId", e.getArtikelId()));
         } catch (BadRequestResponse e) {
             logger.error("Ungültiger JSON-Request-Body {} {}", ctx, e);
             ctx.status(400).result("Ungültiger JSON-Request-Body.");

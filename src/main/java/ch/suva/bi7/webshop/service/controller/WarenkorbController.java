@@ -1,14 +1,17 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.LagerbestandException;
 import ch.suva.bi7.webshop.service.model.*;
 import ch.suva.bi7.webshop.service.service.ArtikelService;
 import ch.suva.bi7.webshop.service.service.WarenkorbService;
 import io.javalin.http.BadRequestResponse;
+import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 
 public class WarenkorbController {
 
@@ -33,13 +36,7 @@ public class WarenkorbController {
 
     public Handler ladeWarenkorb = ctx -> {
         try {
-            // Schritt 2: Je WarenkorbEintragDto den zugehörigen ArtikelDto laden und in den WarenkorbEintragDto setzen.
-            List<WarenkorbEintragDto> warenkorbList = warenkorbService.ladeWarenkorb(ctx.pathParam("email"));
-            for (WarenkorbEintragDto warenkorbEintrag : warenkorbList) {
-                ArtikelDto artikelDto = artikelService.getArtikelById(warenkorbEintrag.getArtikelId());
-                warenkorbEintrag.setArtikelDto(artikelDto);
-            }
-            ctx.status(200).json(warenkorbList);
+            ctx.status(200).json(ladeWarenkorbMitArtikeln(ctx.pathParam("email")));
         } catch (IllegalArgumentException e) {
             ctx.status(400).result(e.getMessage());
         } catch (Exception e) {
@@ -50,6 +47,34 @@ public class WarenkorbController {
         }
     };
 
+    public Handler pruefeVerfuegbarkeit = ctx -> {
+        try {
+            List<WarenkorbEintragDto> warenkorbList = ladeWarenkorbMitArtikeln(ctx.pathParam("email"));
+            VerfuegbarkeitResponse antwort = warenkorbService.pruefeVerfuegbarkeit(warenkorbList);
+            if (!antwort.allesVerfuegbar) {
+                logger.info("Verfügbarkeitsprüfung für '{}': {} Artikel nicht in gewünschter Menge an Lager",
+                        ctx.pathParam("email"), antwort.probleme.size());
+            }
+            ctx.status(200).json(antwort);
+        } catch (IllegalArgumentException e) {
+            ctx.status(400).result(e.getMessage());
+        } catch (Exception e) {
+            logger.error("Fehler bei der Verfügbarkeitsprüfung: {}",
+                    e.getMessage(), e);
+            ctx.status(500).result(
+                    "Fehler bei der Verfügbarkeitsprüfung.");
+        }
+    };
+
+    private List<WarenkorbEintragDto> ladeWarenkorbMitArtikeln(String email) throws Exception {
+        List<WarenkorbEintragDto> warenkorbList = warenkorbService.ladeWarenkorb(email);
+        for (WarenkorbEintragDto warenkorbEintrag : warenkorbList) {
+            ArtikelDto artikelDto = artikelService.getArtikelById(warenkorbEintrag.getArtikelId());
+            warenkorbEintrag.setArtikelDto(artikelDto);
+        }
+        return warenkorbList;
+    }
+
     public Handler fuegeArtikelZuWarenkorbHinzu = ctx -> {
         try {
             WarenkorbAddRequest anfrage =
@@ -59,6 +84,8 @@ public class WarenkorbController {
                     anfrage.email, anfrage.artikelId, anfrage.menge);
             ctx.status(201).json(new AktionResponse(
                     "ok", "Artikel zum Warenkorb hinzugefügt."));
+        } catch (LagerbestandException e) {
+            lagerbestandKonflikt(ctx, e);
         } catch (BadRequestResponse e) {
             ctx.status(400).result("Ungültiger JSON-Request-Body.");
         } catch (NumberFormatException e) {
@@ -85,6 +112,8 @@ public class WarenkorbController {
                 return;
             }
             ctx.status(200).json(new AktionResponse("ok", "Menge aktualisiert."));
+        } catch (LagerbestandException e) {
+            lagerbestandKonflikt(ctx, e);
         } catch (BadRequestResponse e) {
             ctx.status(400).result("Ungültiger JSON-Request-Body.");
         } catch (NumberFormatException e) {
@@ -98,6 +127,13 @@ public class WarenkorbController {
                     "Fehler beim Aktualisieren der Menge.");
         }
     };
+
+    private void lagerbestandKonflikt(Context ctx, LagerbestandException e) {
+        logger.info("Warenkorb-Änderung abgelehnt (Lagerbestand): {}", e.getMessage());
+        ctx.status(409).json(Map.of(
+                "error", e.getMessage(),
+                "artikelId", e.getArtikelId()));
+    }
 
     public Handler loescheWarenkorbEintrag = ctx -> {
         try {

@@ -10,16 +10,19 @@ public class ArtikelDto {
     private String name;
     private BigDecimal preis;
     private String bild;
+    private Integer lagerbestand;
 
     public ArtikelDto(
             @JsonProperty("artikelId") Integer artikelId,
             @JsonProperty("name") String name,
             @JsonProperty("preis") BigDecimal preis,
-            @JsonProperty("bild") String bild) {
+            @JsonProperty("bild") String bild,
+            @JsonProperty("lagerbestand") Integer lagerbestand) {
         this.artikelId = artikelId;
         this.name = name.trim();
         this.preis = preis;
         this.bild = bild == null ? null : bild.trim();
+        this.lagerbestand = lagerbestand;
     }
 
     public Integer getArtikelId() {
@@ -36,5 +39,9 @@ public class ArtikelDto {
 
     public String getBild() {
         return bild;
+    }
+
+    public Integer getLagerbestand() {
+        return lagerbestand;
     }
 }

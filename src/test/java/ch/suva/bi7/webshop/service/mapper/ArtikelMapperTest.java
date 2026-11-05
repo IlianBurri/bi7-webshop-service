@@ -14,7 +14,7 @@ class ArtikelMapperTest {
 
     @Test
     void mapToDtoUebernimmtAlleWerte() {
-        ArtikelEntity entity = EntityHelper.createArtikelEntity(7, "Tastatur", new BigDecimal("49.90"), "bild.png");
+        ArtikelEntity entity = EntityHelper.createArtikelEntity(7, "Tastatur", new BigDecimal("49.90"), "bild.png", 5);
 
         ArtikelDto dto = ArtikelMapper.toDto(entity);
 
@@ -22,6 +22,7 @@ class ArtikelMapperTest {
         assertEquals(entity.getName(), dto.getName());
         assertEquals(entity.getPreis(), dto.getPreis());
         assertEquals(entity.getBild(), dto.getBild());
+        assertEquals(5, dto.getLagerbestand());
     }
 
     @Test

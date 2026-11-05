@@ -42,6 +42,14 @@ public class ArtikelService {
         }
     }
 
+    public int fuelleLagerAuf() {
+        try {
+            return artikelDao.fuelleLagerAuf(ArtikelEntity.STANDARD_LAGERBESTAND);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public ArtikelDto erstelleNeuenArtikel(String name, BigDecimal preis, String bild) {
         try {
             ArtikelEntity artikelEntity = artikelDao.erstelleNeuenArtikel(name, preis, bild);

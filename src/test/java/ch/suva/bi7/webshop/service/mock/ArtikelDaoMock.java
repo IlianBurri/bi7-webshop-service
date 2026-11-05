@@ -10,6 +10,7 @@ import java.util.List;
 public class ArtikelDaoMock implements ArtikelDao {
 
     private final List<ArtikelEntity> items;
+    public Integer letzterMindestbestand;
 
     public ArtikelDaoMock(List<ArtikelEntity> items) {
         this.items = items;
@@ -25,6 +26,12 @@ public class ArtikelDaoMock implements ArtikelDao {
         ArtikelEntity artikelEntity = new ArtikelEntity(name, preis, bild);
         items.add(artikelEntity);
         return artikelEntity;
+    }
+
+    @Override
+    public int fuelleLagerAuf(int mindestbestand) throws Exception {
+        letzterMindestbestand = mindestbestand;
+        return (int) items.stream().filter(artikel -> artikel.getLagerbestand() < mindestbestand).count();
     }
 
     @Override

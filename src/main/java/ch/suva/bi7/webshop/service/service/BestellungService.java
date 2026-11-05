@@ -3,6 +3,7 @@ package ch.suva.bi7.webshop.service.service;
 import ch.suva.bi7.webshop.service.dao.ArtikelDao;
 import ch.suva.bi7.webshop.service.dao.BestellungDao;
 import ch.suva.bi7.webshop.service.dao.DaoException;
+import ch.suva.bi7.webshop.service.dao.LagerbestandException;
 import ch.suva.bi7.webshop.service.dao.WarenkorbDao;
 import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
@@ -72,6 +73,7 @@ public class BestellungService {
         }
 
         Map<Integer, BigDecimal> artikelPreise = new HashMap<>();
+        Map<Integer, String> artikelNamen = new HashMap<>();
         for (WarenkorbEintragEntity item : warenkorb) {
             ArtikelEntity artikel;
             try {
@@ -85,6 +87,7 @@ public class BestellungService {
                         "Artikel " + item.getArtikelId() + " nicht gefunden.");
             }
             artikelPreise.put(item.getArtikelId(), artikel.getPreis());
+            artikelNamen.put(item.getArtikelId(), artikel.getName());
         }
 
         BigDecimal gesamtpreis = warenkorb.stream()
@@ -92,10 +95,16 @@ public class BestellungService {
                         .multiply(BigDecimal.valueOf(item.getMenge())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        int bestellungId = bestellungDao.erstelleBestellungMitWarenkorbItems(
-                userEmail, adressId, gesamtpreis, warenkorb, artikelPreise);
-
-        warenkorbDao.leereWarenkorbNachBenutzer(userEmail);
+        int bestellungId;
+        try {
+            bestellungId = bestellungDao.erstelleBestellungMitWarenkorbItems(
+                    userEmail, adressId, gesamtpreis, warenkorb, artikelPreise);
+        } catch (LagerbestandException e) {
+            String name = artikelNamen.getOrDefault(e.getArtikelId(), "Artikel " + e.getArtikelId());
+            throw new LagerbestandException(e.getArtikelId(),
+                    "\"" + name + "\" ist nicht mehr in der gewünschten Menge an Lager. "
+                            + "Deine Bestellung wurde nicht ausgeführt. Bitte passe deinen Warenkorb an.", e);
+        }
 
         return new BestellungErgebnis(bestellungId, gesamtpreis, "BEZAHLT");
     }

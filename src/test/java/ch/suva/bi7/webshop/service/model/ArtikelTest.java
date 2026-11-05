@@ -114,4 +114,31 @@ class ArtikelTest {
                         () -> EntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), "   "))
         );
     }
+
+    @Test
+    void neuerArtikelOhneLagerbestandHatStandardBestand10() {
+        ArtikelEntity artikel = EntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), null);
+
+        assertEquals(10, artikel.getLagerbestand(), "Neue Artikel haben standardmässig 10 Stück an Lager");
+    }
+
+    @Test
+    void lagerbestandWirdUebernommen() {
+        assertAll(
+                () -> assertEquals(0, EntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), null, 0)
+                        .getLagerbestand(), "Grenzfall 0 (ausverkauft) ist erlaubt"),
+                () -> assertEquals(6, EntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), null, 6)
+                        .getLagerbestand())
+        );
+    }
+
+    @Test
+    void negativerOderFehlenderLagerbestandWirdAbgelehnt() {
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> EntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), null, -1)),
+                () -> assertThrows(IllegalArgumentException.class,
+                        () -> EntityHelper.createArtikelEntity(1, "Laptop", new BigDecimal("10.00"), null, null))
+        );
+    }
 }

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <changeSet id="20261104-01-lagerbestand-spalte" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="artikel" columnName="lagerbestand"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="artikel">
+            <column name="lagerbestand" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <update tableName="artikel">
+            <column name="lagerbestand" valueNumeric="10"/>
+        </update>
+        <rollback>
+            <dropColumn tableName="artikel" columnName="lagerbestand"/>
+        </rollback>
+    </changeSet>
+
+
+    <changeSet id="20261104-02-lagerbestand-check" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM information_schema.CHECK_CONSTRAINTS
+                WHERE CONSTRAINT_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'artikel'
+                  AND CONSTRAINT_NAME = 'chk_artikel_lagerbestand'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE artikel ADD CONSTRAINT chk_artikel_lagerbestand CHECK (lagerbestand &gt;= 0)
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE artikel DROP CONSTRAINT chk_artikel_lagerbestand</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20261104-03-lagerbestand-testwert-samsung" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="1">
+                SELECT COUNT(*) FROM artikel WHERE name = 'Samsung Galaxy S24'
+            </sqlCheck>
+        </preConditions>
+        <update tableName="artikel">
+            <column name="lagerbestand" valueNumeric="5"/>
+            <where>name = 'Samsung Galaxy S24'</where>
+        </update>
+        <rollback>
+            <update tableName="artikel">
+                <column name="lagerbestand" valueNumeric="10"/>
+                <where>name = 'Samsung Galaxy S24'</where>
+            </update>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="20261104-04-lagerbestand-standard-10" author="ilian">
+        <addDefaultValue tableName="artikel" columnName="lagerbestand" columnDataType="INT" defaultValueNumeric="10"/>
+        <rollback>
+            <addDefaultValue tableName="artikel" columnName="lagerbestand" columnDataType="INT" defaultValueNumeric="0"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

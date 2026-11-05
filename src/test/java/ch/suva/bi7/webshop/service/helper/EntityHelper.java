@@ -26,6 +26,16 @@ public class EntityHelper {
         return artikelEntity;
     }
 
+    public static ArtikelEntity createArtikelEntity(Integer artikelId, String name, BigDecimal preis, String bild,
+                                                    Integer lagerbestand) {
+        if (artikelId == null || artikelId.intValue() <= 0) {
+            throw new IllegalArgumentException("artikelId darf nicht null oder kleiner 1 sein");
+        }
+        ArtikelEntity artikelEntity = new ArtikelEntity(name, preis, bild, lagerbestand);
+        setArtikelId(artikelEntity, artikelId);
+        return artikelEntity;
+    }
+
     public static void setArtikelId(ArtikelEntity artikelEntity, Integer artikelId) {
         // Griff in die Trickkiste, um die private artikelId zu setzen, da der Konstruktor sie nicht akzeptiert.
         // JPA/Hibernate setzen die ID normalerweise automatisch, aber für Testzwecke setzen wir sie manuell.

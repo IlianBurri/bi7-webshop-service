@@ -67,6 +67,18 @@ public final class WebshopServiceConfig {
         return parseBoolean(value, "app.runLiquibaseMigration");
     }
 
+    public static boolean lagerAuffuellenBeimStart() {
+        String envValue = System.getenv("APP_LAGER_AUFFUELLEN_BEIM_START");
+        if (envValue != null && !envValue.isBlank()) {
+            return parseBoolean(envValue, "APP_LAGER_AUFFUELLEN_BEIM_START");
+        }
+        String value = PROPERTIES.getProperty("app.lagerAuffuellenBeimStart", "false");
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+        return parseBoolean(value, "app.lagerAuffuellenBeimStart");
+    }
+
     private static boolean parseBoolean(String value, String source) {
         if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
             return Boolean.parseBoolean(value);
@@ -137,6 +149,7 @@ public final class WebshopServiceConfig {
         logger.info("  db.user                   = {} ({})", getDBUser(), quelle("DB_USER"));
         logger.info("  db.password               = ****** ({})", quelle("DB_PASSWORD"));
         logger.info("  app.runLiquibaseMigration = {} ({})", runLiquibaseMigration(), quelle("APP_RUN_LIQUIBASE_MIGRATION"));
+        logger.info("  app.lagerAuffuellenBeimStart = {} ({})", lagerAuffuellenBeimStart(), quelle("APP_LAGER_AUFFUELLEN_BEIM_START"));
         logger.info("  cors.ersteOrigin          = {} ({})", getFirstCorsAllowedOrigin(), quelle("APP_CORS_ALLOWED_ORIGINS"));
         logger.info("  cors.weitereOrigins       = {} ({})", String.join(", ", getAdditionalCorsAllowedOrigins()), quelle("APP_CORS_ALLOWED_ORIGINS"));
         logger.info("  app.ssl.certPath          = {} ({})", getSslCertPath(), quelle("APP_SSL_CERT_PATH"));

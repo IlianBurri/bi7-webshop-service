@@ -6,6 +6,7 @@ import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class WarenkorbDaoMock implements WarenkorbDao {
 
@@ -43,6 +44,13 @@ public class WarenkorbDaoMock implements WarenkorbDao {
             throw new DaoException("Datenbank Fehler");
         }
         return items;
+    }
+
+    @Override
+    public Optional<WarenkorbEintragEntity> getWarenkorbEintragById(int warenkorbItemId) {
+        return items.stream()
+                .filter(eintrag -> eintrag.getWarenkorbItemId() == warenkorbItemId)
+                .findFirst();
     }
 
     @Override

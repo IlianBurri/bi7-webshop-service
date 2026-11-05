@@ -13,6 +13,7 @@ public final class ArtikelMapper {
             throw new IllegalArgumentException("ArtikelEntity darf nicht null sein");
         }
 
-        return new ArtikelDto(entity.getArtikelId(), entity.getName(), entity.getPreis(), entity.getBild());
+        return new ArtikelDto(entity.getArtikelId(), entity.getName(), entity.getPreis(), entity.getBild(),
+                entity.getLagerbestand());
     }
 }

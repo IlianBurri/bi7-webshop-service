@@ -15,6 +15,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class WarenkorbDaoImplTest {
 
     @Test
+    void warenkorbEintragPerIdNutztFind() throws Exception {
+        WarenkorbEintragEntity erwartet = EntityHelper.createWarenkorbEintragEntity(7, "test@somewhere.com", 5, 2);
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.find(WarenkorbEintragEntity.class, 7, erwartet);
+        WarenkorbDao testee = new WarenkorbDaoImpl(jpa.factory());
+
+        assertSame(erwartet, testee.getWarenkorbEintragById(7).orElseThrow());
+        assertTrue(testee.getWarenkorbEintragById(999).isEmpty(), "Unbekannte ID liefert ein leeres Optional");
+    }
+
+    @Test
     void warenkorbLesenLiefertItemsMitJoindaten() throws Exception {
         EntityManagerMock jpa = new EntityManagerMock();
         List<WarenkorbEintragEntity> tuples = List.of(

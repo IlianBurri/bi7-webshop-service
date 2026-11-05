@@ -16,6 +16,31 @@ import static org.junit.jupiter.api.Assertions.*;
 class ArtikelDaoImplTest {
 
     @Test
+    void lagerAuffuellenErhoehtNurArtikelUnterDemMindestbestand() throws Exception {
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.addUpdateCount(3);
+
+        int aufgefuellt = new ArtikelDaoImpl(jpa.factory()).fuelleLagerAuf(10);
+
+        assertEquals(3, aufgefuellt);
+        assertTrue(jpa.actions().contains(
+                        "nativeQuery: UPDATE artikel SET lagerbestand = :menge WHERE lagerbestand < :menge"),
+                "Artikel mit mehr als dem Mindestbestand dürfen nicht reduziert werden");
+        assertEquals(List.of("menge=10"), jpa.parameters());
+        assertTrue(jpa.actions().contains("EntityTransaction.commit"));
+    }
+
+    @Test
+    void fehlerBeimAuffuellenFuehrtZuRollback() {
+        EntityManagerMock jpa = new EntityManagerMock();
+        jpa.updateException(new RuntimeException("Simulierter Datenbankfehler"));
+
+        assertThrows(DaoException.class, () -> new ArtikelDaoImpl(jpa.factory()).fuelleLagerAuf(10));
+        assertTrue(jpa.actions().contains("EntityTransaction.rollback"));
+        assertFalse(jpa.actions().contains("EntityTransaction.commit"));
+    }
+
+    @Test
     void einArtikelKannGeladenWerden() throws Exception {
         ArtikelEntity artikel = artikel(1, "iPhone 15 Pro", new BigDecimal("1199.00"),
                 "https://example.com/iphone.jpg");

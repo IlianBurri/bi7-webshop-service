@@ -48,6 +48,31 @@ public class ArtikelDaoImpl implements ArtikelDao {
     }
 
     @Override
+    public int fuelleLagerAuf(int mindestbestand) throws DaoException {
+        if (mindestbestand < 0) {
+            throw new IllegalArgumentException("mindestbestand muss >= 0 sein");
+        }
+        EntityTransaction transaction = null;
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            transaction = em.getTransaction();
+            transaction.begin();
+
+            int geaenderteArtikel = em.createNativeQuery(
+                            "UPDATE artikel SET lagerbestand = :menge WHERE lagerbestand < :menge")
+                    .setParameter("menge", mindestbestand)
+                    .executeUpdate();
+
+            transaction.commit();
+            return geaenderteArtikel;
+        } catch (Exception e) {
+            if (transaction != null && transaction.isActive()) {
+                transaction.rollback();
+            }
+            throw new DaoException("Fehler beim Auffüllen des Lagers", e);
+        }
+    }
+
+    @Override
     public ArtikelEntity getArtikelById(Integer artikelId) {
         try (EntityManager em = entityManagerFactory.createEntityManager()) {
             return em.find(ArtikelEntity.class, artikelId);

@@ -1,6 +1,7 @@
 package ch.suva.bi7.webshop.service.mock;
 
 import ch.suva.bi7.webshop.service.dao.BestellungDao;
+import ch.suva.bi7.webshop.service.dao.LagerbestandException;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 
@@ -17,12 +18,17 @@ public class FakeBestellungDao implements BestellungDao {
     public BigDecimal letzterGesamtpreis;
     public List<WarenkorbEintragEntity> letzteItems;
     public Map<Integer, BigDecimal> letzteArtikelPreise;
+    public LagerbestandException zuWerfendeException;
 
     @Override
     public int erstelleBestellungMitWarenkorbItems(String userEmail, int adressId, BigDecimal gesamtpreis,
                                                    List<WarenkorbEintragEntity> items,
-                                                   Map<Integer, BigDecimal> artikelPreise) {
+                                                   Map<Integer, BigDecimal> artikelPreise)
+            throws LagerbestandException {
         wurdeAufgerufen = true;
+        if (zuWerfendeException != null) {
+            throw zuWerfendeException;
+        }
         letzterUserEmail = userEmail;
         letzteAdressId = adressId;
         letzterGesamtpreis = gesamtpreis;

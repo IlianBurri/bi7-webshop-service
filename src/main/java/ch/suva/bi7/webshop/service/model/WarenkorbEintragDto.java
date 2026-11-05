@@ -47,4 +47,8 @@ public class WarenkorbEintragDto {
     public String getArtikelBild() {
         return artikelDto == null ? null : artikelDto.getBild();
     }
+
+    public Integer getArtikelLagerbestand() {
+        return artikelDto == null ? null : artikelDto.getLagerbestand();
+    }
 }

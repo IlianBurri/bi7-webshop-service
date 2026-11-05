@@ -24,6 +24,7 @@ public class EntityManagerMock implements EntityManager {
     private final Deque<Object> results = new ArrayDeque<>();
     private final Deque<Integer> updateCounts = new ArrayDeque<>();
     private final List<Object> persistedEntities = new ArrayList<>();
+    private final List<String> parameters = new ArrayList<>();
     private RuntimeException queryException;
     private RuntimeException updateException;
     private final Map<FindKey, Object> findResults = new java.util.HashMap<>();
@@ -202,6 +203,7 @@ public class EntityManagerMock implements EntityManager {
 
     @Override
     public Query createNativeQuery(String sqlString) {
+        actions.add("nativeQuery: " + sqlString);
         return createQueryProxy();
     }
 
@@ -298,6 +300,10 @@ public class EntityManagerMock implements EntityManager {
         return actions;
     }
 
+    public List<String> parameters() {
+        return parameters;
+    }
+
     public List<Object> persistedEntities() {
         return persistedEntities;
     }
@@ -313,6 +319,7 @@ public class EntityManagerMock implements EntityManager {
                 new Class<?>[]{Query.class, TypedQuery.class}, (object, method, args) -> {
                     switch (method.getName()) {
                         case "setParameter" -> {
+                            parameters.add(args[0] + "=" + args[1]);
                             return holder[0];
                         }
                         case "getResultList" -> {

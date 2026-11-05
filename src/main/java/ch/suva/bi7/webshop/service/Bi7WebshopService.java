@@ -5,6 +5,7 @@ import ch.suva.bi7.webshop.service.dao.*;
 import ch.suva.bi7.webshop.service.config.WebshopServiceConfig;
 import ch.suva.bi7.webshop.service.db.JpaEntityManagerFactoryProvider;
 import ch.suva.bi7.webshop.service.db.LiquibaseMigrationRunner;
+import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.service.*;
 import io.javalin.Javalin;
 import nl.altindag.ssl.SSLFactory;
@@ -47,10 +48,15 @@ public class Bi7WebshopService {
             ArtikelDao artikelDao = new ArtikelDaoImpl(entityManagerFactory);
             BenutzerService benutzerService = new BenutzerService(benutzerDao);
             ArtikelService artikelService = new ArtikelService(artikelDao);
+            if (WebshopServiceConfig.lagerAuffuellenBeimStart()) {
+                int aufgefuellt = artikelService.fuelleLagerAuf();
+                System.out.println("Lager aufgefüllt: " + aufgefuellt + " Artikel auf mindestens "
+                        + ArtikelEntity.STANDARD_LAGERBESTAND + " Stück gesetzt.");
+            }
             AdresseController adresseController = new AdresseController(
                     new AdresseService(new AdresseDaoImpl(entityManagerFactory)));
             WarenkorbController warenkorbController = new WarenkorbController(
-                    new WarenkorbService(warenkorbDao), artikelService);
+                    new WarenkorbService(warenkorbDao, artikelDao), artikelService);
             ArtikelController artikelController = new ArtikelController(artikelService, benutzerService);
             BenutzerController benutzerController = new BenutzerController(benutzerService);
 
@@ -99,6 +105,7 @@ public class Bi7WebshopService {
                 config.routes.post("/artikel/addNew", artikelController.erstelleNeuenArtikel);
 
                 config.routes.get("/api/warenkorb/{email}", warenkorbController.ladeWarenkorb);
+                config.routes.get("/api/warenkorb/{email}/verfuegbarkeit", warenkorbController.pruefeVerfuegbarkeit);
                 config.routes.post("/api/warenkorb/add", warenkorbController.fuegeArtikelZuWarenkorbHinzu);
                 config.routes.delete("/api/warenkorb/item/{id}", warenkorbController.loescheWarenkorbEintrag);
                 config.routes.put("/api/warenkorb/item/{id}", warenkorbController.aktualisiereMenge);

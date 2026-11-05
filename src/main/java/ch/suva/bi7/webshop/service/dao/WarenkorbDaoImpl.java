@@ -6,6 +6,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 
 import java.util.List;
+import java.util.Optional;
 
 public class WarenkorbDaoImpl implements WarenkorbDao {
 
@@ -30,6 +31,15 @@ public class WarenkorbDaoImpl implements WarenkorbDao {
                     .getResultList();
         } catch (Exception e) {
             throw new DaoException("Fehler beim Abrufen des Warenkorbs", e);
+        }
+    }
+
+    @Override
+    public Optional<WarenkorbEintragEntity> getWarenkorbEintragById(int warenkorbItemId) throws DaoException {
+        try (EntityManager em = entityManagerFactory.createEntityManager()) {
+            return Optional.ofNullable(em.find(WarenkorbEintragEntity.class, warenkorbItemId));
+        } catch (Exception e) {
+            throw new DaoException("Fehler beim Abrufen des Warenkorb-Eintrags " + warenkorbItemId, e);
         }
     }
 

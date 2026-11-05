@@ -1,5 +1,6 @@
 package ch.suva.bi7.webshop.service.controller;
 
+import ch.suva.bi7.webshop.service.dao.LagerbestandException;
 import ch.suva.bi7.webshop.service.db.entity.ArtikelEntity;
 import ch.suva.bi7.webshop.service.db.entity.WarenkorbEintragEntity;
 import ch.suva.bi7.webshop.service.helper.EntityHelper;
@@ -53,6 +54,31 @@ class BestellungControllerTest {
         assertEquals(new BigDecimal("3297.90"), antwort.gesamtpreis,
                 "Die Checkout-Antwort muss den gespeicherten Gesamtpreis enthalten");
         assertEquals("BEZAHLT", antwort.status);
+        assertFalse(warenkorbDao.wurdeGeleert,
+                "Der Service darf den Warenkorb nicht separat leeren, das passiert in der Bestell-Transaktion im DAO");
+    }
+
+    @Test
+    void checkoutMitZuWenigLagerbestandLiefert409MitArtikelname() throws Exception {
+        ArtikelEntity artikel1 = EntityHelper.createArtikelEntity(5, "Iphone 15 pro", new BigDecimal("1199.00"), "bild.png");
+        ArtikelEntity artikel2 = EntityHelper.createArtikelEntity(6, "Samsung Galaxy S24", new BigDecimal("899.90"), "bild.png");
+        FakeBestellungDao bestellungDao = new FakeBestellungDao();
+        bestellungDao.zuWerfendeException = new LagerbestandException(6, "Artikel 6 ist nicht in der Menge 1 an Lager.");
+        CheckoutWarenkorbDao warenkorbDao = new CheckoutWarenkorbDao(List.of(
+                EntityHelper.createWarenkorbEintragEntity(1, TEST_EMAIL, 5, 2),
+                EntityHelper.createWarenkorbEintragEntity(2, TEST_EMAIL, 6, 1)));
+        BestellungContextMock ctx = new BestellungContextMock(Map.of("adressId", 3));
+        ctx.sessionAttribute("userEmail", TEST_EMAIL);
+
+        new BestellungController(new BestellungService(bestellungDao, warenkorbDao,
+                new ArtikelDaoMock(List.of(artikel1, artikel2)))).erstelleBestellung.handle(ctx);
+
+        assertEquals(409, ctx.gesetzterStatus, "Zu wenig Lagerbestand ist ein Konflikt (409), kein Serverfehler");
+        Map<?, ?> antwort = (Map<?, ?>) ctx.gesendetesJson;
+        assertEquals(6, antwort.get("artikelId"));
+        assertTrue(((String) antwort.get("error")).contains("Samsung Galaxy S24"),
+                "Die Fehlermeldung für den User muss den Artikelnamen enthalten");
+        assertFalse(warenkorbDao.wurdeGeleert, "Bei Abbruch bleibt der Warenkorb erhalten");
     }
 
     @Test
