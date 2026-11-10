@@ -12,18 +12,17 @@ public final class JpaEntityManagerFactoryProvider {
         // Instanzierung verhindern, da dies eine Utility-Klasse ist
     }
 
-    public static EntityManagerFactory createEntityManagerFactory(String host, int port, String schema, String user, String password) {
+    public static EntityManagerFactory createEntityManagerFactory(String url, String driver, String user, String password, String hbm2ddlAuto) {
         Map<String, Object> properties = new HashMap<>();
-        properties.put("jakarta.persistence.jdbc.url", buildJdbcUrl(host, port, schema));
+        properties.put("jakarta.persistence.jdbc.url", url);
         properties.put("jakarta.persistence.jdbc.user", user);
         properties.put("jakarta.persistence.jdbc.password", password);
-        properties.put("jakarta.persistence.jdbc.driver", "org.mariadb.jdbc.Driver");
+        properties.put("jakarta.persistence.jdbc.driver", driver);
+        if (hbm2ddlAuto != null) {
+            properties.put("hibernate.hbm2ddl.auto", hbm2ddlAuto);
+        }
 
         return Persistence.createEntityManagerFactory("webshop-hibernate", properties);
-    }
-
-    private static String buildJdbcUrl(String host, int port, String schema) {
-        return "jdbc:mariadb://" + host + ":" + port + "/" + schema;
     }
 }
 

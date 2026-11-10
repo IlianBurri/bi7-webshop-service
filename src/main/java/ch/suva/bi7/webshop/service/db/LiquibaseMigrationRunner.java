@@ -24,13 +24,10 @@ public final class LiquibaseMigrationRunner {
     private LiquibaseMigrationRunner() {
     }
 
-    public static void migrate(String host, int port, String schema, String user, String password) throws Exception {
-        Class.forName("org.mariadb.jdbc.Driver").newInstance();
+    public static void migrate(String jdbcUrl, String driver, String user, String password) throws Exception {
+        Class.forName(driver);
 
-        String jdbcUrl = "jdbc:mariadb://" + host + ":" + port + "/" + schema + "?" +
-                "user=" + user + "&password=" + password + "&useSSL=false";
-
-        try (Connection connection = DriverManager.getConnection(jdbcUrl)) {
+        try (Connection connection = DriverManager.getConnection(jdbcUrl, user, password)) {
             Database database = DatabaseFactory.getInstance()
                     .findCorrectDatabaseImplementation(new JdbcConnection(connection));
             List<String> changelogFiles = resolveChangelogFiles();

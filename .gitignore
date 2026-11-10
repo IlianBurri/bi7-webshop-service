@@ -8,3 +8,5 @@ REVIEW-ANTWORTEN.txt
 # Lokaler Tool-State (Freebuff-Datenbank)
 .freebuff/
 /bi7-webshop-service.tar
+/bi7-webshop-service_1.0.tar
+/.mcp.json

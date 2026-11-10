@@ -29,9 +29,8 @@ public class Bi7WebshopService {
 
             if (WebshopServiceConfig.runLiquibaseMigration()) {
                 LiquibaseMigrationRunner.migrate(
-                        WebshopServiceConfig.getDBHost(),
-                        WebshopServiceConfig.getDBPort(),
-                        WebshopServiceConfig.getDBSchema(),
+                        WebshopServiceConfig.getDBUrl(),
+                        WebshopServiceConfig.getDBDriver(),
                         WebshopServiceConfig.getDBUser(),
                         WebshopServiceConfig.getDBPassword());
             } else {
@@ -39,7 +38,7 @@ public class Bi7WebshopService {
             }
 
             EntityManagerFactory entityManagerFactory = JpaEntityManagerFactoryProvider.createEntityManagerFactory(
-                    WebshopServiceConfig.getDBHost(), WebshopServiceConfig.getDBPort(), WebshopServiceConfig.getDBSchema(), WebshopServiceConfig.getDBUser(), WebshopServiceConfig.getDBPassword());
+                    WebshopServiceConfig.getDBUrl(), WebshopServiceConfig.getDBDriver(), WebshopServiceConfig.getDBUser(), WebshopServiceConfig.getDBPassword(), WebshopServiceConfig.getHbm2ddlAuto());
             // Beim Shudown der Anwendung die EntityManagerFactory schließen, um Ressourcen freizugeben
             Runtime.getRuntime().addShutdownHook(new Thread(entityManagerFactory::close));
 
@@ -60,6 +59,8 @@ public class Bi7WebshopService {
             ArtikelController artikelController = new ArtikelController(artikelService, benutzerService);
             BenutzerController benutzerController = new BenutzerController(benutzerService);
 
+            SessionTimeout sessionTimeout = new SessionTimeout(WebshopServiceConfig.getSessionTimeout());
+
             BestellungDao bestellungDao = new BestellungDaoImpl(entityManagerFactory);
             BestellungController bestellungController = new BestellungController(
                     new BestellungService(bestellungDao, warenkorbDao, artikelDao));
@@ -77,6 +78,9 @@ public class Bi7WebshopService {
                 config.jetty.modifyServletContextHandler(handler -> {
                     handler.getSessionHandler().setSameSite(HttpCookie.SameSite.NONE);
                     handler.getSessionHandler().getSessionCookieConfig().setSecure(true);
+                    // Jetty räumt verlassene Sessions etwas später selbst auf; der eigentliche Timeout ist SessionTimeout
+                    handler.getSessionHandler().setMaxInactiveInterval(
+                            (int) sessionTimeout.getTimeout().plusMinutes(1).toSeconds());
                 });
 
                 // CORS: Der Browser (z.B. 192.168.1.40) lädt die Seite vom UI-Server und sendet dessen Origin mit.
@@ -94,6 +98,10 @@ public class Bi7WebshopService {
                         it.exposeHeader("sessionId");
                     });
                 });
+                config.routes.before(sessionTimeout.vorRequest);
+                config.routes.after(sessionTimeout.nachRequest);
+                config.routes.beforeMatched("/api/*", new LoginPruefung().nurEingeloggt);
+
                 config.routes.get("/", ctx -> ctx.result("Hello World"));
                 config.routes.get("/users", benutzerController.fetchAlleBenutzernamen);
                 config.routes.post("/users/login", benutzerController.login);

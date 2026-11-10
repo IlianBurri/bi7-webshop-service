@@ -31,7 +31,6 @@
             <sqlCheck expectedResult="0">
                 SELECT COUNT(*) FROM information_schema.CHECK_CONSTRAINTS
                 WHERE CONSTRAINT_SCHEMA = DATABASE()
-                  AND TABLE_NAME = 'artikel'
                   AND CONSTRAINT_NAME = 'chk_artikel_lagerbestand'
             </sqlCheck>
         </preConditions>

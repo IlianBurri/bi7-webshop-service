@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <changeSet id="20261110-01-bestellung-gesamtpreis" author="ilian">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="bestellung" columnName="gesamtpreis"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="bestellung">
+            <column name="gesamtpreis" type="DECIMAL(10, 2)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="bestellung" columnName="gesamtpreis"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

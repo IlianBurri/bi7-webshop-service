@@ -1,7 +1,10 @@
 package ch.suva.bi7.webshop.service.config;
 
+import ch.suva.bi7.webshop.service.controller.SessionTimeout;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -13,11 +16,22 @@ public final class WebshopServiceConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(WebshopServiceConfig.class);
 
-    private static final String PROPERTIES_FILE = "application-dev.properties";
+    private static final String DEV_PROPERTIES_FILE = "application-dev.properties";
+
+    private static final String TEST_PROPERTIES_FILE = "application-test.properties";
+
+    private static final String MARIADB_DRIVER = "org.mariadb.jdbc.Driver";
+
+    private static final String PROPERTIES_FILE = waehlePropertiesDatei();
 
     private static final Properties PROPERTIES = loadProperties();
 
     private WebshopServiceConfig() {
+    }
+
+    private static String waehlePropertiesDatei() {
+        boolean testKonfiguration = WebshopServiceConfig.class.getClassLoader().getResource(TEST_PROPERTIES_FILE) != null;
+        return testKonfiguration ? TEST_PROPERTIES_FILE : DEV_PROPERTIES_FILE;
     }
 
     private static Properties loadProperties() {
@@ -55,6 +69,20 @@ public final class WebshopServiceConfig {
         return Integer.valueOf(requireValue("db.port", "DB_PORT")).intValue();
     }
 
+    public static String getDBUrl() {
+        String value = optionalValue("db.url", "DB_URL");
+        return value != null ? value : "jdbc:mariadb://" + getDBHost() + ":" + getDBPort() + "/" + getDBSchema();
+    }
+
+    public static String getDBDriver() {
+        String value = optionalValue("db.driver", "DB_DRIVER");
+        return value != null ? value : MARIADB_DRIVER;
+    }
+
+    public static String getHbm2ddlAuto() {
+        return optionalValue("db.hbm2ddl", "DB_HBM2DDL");
+    }
+
     public static boolean runLiquibaseMigration() {
         String envValue = System.getenv("APP_RUN_LIQUIBASE_MIGRATION");
         if (envValue != null && !envValue.isBlank()) {
@@ -79,12 +107,42 @@ public final class WebshopServiceConfig {
         return parseBoolean(value, "app.lagerAuffuellenBeimStart");
     }
 
+    public static Duration getSessionTimeout() {
+        String envValue = System.getenv("APP_SESSION_TIMEOUT_MINUTEN");
+        String value = envValue != null && !envValue.isBlank()
+                ? envValue
+                : PROPERTIES.getProperty("app.sessionTimeoutMinuten");
+        if (value == null || value.isBlank()) {
+            return SessionTimeout.STANDARD_TIMEOUT;
+        }
+        try {
+            int minuten = Integer.parseInt(value.trim());
+            if (minuten > 0) {
+                return Duration.ofMinutes(minuten);
+            }
+        } catch (NumberFormatException e) {
+            // unten mit verständlicher Meldung abbrechen
+        }
+        throw new IllegalStateException(
+                "Session-Timeout (APP_SESSION_TIMEOUT_MINUTEN / app.sessionTimeoutMinuten) muss eine ganze Zahl > 0 sein, war: '"
+                        + value + "'");
+    }
+
     private static boolean parseBoolean(String value, String source) {
         if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
             return Boolean.parseBoolean(value);
         }
         throw new IllegalStateException(
                 "Konfigurationskey '" + source + "' muss 'true' oder 'false' sein, war: '" + value + "'");
+    }
+
+    private static String optionalValue(String key, String envKey) {
+        String envValue = System.getenv(envKey);
+        if (envValue != null && !envValue.isBlank()) {
+            return envValue;
+        }
+        String value = PROPERTIES.getProperty(key);
+        return (value == null || value.isBlank()) ? null : value;
     }
 
     private static String requireValue(String key, String envKey) {
@@ -143,6 +201,8 @@ public final class WebshopServiceConfig {
 
     public static void logKonfiguration() {
         logger.info("Webshop-Service startet mit folgender Konfiguration:");
+        logger.info("  db.url                    = {} ({})", getDBUrl(), quelle("DB_URL"));
+        logger.info("  db.driver                 = {} ({})", getDBDriver(), quelle("DB_DRIVER"));
         logger.info("  db.host                   = {} ({})", getDBHost(), quelle("DB_HOST"));
         logger.info("  db.port                   = {} ({})", getDBPort(), quelle("DB_PORT"));
         logger.info("  db.name                   = {} ({})", getDBSchema(), quelle("DB_NAME"));
@@ -150,6 +210,7 @@ public final class WebshopServiceConfig {
         logger.info("  db.password               = ****** ({})", quelle("DB_PASSWORD"));
         logger.info("  app.runLiquibaseMigration = {} ({})", runLiquibaseMigration(), quelle("APP_RUN_LIQUIBASE_MIGRATION"));
         logger.info("  app.lagerAuffuellenBeimStart = {} ({})", lagerAuffuellenBeimStart(), quelle("APP_LAGER_AUFFUELLEN_BEIM_START"));
+        logger.info("  app.sessionTimeoutMinuten = {} ({})", getSessionTimeout().toMinutes(), quelle("APP_SESSION_TIMEOUT_MINUTEN"));
         logger.info("  cors.ersteOrigin          = {} ({})", getFirstCorsAllowedOrigin(), quelle("APP_CORS_ALLOWED_ORIGINS"));
         logger.info("  cors.weitereOrigins       = {} ({})", String.join(", ", getAdditionalCorsAllowedOrigins()), quelle("APP_CORS_ALLOWED_ORIGINS"));
         logger.info("  app.ssl.certPath          = {} ({})", getSslCertPath(), quelle("APP_SSL_CERT_PATH"));

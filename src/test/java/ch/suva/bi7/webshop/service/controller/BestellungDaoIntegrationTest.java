@@ -2,8 +2,7 @@ package ch.suva.bi7.webshop.service.controller;
 
 import ch.suva.bi7.webshop.service.dao.BestellungDao;
 import ch.suva.bi7.webshop.service.dao.BestellungDaoImpl;
-import ch.suva.bi7.webshop.service.config.WebshopServiceConfig;
-import ch.suva.bi7.webshop.service.db.JpaEntityManagerFactoryProvider;
+import ch.suva.bi7.webshop.service.db.H2TestDatenbank;
 import ch.suva.bi7.webshop.service.db.entity.BestellungEntity;
 import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.AfterEach;
@@ -13,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class BestellungDaoIntegrationTest {
 
@@ -22,15 +20,9 @@ class BestellungDaoIntegrationTest {
     private BestellungDao bestellungDao;
 
     @BeforeEach
-    void setUp() {
-        try {
-            entityManagerFactory = JpaEntityManagerFactoryProvider.createEntityManagerFactory(
-                    WebshopServiceConfig.getDBHost(), WebshopServiceConfig.getDBPort(), WebshopServiceConfig.getDBSchema(),
-                    WebshopServiceConfig.getDBUser(), WebshopServiceConfig.getDBPassword());
-            bestellungDao = new BestellungDaoImpl(entityManagerFactory);
-        } catch (Exception e) {
-            assumeTrue(false, "MariaDB not available: " + e.getMessage());
-        }
+    void setUp() throws Exception {
+        entityManagerFactory = H2TestDatenbank.erstelleEntityManagerFactory();
+        bestellungDao = new BestellungDaoImpl(entityManagerFactory);
     }
 
     @AfterEach
